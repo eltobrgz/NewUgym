@@ -19,7 +19,7 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { MoreHorizontal, Download, Filter, FileText } from "lucide-react";
+import { MoreHorizontal, Download, FileText } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,8 +27,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { cn } from "@/lib/utils";
 
 const transactions = [
   { id: "TRN-001", member: "Olivia Martin", amount: 99.99, status: "Paid", date: "2024-07-28", plan: "Pro Annual" },
@@ -39,18 +39,11 @@ const transactions = [
   { id: "TRN-006", member: "David Chen", amount: 29.99, status: "Pending", date: "2024-08-02", plan: "Pro Monthly" },
 ];
 
-const statusVariant: { [key: string]: "default" | "secondary" | "destructive" | "outline" } = {
-  "Paid": "default",
-  "Pending": "secondary",
-  "Overdue": "destructive",
+const statusStyles: { [key: string]: { variant: "default" | "secondary" | "destructive" | "outline", className?: string }} = {
+  "Paid": { variant: "secondary", className: "bg-green-500/10 text-green-400 border-green-500/20" },
+  "Pending": { variant: "secondary", className: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20" },
+  "Overdue": { variant: "destructive" },
 };
-
-const statusColors: { [key: string]: string } = {
-  Paid: "bg-green-500/20 text-green-400 border-green-500/30",
-  Pending: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-  Overdue: "bg-red-500/20 text-red-400 border-red-500/30",
-}
-
 
 export default function FinancePage() {
   const [filter, setFilter] = useState("all");
@@ -146,7 +139,7 @@ export default function FinancePage() {
                   <TableCell className="hidden sm:table-cell">{transaction.plan}</TableCell>
                   <TableCell className="hidden md:table-cell">{transaction.date}</TableCell>
                   <TableCell>
-                    <Badge variant={statusVariant[transaction.status] || "default"} className={`${statusColors[transaction.status]}`}>
+                    <Badge variant={statusStyles[transaction.status]?.variant || "default"} className={cn(statusStyles[transaction.status]?.className)}>
                       {transaction.status}
                     </Badge>
                   </TableCell>

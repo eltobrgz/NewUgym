@@ -47,10 +47,10 @@ const calculateBmi = (weight: number, height: number) => {
 }
 
 const getBmiCategory = (bmi: number) => {
-    if (bmi < 18.5) return { category: "Abaixo do peso", color: "bg-blue-500", variant: "default"};
-    if (bmi < 24.9) return { category: "Peso normal", color: "bg-green-500", variant: "default"};
-    if (bmi < 29.9) return { category: "Sobrepeso", color: "bg-yellow-500", variant: "secondary"};
-    return { category: "Obesidade", color: "bg-red-500", variant: "destructive"};
+    if (bmi < 18.5) return { category: "Abaixo do peso", variant: "default", className: "bg-blue-500 hover:bg-blue-500/80"};
+    if (bmi < 24.9) return { category: "Peso normal", variant: "default", className: "bg-green-500 hover:bg-green-500/80"};
+    if (bmi < 29.9) return { category: "Sobrepeso", variant: "secondary", className: "bg-yellow-500/80 hover:bg-yellow-500 text-yellow-foreground"};
+    return { category: "Obesidade", variant: "destructive"};
 }
 
 const chartComponents = {
@@ -189,7 +189,7 @@ export default function StudentProgressPage({ params }: { params: { studentId: s
             </CardHeader>
             <CardContent>
                 <div className="text-2xl font-bold">{currentBmi}</div>
-                <Badge variant={bmiInfo.variant} className="text-xs">{bmiInfo.category}</Badge>
+                <Badge variant={bmiInfo.variant} className={bmiInfo.className}>{bmiInfo.category}</Badge>
             </CardContent>
         </Card>
          <Card>

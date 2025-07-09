@@ -1,3 +1,4 @@
+
 import Link from "next/link";
 import {
   Avatar,
@@ -21,6 +22,7 @@ import {
   DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu";
 import { useUserRole, UserRole } from "@/contexts/user-role-context";
+import { User, LogOut, Settings, SwatchBook } from "lucide-react";
 
 
 export function UserNav() {
@@ -59,9 +61,17 @@ export function UserNav() {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem>Profile</DropdownMenuItem>
+          <DropdownMenuItem asChild>
+             <Link href="/dashboard/settings">
+                <User className="mr-2 h-4 w-4" />
+                <span>Profile</span>
+             </Link>
+          </DropdownMenuItem>
            <DropdownMenuSub>
-            <DropdownMenuSubTrigger>Switch Role</DropdownMenuSubTrigger>
+            <DropdownMenuSubTrigger>
+                <SwatchBook className="mr-2 h-4 w-4" />
+                <span>Switch Role</span>
+            </DropdownMenuSubTrigger>
             <DropdownMenuPortal>
               <DropdownMenuSubContent>
                 <DropdownMenuRadioGroup value={userRole} onValueChange={handleRoleChange}>
@@ -73,12 +83,18 @@ export function UserNav() {
             </DropdownMenuPortal>
           </DropdownMenuSub>
           <DropdownMenuItem asChild>
-            <Link href="/dashboard/settings">Settings</Link>
+            <Link href="/dashboard/settings">
+                <Settings className="mr-2 h-4 w-4" />
+                <span>Settings</span>
+            </Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link href="/">Log out</Link>
+          <Link href="/">
+            <LogOut className="mr-2 h-4 w-4" />
+            <span>Log out</span>
+          </Link>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

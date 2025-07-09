@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -24,11 +25,11 @@ export function LoginForm() {
   };
 
   return (
-    <Card className="mx-auto w-full max-w-sm border-0 bg-transparent shadow-none lg:bg-card lg:border lg:shadow-sm">
+    <Card className="mx-auto w-full max-w-sm border-0 bg-transparent shadow-none lg:border lg:bg-card lg:shadow-sm">
       <CardHeader className="text-center">
-        <div className="flex items-center justify-center mb-2 lg:hidden">
-          <Dumbbell className="h-8 w-8 mr-2 text-primary" />
-          <CardTitle className="text-3xl font-bold">Ugym</CardTitle>
+        <div className="flex items-center justify-center gap-2 mb-2 lg:hidden">
+          <Dumbbell className="h-8 w-8 text-primary" />
+          <h1 className="text-3xl font-bold">Ugym</h1>
         </div>
         <CardTitle className="text-2xl font-bold hidden lg:block">Login</CardTitle>
         <CardDescription>

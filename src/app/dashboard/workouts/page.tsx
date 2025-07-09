@@ -90,6 +90,8 @@ const StudentView = () => {
   const [dailyWorkouts, setDailyWorkouts] = useState<WorkoutsByDay>(initialWorkouts);
   const today = new Date().toLocaleString('en-us', { weekday: 'long' });
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+  const [isBuilderOpen, setIsBuilderOpen] = useState(false);
+  const { toast } = useToast();
 
   const toggleDone = (day: string, workoutName: string) => {
     setDailyWorkouts(prev => ({
@@ -105,6 +107,10 @@ const StudentView = () => {
             newWorkouts[day.day] = day.exercises ? day.exercises.map(ex => ({...ex, done: false})) : [{ name: 'Rest Day' }];
         });
         setDailyWorkouts(newWorkouts);
+         toast({
+            title: "Plano de Treino Criado!",
+            description: `Seu novo plano "${plan.planName}" foi salvo e está pronto para uso.`,
+        });
     }
     setIsAiModalOpen(false);
   };
@@ -112,10 +118,16 @@ const StudentView = () => {
 
   return (
     <>
+    <WorkoutBuilder 
+        open={isBuilderOpen}
+        onOpenChange={setIsBuilderOpen}
+        onSave={() => setIsBuilderOpen(false)}
+        template={null}
+      />
     <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
         <h1 className="text-3xl font-bold tracking-tight">Meus Treinos</h1>
         <div className="flex gap-2 w-full sm:w-auto">
-            <Button variant="outline" className="flex-1">
+            <Button variant="outline" className="flex-1" onClick={() => setIsBuilderOpen(true)}>
               <PlusCircle className="mr-2 h-4 w-4" />
               Criar meu treino
             </Button>
@@ -310,7 +322,7 @@ const AssignWorkoutModal = ({ open, onOpenChange, templateName }: { open: boolea
                 </DialogHeader>
                 <div className="py-4">
                     <div className="flex items-center px-4 pb-2 border-b">
-                        <Checkbox id="select-all" onCheckedChange={(checked) => handleSelectAll(Boolean(checked))} checked={selectedStudents.size === studentsForAssignment.length} />
+                        <Checkbox id="select-all" onCheckedChange={(checked) => handleSelectAll(Boolean(checked))} checked={selectedStudents.size === studentsForAssignment.length && studentsForAssignment.length > 0} />
                         <Label htmlFor="select-all" className="ml-2 font-semibold">Selecionar Todos</Label>
                     </div>
                     <ScrollArea className="h-64">
@@ -335,6 +347,7 @@ const AssignWorkoutModal = ({ open, onOpenChange, templateName }: { open: boolea
 
 
 const TrainerView = () => {
+    const { toast } = useToast();
     const [isAiModalOpen, setIsAiModalOpen] = useState(false);
     const [isBuilderOpen, setIsBuilderOpen] = useState(false);
     const [isAssignModalOpen, setAssignModalOpen] = useState(false);
@@ -342,8 +355,11 @@ const TrainerView = () => {
 
     const handleAiGeneratedPlan = (plan: WorkoutPlan | null) => {
         if (plan) {
-            console.log("New AI-generated template:", plan);
             // In a real app, you would save this new template to the database
+             toast({
+                title: "Template de IA Criado!",
+                description: `O novo template "${plan.planName}" foi adicionado à sua biblioteca.`,
+            });
         }
         setIsAiModalOpen(false);
     };
