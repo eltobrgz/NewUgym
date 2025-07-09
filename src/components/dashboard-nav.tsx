@@ -59,30 +59,32 @@ export function DashboardNav() {
         <SidebarMenu>
           {navItems.map((item) => (
             <SidebarMenuItem key={item.name}>
-              <Link href={item.href} legacyBehavior passHref>
-                <SidebarMenuButton
-                  isActive={pathname === item.href}
-                  tooltip={item.name}
-                >
+              <SidebarMenuButton
+                asChild
+                isActive={pathname === item.href}
+                tooltip={item.name}
+              >
+                <Link href={item.href}>
                   <item.icon className="h-5 w-5" />
                   <span>{item.name}</span>
-                </SidebarMenuButton>
-              </Link>
+                </Link>
+              </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
         </SidebarMenu>
         <SidebarMenu>
           {commonNav.map((item) => (
             <SidebarMenuItem key={item.name}>
-                <Link href={item.href} legacyBehavior passHref>
-                    <SidebarMenuButton
-                        isActive={pathname === item.href}
-                        tooltip={item.name}
-                    >
+                <SidebarMenuButton
+                    asChild
+                    isActive={pathname === item.href}
+                    tooltip={item.name}
+                >
+                    <Link href={item.href}>
                         <item.icon className="h-5 w-5" />
                         <span>{item.name}</span>
-                    </SidebarMenuButton>
-                </Link>
+                    </Link>
+                </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
         </SidebarMenu>
