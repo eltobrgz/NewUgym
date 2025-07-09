@@ -11,7 +11,7 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 
-export const GenerateWorkoutInputSchema = z.object({
+const GenerateWorkoutInputSchema = z.object({
   goal: z.string().describe('The primary fitness goal (e.g., Hypertrophy, Strength, Endurance, Weight Loss).'),
   level: z.string().describe('The user\'s experience level (Beginner, Intermediate, Advanced).'),
   daysPerWeek: z.number().min(1).max(7).describe('How many days per week the user can train.'),
@@ -35,7 +35,7 @@ const DailyWorkoutSchema = z.object({
     exercises: z.array(ExerciseSchema).optional().describe("A list of exercises for the day. Should be empty if it's a Rest Day."),
 });
 
-export const GenerateWorkoutOutputSchema = z.object({
+const GenerateWorkoutOutputSchema = z.object({
   planName: z.string().describe("A catchy and descriptive name for the generated workout plan."),
   weeklySchedule: z.array(DailyWorkoutSchema).length(7).describe("A complete 7-day workout schedule, including rest days."),
 });

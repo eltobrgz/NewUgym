@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { generateWorkoutPlan, GenerateWorkoutInputSchema, GenerateWorkoutOutput } from '@/ai/flows/generate-workout-flow';
+import { generateWorkoutPlan, GenerateWorkoutInput, GenerateWorkoutOutput } from '@/ai/flows/generate-workout-flow';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -18,11 +18,20 @@ type GenerateWorkoutFormProps = {
   onPlanGenerated: (plan: GenerateWorkoutOutput | null) => void;
 };
 
+// Re-define the schema here for client-side validation
+const GenerateWorkoutInputSchema = z.object({
+  goal: z.string().describe('The primary fitness goal (e.g., Hypertrophy, Strength, Endurance, Weight Loss).'),
+  level: z.string().describe('The user\'s experience level (Beginner, Intermediate, Advanced).'),
+  daysPerWeek: z.number().min(1).max(7).describe('How many days per week the user can train.'),
+  sessionDuration: z.number().min(15).max(120).describe('The average duration of each training session in minutes.'),
+  notes: z.string().optional().describe('Any additional notes or preferences from the user (e.g., equipment limitations, specific exercises to include/avoid).'),
+});
+
 export function GenerateWorkoutForm({ onPlanGenerated }: GenerateWorkoutFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [generatedPlan, setGeneratedPlan] = useState<GenerateWorkoutOutput | null>(null);
 
-  const form = useForm<z.infer<typeof GenerateWorkoutInputSchema>>({
+  const form = useForm<GenerateWorkoutInput>({
     resolver: zodResolver(GenerateWorkoutInputSchema),
     defaultValues: {
       goal: 'Hypertrophy',
@@ -33,7 +42,7 @@ export function GenerateWorkoutForm({ onPlanGenerated }: GenerateWorkoutFormProp
     },
   });
 
-  async function onSubmit(values: z.infer<typeof GenerateWorkoutInputSchema>) {
+  async function onSubmit(values: GenerateWorkoutInput) {
     setIsLoading(true);
     setGeneratedPlan(null);
     try {
