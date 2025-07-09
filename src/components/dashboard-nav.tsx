@@ -13,10 +13,6 @@ import {
 } from "@/components/ui/sidebar";
 import { useUserRole } from "@/contexts/user-role-context";
 
-interface DashboardNavProps {
-  userRole: string;
-}
-
 const navConfig = {
   student: [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },

@@ -3,14 +3,12 @@
 import type { ReactNode } from "react";
 import { DashboardNav } from "@/components/dashboard-nav";
 import { UserNav } from "@/components/user-nav";
-import { Sidebar, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
-import { useUserRole } from "@/contexts/user-role-context";
+import { Sidebar, SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 
 export function DashboardView({ children }: { children: ReactNode }) {
-  const { userRole } = useUserRole();
 
   return (
-    <>
+    <SidebarProvider>
       <Sidebar>
         <DashboardNav />
       </Sidebar>
@@ -22,6 +20,6 @@ export function DashboardView({ children }: { children: ReactNode }) {
         </header>
         <main className="flex-1 overflow-auto p-4 sm:px-6 sm:py-6">{children}</main>
       </SidebarInset>
-    </>
+    </SidebarProvider>
   );
 }
