@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from "next/link";
@@ -31,7 +30,7 @@ const navConfig = {
   ],
   gym: [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { name:á: "Treinadores", href: "/dashboard/trainers", icon: ShieldCheck },
+    { name: "Treinadores", href: "/dashboard/trainers", icon: ShieldCheck },
     { name: "Membros", href: "/dashboard/members", icon: Users },
     { name: "Calendário", href: "/dashboard/calendar", icon: Calendar },
   ],
