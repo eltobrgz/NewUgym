@@ -1,5 +1,5 @@
+
 import Link from "next/link";
-import { useTheme } from "next-themes";
 import {
   Avatar,
   AvatarFallback,
@@ -22,14 +22,13 @@ import {
   DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu";
 import { useUserRole, UserRole } from "@/contexts/user-role-context";
-import { User, LogOut, Settings, SwatchBook, Monitor, Moon, Sun } from "lucide-react";
+import { User, LogOut, Settings, SwatchBook } from "lucide-react";
 import { useSidebar } from "./ui/sidebar";
 
 
 export function UserNav() {
   const { user, userRole, setUserRole } = useUserRole();
   const { state } = useSidebar();
-  const { setTheme } = useTheme();
 
   const getInitials = (name: string) => {
     const names = name.split(" ");
@@ -47,15 +46,15 @@ export function UserNav() {
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-           <button className="flex items-center w-full gap-2 p-2 rounded-md text-left hover:bg-accent">
-              <Avatar className="h-9 w-9">
+           <button className="flex items-center w-full gap-2 p-1.5 rounded-md text-left hover:bg-accent flex-1">
+              <Avatar className="h-8 w-8">
                 <AvatarImage src={`https://placehold.co/100x100.png`} alt={`@${user.name}`} data-ai-hint="person portrait"/>
                 <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
               </Avatar>
               <div className="flex-1 truncate">
                  <p className="text-sm font-medium leading-none text-card-foreground">{user.name}</p>
                  <p className="text-xs leading-none text-muted-foreground truncate">
-                  {user.email}
+                  {userRole}
                 </p>
               </div>
            </button>
@@ -65,53 +64,36 @@ export function UserNav() {
             <DropdownMenuItem asChild>
               <Link href="/dashboard/settings">
                   <User className="mr-2 h-4 w-4" />
-                  <span>Profile</span>
+                  <span>Perfil</span>
               </Link>
             </DropdownMenuItem>
              <DropdownMenuSub>
               <DropdownMenuSubTrigger>
                   <SwatchBook className="mr-2 h-4 w-4" />
-                  <span>Switch Role</span>
+                  <span>Mudar Perfil</span>
               </DropdownMenuSubTrigger>
               <DropdownMenuPortal>
                 <DropdownMenuSubContent>
                   <DropdownMenuRadioGroup value={userRole} onValueChange={handleRoleChange}>
-                    <DropdownMenuRadioItem value="Student">Student</DropdownMenuRadioItem>
-                    <DropdownMenuRadioItem value="Trainer">Trainer</DropdownMenuRadioItem>
-                    <DropdownMenuRadioItem value="Gym">Gym</DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="Student">Aluno</DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="Trainer">Personal</DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="Gym">Academia</DropdownMenuRadioItem>
                   </DropdownMenuRadioGroup>
                 </DropdownMenuSubContent>
               </DropdownMenuPortal>
             </DropdownMenuSub>
-            <DropdownMenuSub>
-              <DropdownMenuSubTrigger>
-                <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-                <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-                <span className="ml-2">Toggle Theme</span>
-              </DropdownMenuSubTrigger>
-              <DropdownMenuPortal>
-                <DropdownMenuSubContent>
-                  <DropdownMenuItem onClick={() => setTheme("light")}>
-                    <Sun className="mr-2 h-4 w-4" />
-                    <span>Light</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setTheme("dark")}>
-                    <Moon className="mr-2 h-4 w-4" />
-                    <span>Dark</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setTheme("system")}>
-                    <Monitor className="mr-2 h-4 w-4" />
-                    <span>System</span>
-                  </DropdownMenuItem>
-                </DropdownMenuSubContent>
-              </DropdownMenuPortal>
-            </DropdownMenuSub>
+             <DropdownMenuItem asChild>
+                <Link href="/dashboard/settings">
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Configurações</span>
+                </Link>
+            </DropdownMenuItem>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
           <DropdownMenuItem asChild>
             <Link href="/">
               <LogOut className="mr-2 h-4 w-4" />
-              <span>Log out</span>
+              <span>Sair</span>
             </Link>
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -143,20 +125,20 @@ export function UserNav() {
           <DropdownMenuItem asChild>
              <Link href="/dashboard/settings">
                 <User className="mr-2 h-4 w-4" />
-                <span>Profile</span>
+                <span>Perfil</span>
              </Link>
           </DropdownMenuItem>
            <DropdownMenuSub>
             <DropdownMenuSubTrigger>
                 <SwatchBook className="mr-2 h-4 w-4" />
-                <span>Switch Role</span>
+                <span>Mudar Perfil</span>
             </DropdownMenuSubTrigger>
             <DropdownMenuPortal>
               <DropdownMenuSubContent>
                 <DropdownMenuRadioGroup value={userRole} onValueChange={handleRoleChange}>
-                  <DropdownMenuRadioItem value="Student">Student</DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="Trainer">Trainer</DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="Gym">Gym</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="Student">Aluno</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="Trainer">Personal</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="Gym">Academia</DropdownMenuRadioItem>
                 </DropdownMenuRadioGroup>
               </DropdownMenuSubContent>
             </DropdownMenuPortal>
@@ -164,7 +146,7 @@ export function UserNav() {
           <DropdownMenuItem asChild>
             <Link href="/dashboard/settings">
                 <Settings className="mr-2 h-4 w-4" />
-                <span>Settings</span>
+                <span>Configurações</span>
             </Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>
@@ -172,7 +154,7 @@ export function UserNav() {
         <DropdownMenuItem asChild>
           <Link href="/">
             <LogOut className="mr-2 h-4 w-4" />
-            <span>Log out</span>
+            <span>Sair</span>
           </Link>
         </DropdownMenuItem>
       </DropdownMenuContent>
