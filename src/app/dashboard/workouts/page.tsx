@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { CheckCircle2, Circle, Dumbbell, PlusCircle, Edit, Trash2 } from "lucide-react";
+import { CheckCircle2, Circle, Dumbbell, PlusCircle, Edit, Sparkles } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from '@/lib/utils';
 import { useUserRole } from '@/contexts/user-role-context';
@@ -23,26 +23,36 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { GenerateWorkoutForm } from '@/components/generate-workout-form';
+
 
 const workouts = {
   Monday: [
-    { name: "Bench Press", sets: 3, reps: 10, done: true },
-    { name: "Squats", sets: 4, reps: 8, done: false },
-    { name: "Overhead Press", sets: 3, reps: 12, done: true },
+    { name: "Bench Press", sets: 3, reps: "10", done: true },
+    { name: "Squats", sets: 4, reps: "8", done: false },
+    { name: "Overhead Press", sets: 3, reps: "12", done: true },
   ],
   Tuesday: [{ name: "Rest Day" }],
   Wednesday: [
-    { name: "Deadlift", sets: 3, reps: 5, done: false },
-    { name: "Pull-ups", sets: 5, reps: 5, done: false },
-    { name: "Bicep Curls", sets: 3, reps: 15, done: false },
+    { name: "Deadlift", sets: 3, reps: "5", done: false },
+    { name: "Pull-ups", sets: 5, reps: "5", done: false },
+    { name: "Bicep Curls", sets: 3, reps: "15", done: false },
   ],
   Thursday: [
     { name: "Running", duration: "30 mins", done: true },
     { name: "Stretching", duration: "15 mins", done: false },
   ],
   Friday: [
-    { name: "Leg Press", sets: 4, reps: 12, done: false },
-    { name: "Calf Raises", sets: 3, reps: 20, done: false },
+    { name: "Leg Press", sets: 4, reps: "12", done: false },
+    { name: "Calf Raises", sets: 3, reps: "20", done: false },
     { name: "Plank", duration: "3x 60s", done: false },
   ],
   Saturday: [{ name: "Rest Day" }],
@@ -56,12 +66,17 @@ const workoutTemplates = [
     { id: "TPL-004", name: "Upper/Lower Split 4x", difficulty: "Intermediário", focus: "Força", assignments: 10 },
 ]
 
-type Workout = { name: string; sets?: number; reps?: number; duration?: string; done?: boolean };
-type WorkoutsByDay = { [key: string]: Workout[] };
+type Exercise = { name: string; sets?: number; reps?: string; duration?: string; rest?: string };
+type DailyWorkout = { day: string; focus: string; exercises?: Exercise[] };
+type WorkoutPlan = { planName: string; weeklySchedule: DailyWorkout[] };
+
+type WorkoutState = { name: string; sets?: number; reps?: string; duration?: string; done?: boolean };
+type WorkoutsByDay = { [key: string]: WorkoutState[] };
 
 const StudentView = () => {
   const [dailyWorkouts, setDailyWorkouts] = useState<WorkoutsByDay>(workouts);
   const today = new Date().toLocaleString('en-us', { weekday: 'long' });
+  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
 
   const toggleDone = (day: string, workoutName: string) => {
     setDailyWorkouts(prev => ({
@@ -69,15 +84,46 @@ const StudentView = () => {
       [day]: prev[day].map(w => w.name === workoutName ? { ...w, done: !w.done } : w)
     }));
   };
+  
+  const handleAiGeneratedPlan = (plan: WorkoutPlan | null) => {
+    if (plan && plan.weeklySchedule) {
+        const newWorkouts: WorkoutsByDay = {};
+        plan.weeklySchedule.forEach(day => {
+            newWorkouts[day.day] = day.exercises ? day.exercises.map(ex => ({...ex, done: false})) : [{ name: 'Rest Day' }];
+        });
+        setDailyWorkouts(newWorkouts);
+    }
+    setIsAiModalOpen(false);
+  };
+
 
   return (
     <>
     <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight">Meus Treinos</h1>
-        <Button variant="outline">
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Criar meu treino
-        </Button>
+        <div className="flex gap-2">
+            <Button variant="outline">
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Criar meu treino
+            </Button>
+            <Dialog open={isAiModalOpen} onOpenChange={setIsAiModalOpen}>
+                <DialogTrigger asChild>
+                    <Button>
+                      <Sparkles className="mr-2 h-4 w-4" />
+                      Criar com IA
+                    </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[625px]">
+                    <DialogHeader>
+                        <DialogTitle>Gerador de Treino com IA</DialogTitle>
+                        <DialogDescription>
+                            Descreva seus objetivos e deixe a IA criar um plano de treino personalizado para você.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <GenerateWorkoutForm onPlanGenerated={handleAiGeneratedPlan} />
+                </DialogContent>
+            </Dialog>
+        </div>
       </div>
     <Tabs defaultValue={today} className="w-full">
       <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 md:grid-cols-7">
@@ -132,13 +178,41 @@ const StudentView = () => {
   );
 };
 
-const TrainerView = () => (
+const TrainerView = () => {
+    const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+
+    const handleAiGeneratedPlan = (plan: WorkoutPlan | null) => {
+        // In a real app, you would save this new template to the database
+        if (plan) {
+            console.log("New AI-generated template:", plan);
+            // Here you would add the new plan to your `workoutTemplates` state
+        }
+        setIsAiModalOpen(false);
+    };
+
+    return (
     <>
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight">Gerenciar Treinos</h1>
         <div className="flex gap-2">
             <Button variant="outline"><PlusCircle className="mr-2 h-4 w-4" />Atribuir Treino</Button>
-            <Button><PlusCircle className="mr-2 h-4 w-4" />Criar Template</Button>
+            <Dialog open={isAiModalOpen} onOpenChange={setIsAiModalOpen}>
+                <DialogTrigger asChild>
+                    <Button>
+                      <Sparkles className="mr-2 h-4 w-4" />
+                      Criar Template com IA
+                    </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[625px]">
+                    <DialogHeader>
+                        <DialogTitle>Gerador de Template com IA</DialogTitle>
+                        <DialogDescription>
+                            Descreva os objetivos do template e deixe a IA criar um plano de treino reutilizável.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <GenerateWorkoutForm onPlanGenerated={handleAiGeneratedPlan} />
+                </DialogContent>
+            </Dialog>
         </div>
       </div>
       <Card>
@@ -190,7 +264,8 @@ const TrainerView = () => (
         </CardContent>
     </Card>
     </>
-)
+    )
+}
 
 export default function WorkoutsPage() {
   const { userRole } = useUserRole();
