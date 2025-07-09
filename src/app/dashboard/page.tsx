@@ -10,9 +10,7 @@ import { Activity, Dumbbell, Users, Calendar, ListChecks, CheckCircle2, Repeat }
 import { Bar, BarChart, CartesianGrid, XAxis, Tooltip } from 'recharts'
 import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart'
 import { Badge } from "@/components/ui/badge";
-
-// In a real app, you would fetch user data and role.
-const MOCK_USER_ROLE = "Student";
+import { useUserRole } from "@/contexts/user-role-context";
 
 const metrics = {
   student: [
@@ -77,12 +75,13 @@ const renderMetrics = (role: keyof typeof metrics) => (
 );
 
 export default function DashboardPage() {
-  const roleKey = MOCK_USER_ROLE.toLowerCase() as keyof typeof metrics;
+  const { userRole } = useUserRole();
+  const roleKey = userRole.toLowerCase() as keyof typeof metrics;
   
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-3xl font-bold tracking-tight">
-        {MOCK_USER_ROLE} Dashboard
+        {userRole} Dashboard
       </h1>
       
       {renderMetrics(roleKey)}

@@ -11,6 +11,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from "@/components/ui/sidebar";
+import { useUserRole } from "@/contexts/user-role-context";
 
 interface DashboardNavProps {
   userRole: string;
@@ -42,8 +43,9 @@ const commonNav = [
   { name: "Settings", href: "/dashboard/settings", icon: Settings },
 ];
 
-export function DashboardNav({ userRole }: DashboardNavProps) {
+export function DashboardNav() {
   const pathname = usePathname();
+  const { userRole } = useUserRole();
   const lowerCaseRole = userRole.toLowerCase() as keyof typeof navConfig;
   const navItems = navConfig[lowerCaseRole] || navConfig.student;
 

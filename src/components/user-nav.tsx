@@ -13,23 +13,29 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuPortal,
+  DropdownMenuSubContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu";
+import { useUserRole, UserRole } from "@/contexts/user-role-context";
 
-interface UserNavProps {
-  user: {
-    name: string;
-    email: string;
-    role: string;
-  };
-}
 
-export function UserNav({ user }: UserNavProps) {
+export function UserNav() {
+  const { user, userRole, setUserRole } = useUserRole();
+
   const getInitials = (name: string) => {
     const names = name.split(" ");
     if (names.length === 0) return "";
     const firstInitial = names[0][0];
     const lastInitial = names.length > 1 ? names[names.length - 1][0] : "";
     return `${firstInitial}${lastInitial}`.toUpperCase();
+  };
+
+  const handleRoleChange = (role: string) => {
+    setUserRole(role as UserRole);
   };
 
   return (
@@ -54,7 +60,18 @@ export function UserNav({ user }: UserNavProps) {
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
           <DropdownMenuItem>Profile</DropdownMenuItem>
-          <DropdownMenuItem>Billing</DropdownMenuItem>
+           <DropdownMenuSub>
+            <DropdownMenuSubTrigger>Switch Role</DropdownMenuSubTrigger>
+            <DropdownMenuPortal>
+              <DropdownMenuSubContent>
+                <DropdownMenuRadioGroup value={userRole} onValueChange={handleRoleChange}>
+                  <DropdownMenuRadioItem value="Student">Student</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="Trainer">Trainer</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="Gym">Gym</DropdownMenuRadioItem>
+                </DropdownMenuRadioGroup>
+              </DropdownMenuSubContent>
+            </DropdownMenuPortal>
+          </DropdownMenuSub>
           <DropdownMenuItem asChild>
             <Link href="/dashboard/settings">Settings</Link>
           </DropdownMenuItem>
