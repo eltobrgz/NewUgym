@@ -3,8 +3,8 @@
 
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { CheckCircle2, Circle, Dumbbell, PlusCircle, Edit, Sparkles } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { CheckCircle2, Circle, Dumbbell, PlusCircle, Edit, Sparkles, Trash2, MoreVertical } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from '@/lib/utils';
 import { useUserRole } from '@/contexts/user-role-context';
@@ -30,11 +30,16 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { GenerateWorkoutForm } from '@/components/generate-workout-form';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/hooks/use-toast';
 
 
-const workouts = {
+const initialWorkouts = {
   Monday: [
     { name: "Bench Press", sets: 3, reps: "10", done: true },
     { name: "Squats", sets: 4, reps: "8", done: false },
@@ -59,22 +64,21 @@ const workouts = {
   Sunday: [{ name: "Rest Day" }],
 };
 
-const workoutTemplates = [
+const initialWorkoutTemplates = [
     { id: "TPL-001", name: "Iniciante Força 3x", difficulty: "Iniciante", focus: "Força", assignments: 5 },
     { id: "TPL-002", name: "Hipertrofia Full Body", difficulty: "Intermediário", focus: "Hipertrofia", assignments: 12 },
     { id: "TPL-003", name: "Cardio Intenso 30min", difficulty: "Avançado", focus: "Cardio", assignments: 8 },
     { id: "TPL-004", name: "Upper/Lower Split 4x", difficulty: "Intermediário", focus: "Força", assignments: 10 },
-]
+];
 
 type Exercise = { name: string; sets?: number; reps?: string; duration?: string; rest?: string };
 type DailyWorkout = { day: string; focus: string; exercises?: Exercise[] };
 type WorkoutPlan = { planName: string; weeklySchedule: DailyWorkout[] };
-
 type WorkoutState = { name: string; sets?: number; reps?: string; duration?: string; done?: boolean };
 type WorkoutsByDay = { [key: string]: WorkoutState[] };
 
 const StudentView = () => {
-  const [dailyWorkouts, setDailyWorkouts] = useState<WorkoutsByDay>(workouts);
+  const [dailyWorkouts, setDailyWorkouts] = useState<WorkoutsByDay>(initialWorkouts);
   const today = new Date().toLocaleString('en-us', { weekday: 'long' });
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
 
@@ -99,16 +103,16 @@ const StudentView = () => {
 
   return (
     <>
-    <div className="flex items-center justify-between">
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
         <h1 className="text-3xl font-bold tracking-tight">Meus Treinos</h1>
-        <div className="flex gap-2">
-            <Button variant="outline">
+        <div className="flex gap-2 w-full sm:w-auto">
+            <Button variant="outline" className="flex-1">
               <PlusCircle className="mr-2 h-4 w-4" />
               Criar meu treino
             </Button>
             <Dialog open={isAiModalOpen} onOpenChange={setIsAiModalOpen}>
                 <DialogTrigger asChild>
-                    <Button>
+                    <Button className="flex-1">
                       <Sparkles className="mr-2 h-4 w-4" />
                       Criar com IA
                     </Button>
@@ -126,7 +130,7 @@ const StudentView = () => {
         </div>
       </div>
     <Tabs defaultValue={today} className="w-full">
-      <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 md:grid-cols-7">
+      <TabsList className="grid w-full grid-cols-3 sm:grid-cols-4 md:grid-cols-7">
         {Object.keys(dailyWorkouts).map(day => (
           <TabsTrigger key={day} value={day}>{day.substring(0, 3)}</TabsTrigger>
         ))}
@@ -178,29 +182,118 @@ const StudentView = () => {
   );
 };
 
+const WorkoutBuilder = ({ open, onOpenChange, onSave, template }: { open: boolean, onOpenChange: (open: boolean) => void, onSave: () => void, template?: typeof initialWorkoutTemplates[0] | null }) => {
+    const { toast } = useToast();
+    
+    const handleSave = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        toast({
+            title: `Template ${template ? 'Atualizado' : 'Criado'}!`,
+            description: `O template de treino foi salvo com sucesso.`,
+        });
+        onSave();
+    }
+
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
+                <DialogHeader>
+                    <DialogTitle>{template ? 'Editar' : 'Criar'} Template de Treino</DialogTitle>
+                    <DialogDescription>Construa um plano de treino semanal reutilizável.</DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handleSave} className="flex-1 overflow-y-auto space-y-6 pr-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="space-y-2 md:col-span-2">
+                            <Label htmlFor="template-name">Nome do Template</Label>
+                            <Input id="template-name" defaultValue={template?.name} placeholder="Ex: Hipertrofia Intensa 5x" />
+                        </div>
+                         <div className="space-y-2">
+                            <Label htmlFor="template-difficulty">Dificuldade</Label>
+                            <Input id="template-difficulty" defaultValue={template?.difficulty} placeholder="Ex: Intermediário" />
+                        </div>
+                    </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="template-description">Descrição</Label>
+                        <Textarea id="template-description" placeholder="Descreva o foco e objetivo deste template..." />
+                    </div>
+
+                    {['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'].map(day => (
+                       <Card key={day}>
+                           <CardHeader>
+                               <CardTitle>{day}</CardTitle>
+                           </CardHeader>
+                           <CardContent className="space-y-4">
+                               <div className="space-y-2">
+                                   <Label>Foco do Dia</Label>
+                                   <Input placeholder="Ex: Peito e Tríceps" />
+                               </div>
+                               <div className="border rounded-md p-4 space-y-4">
+                                   <div className="flex items-center gap-2">
+                                       <Input placeholder="Nome do exercício" className="flex-1" />
+                                       <Input placeholder="Sets" type="number" className="w-20" />
+                                       <Input placeholder="Reps" className="w-20" />
+                                       <Button variant="ghost" size="icon"><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                                   </div>
+                                    <div className="flex items-center gap-2">
+                                       <Input placeholder="Nome do exercício" className="flex-1" />
+                                       <Input placeholder="Duração" className="w-32" />
+                                       <Button variant="ghost" size="icon"><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                                   </div>
+                                    <Button variant="outline" size="sm"><PlusCircle className="mr-2 h-4 w-4" />Adicionar Exercício</Button>
+                               </div>
+                           </CardContent>
+                       </Card>
+                    ))}
+                </form>
+                <DialogFooter>
+                    <Button type="submit" form="workout-builder-form">Salvar Template</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    )
+}
+
+
 const TrainerView = () => {
     const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+    const [isBuilderOpen, setIsBuilderOpen] = useState(false);
+    const [selectedTemplate, setSelectedTemplate] = useState<typeof initialWorkoutTemplates[0] | null>(null);
 
     const handleAiGeneratedPlan = (plan: WorkoutPlan | null) => {
-        // In a real app, you would save this new template to the database
         if (plan) {
             console.log("New AI-generated template:", plan);
-            // Here you would add the new plan to your `workoutTemplates` state
+            // In a real app, you would save this new template to the database
         }
         setIsAiModalOpen(false);
     };
 
+    const handleEditTemplate = (template: typeof initialWorkoutTemplates[0]) => {
+        setSelectedTemplate(template);
+        setIsBuilderOpen(true);
+    }
+    
+    const handleAddNewTemplate = () => {
+        setSelectedTemplate(null);
+        setIsBuilderOpen(true);
+    }
+
     return (
     <>
-      <div className="flex items-center justify-between">
+      <WorkoutBuilder 
+        open={isBuilderOpen}
+        onOpenChange={setIsBuilderOpen}
+        onSave={() => setIsBuilderOpen(false)}
+        template={selectedTemplate}
+      />
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
         <h1 className="text-3xl font-bold tracking-tight">Gerenciar Treinos</h1>
-        <div className="flex gap-2">
-            <Button variant="outline"><PlusCircle className="mr-2 h-4 w-4" />Atribuir Treino</Button>
+        <div className="flex gap-2 w-full sm:w-auto">
+            <Button variant="outline" onClick={handleAddNewTemplate} className="flex-1"><PlusCircle className="mr-2 h-4 w-4" />Adicionar Template</Button>
             <Dialog open={isAiModalOpen} onOpenChange={setIsAiModalOpen}>
                 <DialogTrigger asChild>
-                    <Button>
+                    <Button className="flex-1">
                       <Sparkles className="mr-2 h-4 w-4" />
-                      Criar Template com IA
+                      Criar com IA
                     </Button>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-[625px]">
@@ -225,20 +318,20 @@ const TrainerView = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Nome do Template</TableHead>
-                    <TableHead>Foco</TableHead>
-                    <TableHead>Dificuldade</TableHead>
+                    <TableHead className="hidden sm:table-cell">Foco</TableHead>
+                    <TableHead className="hidden md:table-cell">Dificuldade</TableHead>
                     <TableHead>Nº de Alunos</TableHead>
                     <TableHead><span className="sr-only">Ações</span></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {workoutTemplates.map((template) => (
+                  {initialWorkoutTemplates.map((template) => (
                     <TableRow key={template.id}>
                       <TableCell className="font-medium">{template.name}</TableCell>
-                      <TableCell>
+                      <TableCell className="hidden sm:table-cell">
                           <Badge variant="secondary">{template.focus}</Badge>
                       </TableCell>
-                       <TableCell>
+                       <TableCell className="hidden md:table-cell">
                           <Badge variant="outline">{template.difficulty}</Badge>
                        </TableCell>
                       <TableCell>{template.assignments}</TableCell>
@@ -246,13 +339,13 @@ const TrainerView = () => {
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" size="icon">
-                                    <Edit className="h-4 w-4" />
+                                    <MoreVertical className="h-4 w-4" />
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent>
-                                <DropdownMenuItem>Editar</DropdownMenuItem>
-                                <DropdownMenuItem>Duplicar</DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => handleEditTemplate(template)}>Editar</DropdownMenuItem>
                                 <DropdownMenuItem>Atribuir a Alunos</DropdownMenuItem>
+                                <DropdownMenuItem>Duplicar</DropdownMenuItem>
                                 <DropdownMenuItem className="text-destructive">Excluir</DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>

@@ -8,7 +8,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { TrendingDown, TrendingUp, ArrowRight, Weight, Ruler, HeartPulse } from 'lucide-react';
+import { TrendingDown, TrendingUp, ArrowRight, Weight, Ruler, HeartPulse, PlusCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
 
 const progressData = [
   { date: '2024-05-01', weight: 85, bodyFat: 22, arm: 38, leg: 58, waist: 90 },
@@ -67,10 +72,67 @@ const ChartComponent = ({ type, data, metric } : { type: keyof typeof chartCompo
 export default function ProgressPage() {
   const [chartType, setChartType] = useState<keyof typeof chartComponents>('line');
   const [selectedMetric, setSelectedMetric] = useState('weight');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { toast } = useToast();
+
+  const handleAddMetric = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    // In a real app, you would add the metric to your state/DB
+    toast({
+        title: "Medição Adicionada!",
+        description: "Suas novas métricas foram salvas com sucesso.",
+    });
+    setIsModalOpen(false);
+  }
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-3xl font-bold tracking-tight">Meu Progresso</h1>
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <h1 className="text-3xl font-bold tracking-tight">Meu Progresso</h1>
+         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+            <DialogTrigger asChild>
+                <Button className="w-full sm:w-auto">
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Adicionar Medição
+                </Button>
+            </DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Adicionar Nova Medição</DialogTitle>
+                    <DialogDescription>Preencha suas métricas mais recentes.</DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handleAddMetric} className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="date">Data</Label>
+                        <Input id="date" type="date" required defaultValue={new Date().toISOString().split('T')[0]} />
+                    </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="weight">Peso (kg)</Label>
+                        <Input id="weight" type="number" step="0.1" required />
+                    </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="bodyFat">Gordura Corporal (%)</Label>
+                        <Input id="bodyFat" type="number" step="0.1" />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="arm">Braço (cm)</Label>
+                        <Input id="arm" type="number" step="0.1" />
+                    </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="leg">Perna (cm)</Label>
+                        <Input id="leg" type="number" step="0.1" />
+                    </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="waist">Cintura (cm)</Label>
+                        <Input id="waist" type="number" step="0.1" />
+                    </div>
+                    <DialogFooter className="col-span-2">
+                        <Button type="submit">Salvar Medição</Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
+      </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
@@ -131,7 +193,7 @@ export default function ProgressPage() {
              </div>
              <div className="flex gap-2">
                 <Select value={selectedMetric} onValueChange={setSelectedMetric}>
-                    <SelectTrigger className="w-[180px]">
+                    <SelectTrigger className="w-full sm:w-[180px]">
                         <SelectValue placeholder="Selecionar Métrica" />
                     </SelectTrigger>
                     <SelectContent>
@@ -143,7 +205,7 @@ export default function ProgressPage() {
                     </SelectContent>
                 </Select>
                 <Select value={chartType} onValueChange={(v) => setChartType(v as any)}>
-                    <SelectTrigger className="w-[150px]">
+                    <SelectTrigger className="w-full sm:w-[150px]">
                         <SelectValue placeholder="Tipo de Gráfico" />
                     </SelectTrigger>
                     <SelectContent>
@@ -171,10 +233,10 @@ export default function ProgressPage() {
               <TableRow>
                 <TableHead>Data</TableHead>
                 <TableHead>Peso (kg)</TableHead>
-                <TableHead>Gordura (%)</TableHead>
-                <TableHead>Braço (cm)</TableHead>
-                <TableHead>Perna (cm)</TableHead>
-                <TableHead>Cintura (cm)</TableHead>
+                <TableHead className="hidden sm:table-cell">Gordura (%)</TableHead>
+                <TableHead className="hidden sm:table-cell">Braço (cm)</TableHead>
+                <TableHead className="hidden md:table-cell">Perna (cm)</TableHead>
+                <TableHead className="hidden md:table-cell">Cintura (cm)</TableHead>
                  <TableHead>IMC</TableHead>
               </TableRow>
             </TableHeader>
@@ -183,10 +245,10 @@ export default function ProgressPage() {
                 <TableRow key={index}>
                   <TableCell>{entry.date}</TableCell>
                   <TableCell>{entry.weight}</TableCell>
-                  <TableCell>{entry.bodyFat}</TableCell>
-                  <TableCell>{entry.arm}</TableCell>
-                  <TableCell>{entry.leg}</TableCell>
-                  <TableCell>{entry.waist}</TableCell>
+                  <TableCell className="hidden sm:table-cell">{entry.bodyFat}</TableCell>
+                  <TableCell className="hidden sm:table-cell">{entry.arm}</TableCell>
+                  <TableCell className="hidden md:table-cell">{entry.leg}</TableCell>
+                  <TableCell className="hidden md:table-cell">{entry.waist}</TableCell>
                    <TableCell>{calculateBmi(entry.weight, heightInCm)}</TableCell>
                 </TableRow>
               )).reverse()}

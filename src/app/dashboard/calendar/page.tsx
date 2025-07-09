@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -6,6 +7,12 @@ import { Calendar } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+
 
 type Event = {
   title: string;
@@ -13,7 +20,7 @@ type Event = {
   type: 'class' | 'event' | 'seminar';
 };
 
-const events: Record<string, Event[]> = {
+const initialEvents: Record<string, Event[]> = {
   // Dates are in YYYY-MM-DD format for easy key access
   "2024-08-01": [{ title: "Yoga Class", time: "6:00 PM", type: "class" }],
   "2024-08-05": [{ title: "Team Workout", time: "10:00 AM", type: "event" }],
@@ -21,8 +28,7 @@ const events: Record<string, Event[]> = {
   "2024-08-22": [{ title: "Yoga Class", time: "6:00 PM", type: "class" }],
 };
 
-// This needs to be outside the component to avoid re-creation on render.
-const datesWithEvents = Object.keys(events).map(d => {
+const datesWithEvents = Object.keys(initialEvents).map(d => {
   const [year, month, day] = d.split('-').map(Number);
   return new Date(year, month - 1, day);
 });
@@ -30,23 +36,75 @@ const datesWithEvents = Object.keys(events).map(d => {
 
 export default function CalendarPage() {
   const [date, setDate] = useState<Date | undefined>();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     // Set initial date on client-side to avoid hydration mismatch
     setDate(new Date());
   }, []);
 
+  const handleAddEvent = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    // In a real app, you would add the event to your state/DB
+    toast({
+        title: "Evento Adicionado!",
+        description: "O novo evento foi adicionado ao calendário.",
+    });
+    setIsModalOpen(false);
+  }
+
   const selectedDateString = date ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}` : '';
-  const selectedEvents = events[selectedDateString] || [];
+  const selectedEvents = initialEvents[selectedDateString] || [];
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
         <h1 className="text-3xl font-bold tracking-tight">Event Calendar</h1>
-        <Button>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Add New Event
-        </Button>
+        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+            <DialogTrigger asChild>
+                <Button className="w-full sm:w-auto">
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Add New Event
+                </Button>
+            </DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Add New Event</DialogTitle>
+                    <DialogDescription>Fill in the details for the new event.</DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handleAddEvent} className="space-y-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="event-title">Event Title</Label>
+                        <Input id="event-title" placeholder="E.g., Morning Yoga" required />
+                    </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="event-date">Date</Label>
+                        <Input id="event-date" type="date" required />
+                    </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="event-time">Time</Label>
+                        <Input id="event-time" type="time" required />
+                    </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="event-type">Type</Label>
+                         <Select required>
+                            <SelectTrigger id="event-type">
+                                <SelectValue placeholder="Select event type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="class">Class</SelectItem>
+                                <SelectItem value="event">Event</SelectItem>
+                                <SelectItem value="seminar">Seminar</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <DialogFooter>
+                        <Button type="submit">Add Event</Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
       </div>
 
       <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-[1fr_380px]">
@@ -55,7 +113,7 @@ export default function CalendarPage() {
             mode="single"
             selected={date}
             onSelect={setDate}
-            className="p-3 flex justify-center"
+            className="p-3 flex justify-center w-full"
             modifiers={{ hasEvent: datesWithEvents }}
             modifiersClassNames={{ hasEvent: 'has-event' }}
             styles={{

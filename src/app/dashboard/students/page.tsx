@@ -1,3 +1,4 @@
+
 import {
   Table,
   TableBody,
@@ -64,9 +65,9 @@ const students = [
 export default function StudentsPage() {
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
         <h1 className="text-3xl font-bold tracking-tight">Manage Students</h1>
-        <Button>
+        <Button className="w-full sm:w-auto">
           <PlusCircle className="mr-2 h-4 w-4" />
           Add New Student
         </Button>
@@ -108,7 +109,7 @@ export default function StudentsPage() {
                   <TableCell className="hidden sm:table-cell">{student.lastActive}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-3">
-                      <Progress value={student.progress} className="h-2 w-[100px]" />
+                      <Progress value={student.progress} className="h-2 w-16 sm:w-[100px]" />
                       <span className="text-sm text-muted-foreground">{student.progress}%</span>
                     </div>
                   </TableCell>
