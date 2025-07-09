@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview A workout plan generation AI flow.
@@ -8,7 +9,7 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'genkit/zod';
+import { z } from 'zod';
 
 export const GenerateWorkoutInputSchema = z.object({
   goal: z.string().describe('The primary fitness goal (e.g., Hypertrophy, Strength, Endurance, Weight Loss).'),
