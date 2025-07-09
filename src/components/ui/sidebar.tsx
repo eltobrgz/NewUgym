@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -572,8 +573,10 @@ export const SidebarMenuButton = React.forwardRef<
         className={cn(sidebarMenuButtonVariants({ variant, size, isActive }), className)}
         {...props}
       >
-        {isActive && <div className="absolute left-0 h-6 w-1 rounded-r-full bg-primary" />}
-        {children}
+        <>
+          {isActive && <div className="absolute left-0 h-6 w-1 rounded-r-full bg-primary" />}
+          {children}
+        </>
       </Comp>
     )
 
@@ -744,3 +747,5 @@ export const SidebarMenuSubButton = React.forwardRef<
   )
 })
 SidebarMenuSubButton.displayName = "SidebarMenuSubButton"
+
+    
