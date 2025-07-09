@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { TrendingDown, TrendingUp, TrendingRight, Weight, Ruler, HeartPulse } from 'lucide-react';
+import { TrendingDown, TrendingUp, ArrowRight, Weight, Ruler, HeartPulse } from 'lucide-react';
 
 const progressData = [
   { date: '2024-05-01', weight: 85, bodyFat: 22, arm: 38, leg: 58, waist: 90 },
@@ -83,7 +83,7 @@ export default function ProgressPage() {
                  <div className="text-xs text-muted-foreground flex items-center">
                     {weightTrend === 'increase' && <TrendingUp className="mr-1 h-4 w-4 text-red-500" />}
                     {weightTrend === 'decrease' && <TrendingDown className="mr-1 h-4 w-4 text-green-500" />}
-                    {weightTrend === 'stable' && <TrendingRight className="mr-1 h-4 w-4 text-muted-foreground" />}
+                    {weightTrend === 'stable' && <ArrowRight className="mr-1 h-4 w-4 text-muted-foreground" />}
                     {weightTrend === 'increase' ? 'Aumento' : weightTrend === 'decrease' ? 'Redução' : 'Estável'} desde a última medição
                 </div>
             </CardContent>
