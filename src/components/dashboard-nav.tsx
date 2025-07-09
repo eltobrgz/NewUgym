@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Dumbbell, LayoutDashboard, BarChart, Calendar, ListChecks, Settings, Users, ShieldCheck, LineChart } from "lucide-react";
+import { Dumbbell, LayoutDashboard, BarChart, Calendar, ListChecks, Settings, Users, ShieldCheck, LineChart, DollarSign } from "lucide-react";
 
 import {
   SidebarContent,
@@ -32,6 +32,7 @@ const navConfig = {
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { name: "Treinadores", href: "/dashboard/trainers", icon: ShieldCheck },
     { name: "Membros", href: "/dashboard/members", icon: Users },
+    { name: "Financeiro", href: "/dashboard/finance", icon: DollarSign },
     { name: "Calendário", href: "/dashboard/calendar", icon: Calendar },
   ],
 };

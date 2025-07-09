@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { CheckCircle2, Circle, Dumbbell, PlusCircle, Edit, Sparkles, Trash2, MoreVertical } from "lucide-react";
+import { CheckCircle2, Circle, Dumbbell, PlusCircle, Sparkles, Trash2, MoreVertical } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from '@/lib/utils';
 import { useUserRole } from '@/contexts/user-role-context';
@@ -37,6 +37,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ScrollArea } from '@/components/ui/scroll-area';
+
+const studentsForAssignment = [
+  { id: "alex-johnson", name: "Alex Johnson" },
+  { id: "maria-garcia", name: "Maria Garcia" },
+  { id: "david-chen", name: "David Chen" },
+  { id: "emily-white", name: "Emily White" },
+];
 
 
 const initialWorkouts = {
@@ -201,7 +210,7 @@ const WorkoutBuilder = ({ open, onOpenChange, onSave, template }: { open: boolea
                     <DialogTitle>{template ? 'Editar' : 'Criar'} Template de Treino</DialogTitle>
                     <DialogDescription>Construa um plano de treino semanal reutilizável.</DialogDescription>
                 </DialogHeader>
-                <form onSubmit={handleSave} className="flex-1 overflow-y-auto space-y-6 pr-4">
+                <form id="workout-builder-form" onSubmit={handleSave} className="flex-1 overflow-y-auto space-y-6 pr-4">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="space-y-2 md:col-span-2">
                             <Label htmlFor="template-name">Nome do Template</Label>
@@ -253,10 +262,82 @@ const WorkoutBuilder = ({ open, onOpenChange, onSave, template }: { open: boolea
     )
 }
 
+const AssignWorkoutModal = ({ open, onOpenChange, templateName }: { open: boolean, onOpenChange: (open: boolean) => void, templateName: string }) => {
+    const { toast } = useToast();
+    const [selectedStudents, setSelectedStudents] = useState<Set<string>>(new Set());
+
+    const handleAssign = () => {
+        if (selectedStudents.size === 0) {
+            toast({
+                title: 'Nenhum aluno selecionado',
+                description: 'Por favor, selecione pelo menos um aluno para atribuir o treino.',
+                variant: 'destructive',
+            });
+            return;
+        }
+        toast({
+            title: 'Treino Atribuído!',
+            description: `O template "${templateName}" foi atribuído a ${selectedStudents.size} aluno(s).`,
+        });
+        onOpenChange(false);
+        setSelectedStudents(new Set());
+    };
+
+    const handleSelectStudent = (studentId: string, isSelected: boolean) => {
+        const newSet = new Set(selectedStudents);
+        if (isSelected) {
+            newSet.add(studentId);
+        } else {
+            newSet.delete(studentId);
+        }
+        setSelectedStudents(newSet);
+    };
+
+    const handleSelectAll = (isAllSelected: boolean) => {
+        if (isAllSelected) {
+            setSelectedStudents(new Set(studentsForAssignment.map(s => s.id)));
+        } else {
+            setSelectedStudents(new Set());
+        }
+    };
+    
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Atribuir "{templateName}"</DialogTitle>
+                    <DialogDescription>Selecione os alunos para quem você deseja atribuir este template de treino.</DialogDescription>
+                </DialogHeader>
+                <div className="py-4">
+                    <div className="flex items-center px-4 pb-2 border-b">
+                        <Checkbox id="select-all" onCheckedChange={(checked) => handleSelectAll(Boolean(checked))} checked={selectedStudents.size === studentsForAssignment.length} />
+                        <Label htmlFor="select-all" className="ml-2 font-semibold">Selecionar Todos</Label>
+                    </div>
+                    <ScrollArea className="h-64">
+                        <div className="p-4 space-y-2">
+                        {studentsForAssignment.map(student => (
+                            <div key={student.id} className="flex items-center">
+                                <Checkbox id={student.id} onCheckedChange={(checked) => handleSelectStudent(student.id, Boolean(checked))} checked={selectedStudents.has(student.id)}/>
+                                <Label htmlFor={student.id} className="ml-2">{student.name}</Label>
+                            </div>
+                        ))}
+                        </div>
+                    </ScrollArea>
+                </div>
+                <DialogFooter>
+                    <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+                    <Button onClick={handleAssign}>Atribuir</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    )
+}
+
 
 const TrainerView = () => {
     const [isAiModalOpen, setIsAiModalOpen] = useState(false);
     const [isBuilderOpen, setIsBuilderOpen] = useState(false);
+    const [isAssignModalOpen, setAssignModalOpen] = useState(false);
     const [selectedTemplate, setSelectedTemplate] = useState<typeof initialWorkoutTemplates[0] | null>(null);
 
     const handleAiGeneratedPlan = (plan: WorkoutPlan | null) => {
@@ -276,6 +357,11 @@ const TrainerView = () => {
         setSelectedTemplate(null);
         setIsBuilderOpen(true);
     }
+    
+    const handleOpenAssignModal = (template: typeof initialWorkoutTemplates[0]) => {
+        setSelectedTemplate(template);
+        setAssignModalOpen(true);
+    }
 
     return (
     <>
@@ -285,6 +371,13 @@ const TrainerView = () => {
         onSave={() => setIsBuilderOpen(false)}
         template={selectedTemplate}
       />
+      {selectedTemplate && (
+          <AssignWorkoutModal 
+            open={isAssignModalOpen}
+            onOpenChange={setAssignModalOpen}
+            templateName={selectedTemplate.name}
+          />
+      )}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
         <h1 className="text-3xl font-bold tracking-tight">Gerenciar Treinos</h1>
         <div className="flex gap-2 w-full sm:w-auto">
@@ -344,7 +437,7 @@ const TrainerView = () => {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent>
                                 <DropdownMenuItem onSelect={() => handleEditTemplate(template)}>Editar</DropdownMenuItem>
-                                <DropdownMenuItem>Atribuir a Alunos</DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => handleOpenAssignModal(template)}>Atribuir a Alunos</DropdownMenuItem>
                                 <DropdownMenuItem>Duplicar</DropdownMenuItem>
                                 <DropdownMenuItem className="text-destructive">Excluir</DropdownMenuItem>
                             </DropdownMenuContent>
