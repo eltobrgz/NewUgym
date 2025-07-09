@@ -12,6 +12,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarFooter,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { UserNav } from "@/components/user-nav";
 import { useUserRole } from "@/contexts/user-role-context";
