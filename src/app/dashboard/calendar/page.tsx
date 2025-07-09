@@ -36,13 +36,14 @@ const datesWithEvents = Object.keys(initialEvents).map(d => {
 
 export default function CalendarPage() {
   const { userRole } = useUserRole();
-  const [date, setDate] = useState<Date | undefined>();
+  const [date, setDate] = useState<Date | undefined>(undefined);
   const [isAddModalOpen, setAddModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [registeredEvents, setRegisteredEvents] = useState<Set<string>>(new Set());
   const { toast } = useToast();
 
   useEffect(() => {
+    // Set initial date on the client to avoid hydration mismatch
     setDate(new Date());
   }, []);
 
