@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, LineChart, Calendar, Settings, Users, DollarSign, LogOut, ClipboardList, CheckSquare, Whistle, UserSquare } from "lucide-react";
+import { LayoutDashboard, LineChart, Calendar, Settings, Users, DollarSign, LogOut, ClipboardList, CheckSquare, Award, UserSquare } from "lucide-react";
 
 import {
   SidebarContent,
@@ -35,7 +35,7 @@ export const navConfig = {
   ],
   gym: [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { name: "Treinadores", href: "/dashboard/trainers", icon: Whistle },
+    { name: "Treinadores", href: "/dashboard/trainers", icon: Award },
     { name: "Membros", href: "/dashboard/members", icon: UserSquare },
     { name: "Financeiro", href: "/dashboard/finance", icon: DollarSign },
     { name: "Calendário", href: "/dashboard/calendar", icon: Calendar },
