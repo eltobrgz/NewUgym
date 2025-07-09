@@ -1,3 +1,4 @@
+"use client"
 import {
   Card,
   CardContent,
@@ -5,7 +6,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Activity, Dumbbell, Users, Calendar, ListChecks } from "lucide-react";
+import { Activity, Dumbbell, Users, Calendar, ListChecks, CheckCircle2, Repeat } from "lucide-react";
+import { Bar, BarChart, CartesianGrid, XAxis, Tooltip } from 'recharts'
+import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart'
+import { Badge } from "@/components/ui/badge";
 
 // In a real app, you would fetch user data and role.
 const MOCK_USER_ROLE = "Student";
@@ -30,6 +34,30 @@ const metrics = {
     { title: "Facility Tasks", value: "3", icon: ListChecks, change: "Check equipment" }
   ]
 }
+
+const chartData = [
+  { day: 'Mon', minutes: 60 },
+  { day: 'Tue', minutes: 45 },
+  { day: 'Wed', minutes: 75 },
+  { day: 'Thu', minutes: 30 },
+  { day: 'Fri', minutes: 90 },
+  { day: 'Sat', minutes: 0 },
+  { day: 'Sun', minutes: 20 },
+]
+
+const chartConfig = {
+  minutes: {
+    label: 'Minutes',
+    color: 'hsl(var(--primary))',
+  },
+}
+
+const recentActivity = [
+    { type: 'workout', description: 'Completed Leg Day workout', time: '2h ago', icon: Dumbbell, status: 'done' },
+    { type: 'task', description: 'Updated meal plan', time: '5h ago', icon: ListChecks, status: 'done' },
+    { type: 'event', description: 'Joined the "Summer Shred" challenge', time: '1d ago', icon: Calendar, status: 'joined' },
+    { type: 'workout', description: 'Missed Cardio session', time: '2d ago', icon: Repeat, status: 'missed' },
+]
 
 const renderMetrics = (role: keyof typeof metrics) => (
   <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -62,21 +90,52 @@ export default function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
         <Card className="col-span-4">
           <CardHeader>
-            <CardTitle>Overview</CardTitle>
+            <CardTitle>Workout Progress</CardTitle>
+            <CardDescription>Your workout duration for the last 7 days.</CardDescription>
           </CardHeader>
           <CardContent className="pl-2">
-            <p>A beautiful chart showing progress over time will be displayed here.</p>
+            <ChartContainer config={chartConfig} className="h-[250px] w-full">
+                <BarChart data={chartData} margin={{ top: 20, right: 20, bottom: 0, left: 0 }} accessibilityLayer>
+                    <CartesianGrid vertical={false} />
+                    <XAxis
+                    dataKey="day"
+                    tickLine={false}
+                    tickMargin={10}
+                    axisLine={false}
+                    />
+                     <Tooltip
+                        cursor={false}
+                        content={<ChartTooltipContent indicator="dot" />}
+                    />
+                    <Bar dataKey="minutes" fill="var(--color-minutes)" radius={8} />
+                </BarChart>
+            </ChartContainer>
           </CardContent>
         </Card>
         <Card className="col-span-4 lg:col-span-3">
           <CardHeader>
             <CardTitle>Recent Activity</CardTitle>
             <CardDescription>
-              A log of recent workouts, completed tasks, and events.
+              A log of your recent workouts and tasks.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <p>Your recent activity feed will appear here.</p>
+            <div className="space-y-4">
+                {recentActivity.map((activity, index) => (
+                    <div key={index} className="flex items-center gap-4">
+                        <div className="bg-secondary p-2 rounded-full">
+                            <activity.icon className="h-5 w-5 text-muted-foreground" />
+                        </div>
+                        <div className="flex-1">
+                            <p className="text-sm font-medium">{activity.description}</p>
+                            <p className="text-xs text-muted-foreground">{activity.time}</p>
+                        </div>
+                        {activity.status === 'done' && <Badge variant="secondary" className="bg-green-500/10 text-green-400 border-green-500/20">Done</Badge>}
+                        {activity.status === 'missed' && <Badge variant="destructive">Missed</Badge>}
+                         {activity.status === 'joined' && <Badge variant="default">Joined</Badge>}
+                    </div>
+                ))}
+            </div>
           </CardContent>
         </Card>
       </div>

@@ -20,18 +20,17 @@ export function LoginForm() {
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    // In a real app, you'd handle authentication here.
-    // For now, we'll just navigate to the dashboard.
     router.push("/dashboard");
   };
 
   return (
-    <Card className="mx-auto w-full max-w-sm">
+    <Card className="mx-auto w-full max-w-sm border-0 bg-transparent shadow-none lg:bg-card lg:border lg:shadow-sm">
       <CardHeader className="text-center">
-        <div className="flex items-center justify-center mb-2">
+        <div className="flex items-center justify-center mb-2 lg:hidden">
           <Dumbbell className="h-8 w-8 mr-2 text-primary" />
           <CardTitle className="text-3xl font-bold">Ugym</CardTitle>
         </div>
+        <CardTitle className="text-2xl font-bold hidden lg:block">Login</CardTitle>
         <CardDescription>
           Enter your email below to login to your account
         </CardDescription>
@@ -52,7 +51,7 @@ export function LoginForm() {
               <Label htmlFor="password">Password</Label>
               <Link
                 href="#"
-                className="ml-auto inline-block text-sm underline"
+                className="ml-auto inline-block text-sm text-primary/80 hover:text-primary"
               >
                 Forgot your password?
               </Link>
@@ -68,7 +67,7 @@ export function LoginForm() {
         </form>
         <div className="mt-4 text-center text-sm">
           Don&apos;t have an account?{" "}
-          <Link href="/signup" className="underline">
+          <Link href="/signup" className="font-semibold text-primary/90 hover:text-primary">
             Sign up
           </Link>
         </div>
