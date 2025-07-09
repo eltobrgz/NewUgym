@@ -27,11 +27,11 @@ export function LoginForm() {
   return (
     <Card className="mx-auto w-full max-w-sm border-0 bg-transparent shadow-none lg:border lg:bg-card lg:shadow-sm">
       <CardHeader className="text-center">
-        <div className="flex items-center justify-center gap-2 mb-2 lg:hidden">
+        <div className="flex items-center justify-center gap-2 mb-4">
           <Dumbbell className="h-8 w-8 text-primary" />
           <h1 className="text-3xl font-bold">Ugym</h1>
         </div>
-        <CardTitle className="text-2xl font-bold hidden lg:block">Login</CardTitle>
+        <CardTitle className="text-2xl font-bold">Login</CardTitle>
         <CardDescription>
           Enter your email below to login to your account
         </CardDescription>
@@ -52,7 +52,7 @@ export function LoginForm() {
               <Label htmlFor="password">Password</Label>
               <Link
                 href="#"
-                className="ml-auto inline-block text-sm text-primary/80 hover:text-primary"
+                className="ml-auto inline-block text-sm text-primary/90 hover:text-primary"
               >
                 Forgot your password?
               </Link>

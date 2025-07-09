@@ -1,5 +1,5 @@
-
 import Link from "next/link";
+import { useTheme } from "next-themes";
 import {
   Avatar,
   AvatarFallback,
@@ -22,13 +22,14 @@ import {
   DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu";
 import { useUserRole, UserRole } from "@/contexts/user-role-context";
-import { User, LogOut, Settings, SwatchBook } from "lucide-react";
+import { User, LogOut, Settings, SwatchBook, Monitor, Moon, Sun } from "lucide-react";
 import { useSidebar } from "./ui/sidebar";
 
 
 export function UserNav() {
   const { user, userRole, setUserRole } = useUserRole();
   const { state } = useSidebar();
+  const { setTheme } = useTheme();
 
   const getInitials = (name: string) => {
     const names = name.split(" ");
@@ -46,13 +47,13 @@ export function UserNav() {
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-           <button className="flex items-center w-full gap-2 p-2 rounded-md text-left hover:bg-sidebar-accent">
+           <button className="flex items-center w-full gap-2 p-2 rounded-md text-left hover:bg-accent">
               <Avatar className="h-9 w-9">
                 <AvatarImage src={`https://placehold.co/100x100.png`} alt={`@${user.name}`} data-ai-hint="person portrait"/>
                 <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
               </Avatar>
               <div className="flex-1 truncate">
-                 <p className="text-sm font-medium leading-none text-sidebar-foreground">{user.name}</p>
+                 <p className="text-sm font-medium leading-none text-card-foreground">{user.name}</p>
                  <p className="text-xs leading-none text-muted-foreground truncate">
                   {user.email}
                 </p>
@@ -67,7 +68,7 @@ export function UserNav() {
                   <span>Profile</span>
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuSub>
+             <DropdownMenuSub>
               <DropdownMenuSubTrigger>
                   <SwatchBook className="mr-2 h-4 w-4" />
                   <span>Switch Role</span>
@@ -79,6 +80,29 @@ export function UserNav() {
                     <DropdownMenuRadioItem value="Trainer">Trainer</DropdownMenuRadioItem>
                     <DropdownMenuRadioItem value="Gym">Gym</DropdownMenuRadioItem>
                   </DropdownMenuRadioGroup>
+                </DropdownMenuSubContent>
+              </DropdownMenuPortal>
+            </DropdownMenuSub>
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>
+                <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+                <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+                <span className="ml-2">Toggle Theme</span>
+              </DropdownMenuSubTrigger>
+              <DropdownMenuPortal>
+                <DropdownMenuSubContent>
+                  <DropdownMenuItem onClick={() => setTheme("light")}>
+                    <Sun className="mr-2 h-4 w-4" />
+                    <span>Light</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setTheme("dark")}>
+                    <Moon className="mr-2 h-4 w-4" />
+                    <span>Dark</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setTheme("system")}>
+                    <Monitor className="mr-2 h-4 w-4" />
+                    <span>System</span>
+                  </DropdownMenuItem>
                 </DropdownMenuSubContent>
               </DropdownMenuPortal>
             </DropdownMenuSub>
