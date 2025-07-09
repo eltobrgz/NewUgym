@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Dumbbell, LayoutDashboard, BarChart, Calendar, ListChecks, Settings, Users, ShieldCheck, LineChart, DollarSign } from "lucide-react";
+import { Dumbbell, LayoutDashboard, BarChart, Calendar, ListChecks, Settings, Users, ShieldCheck, LineChart, DollarSign, LogOut } from "lucide-react";
 
 import {
   SidebarContent,
@@ -10,10 +10,13 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
+  SidebarFooter,
 } from "@/components/ui/sidebar";
+import { UserNav } from "@/components/user-nav";
 import { useUserRole } from "@/contexts/user-role-context";
+import { Separator } from "./ui/separator";
 
-const navConfig = {
+export const navConfig = {
   student: [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { name: "Meus Treinos", href: "/dashboard/workouts", icon: BarChart },
@@ -37,7 +40,7 @@ const navConfig = {
   ],
 };
 
-const commonNav = [
+export const commonNav = [
   { name: "Configurações", href: "/dashboard/settings", icon: Settings },
 ];
 
@@ -63,7 +66,7 @@ export function DashboardNav() {
             <SidebarMenuItem key={item.name}>
               <SidebarMenuButton
                 asChild
-                isActive={pathname.startsWith(item.href)}
+                isActive={pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href))}
                 tooltip={item.name}
               >
                 <Link href={item.href}>
@@ -74,22 +77,28 @@ export function DashboardNav() {
             </SidebarMenuItem>
           ))}
         </SidebarMenu>
-        <SidebarMenu>
-          {commonNav.map((item) => (
-            <SidebarMenuItem key={item.name}>
-                <SidebarMenuButton
-                    asChild
-                    isActive={pathname === item.href}
-                    tooltip={item.name}
-                >
-                    <Link href={item.href}>
-                        <item.icon className="h-5 w-5" />
-                        <span>{item.name}</span>
-                    </Link>
-                </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
-        </SidebarMenu>
+        <div>
+          <Separator className="my-2"/>
+          <SidebarMenu>
+            {commonNav.map((item) => (
+              <SidebarMenuItem key={item.name}>
+                  <SidebarMenuButton
+                      asChild
+                      isActive={pathname === item.href}
+                      tooltip={item.name}
+                  >
+                      <Link href={item.href}>
+                          <item.icon className="h-5 w-5" />
+                          <span>{item.name}</span>
+                      </Link>
+                  </SidebarMenuButton>
+              </SidebarMenuItem>
+            ))}
+          </SidebarMenu>
+          <SidebarFooter className="p-2 mt-4">
+             <UserNav />
+          </SidebarFooter>
+        </div>
       </SidebarContent>
     </>
   );
