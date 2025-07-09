@@ -1,12 +1,28 @@
+
 "use client";
 
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { CheckCircle2, Circle, Dumbbell, PlusCircle } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { CheckCircle2, Circle, Dumbbell, PlusCircle, Edit, Trash2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from '@/lib/utils';
 import { useUserRole } from '@/contexts/user-role-context';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from '@/components/ui/badge';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const workouts = {
   Monday: [
@@ -33,6 +49,13 @@ const workouts = {
   Sunday: [{ name: "Rest Day" }],
 };
 
+const workoutTemplates = [
+    { id: "TPL-001", name: "Iniciante Força 3x", difficulty: "Iniciante", focus: "Força", assignments: 5 },
+    { id: "TPL-002", name: "Hipertrofia Full Body", difficulty: "Intermediário", focus: "Hipertrofia", assignments: 12 },
+    { id: "TPL-003", name: "Cardio Intenso 30min", difficulty: "Avançado", focus: "Cardio", assignments: 8 },
+    { id: "TPL-004", name: "Upper/Lower Split 4x", difficulty: "Intermediário", focus: "Força", assignments: 10 },
+]
+
 type Workout = { name: string; sets?: number; reps?: number; duration?: string; done?: boolean };
 type WorkoutsByDay = { [key: string]: Workout[] };
 
@@ -48,6 +71,14 @@ const StudentView = () => {
   };
 
   return (
+    <>
+    <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold tracking-tight">Meus Treinos</h1>
+        <Button variant="outline">
+          <PlusCircle className="mr-2 h-4 w-4" />
+          Criar meu treino
+        </Button>
+      </div>
     <Tabs defaultValue={today} className="w-full">
       <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 md:grid-cols-7">
         {Object.keys(dailyWorkouts).map(day => (
@@ -59,24 +90,25 @@ const StudentView = () => {
         <TabsContent key={day} value={day}>
           <Card>
             <CardHeader>
-              <CardTitle>{day}'s Plan</CardTitle>
+              <CardTitle>Plano de {day}</CardTitle>
+              <CardDescription>Marque os exercícios conforme os completa.</CardDescription>
             </CardHeader>
             <CardContent>
               {workoutList[0].name === "Rest Day" ? (
                 <div className="flex items-center text-lg text-muted-foreground p-8 justify-center">
                   <CheckCircle2 className="mr-2 h-6 w-6 text-green-500" />
-                  <span>Rest Day</span>
+                  <span>Dia de Descanso</span>
                 </div>
               ) : (
                 <div className="space-y-4">
                   {workoutList.map((workout) => (
-                    <div key={workout.name} className={cn("flex items-center justify-between p-3 rounded-lg", workout.done ? "bg-primary/10" : "bg-secondary")}>
+                    <div key={workout.name} className={cn("flex items-center justify-between p-3 rounded-lg", workout.done ? "bg-primary/10 border border-primary/20" : "bg-secondary")}>
                       <div className="flex items-center">
                         <Dumbbell className="h-5 w-5 mr-3 text-primary" />
                         <div>
                           <p className="font-semibold">{workout.name}</p>
                           <p className="text-sm text-muted-foreground">
-                            {workout.sets && workout.reps ? `${workout.sets} sets of ${workout.reps} reps` : workout.duration}
+                            {workout.sets && workout.reps ? `${workout.sets} sets de ${workout.reps} reps` : workout.duration}
                           </p>
                         </div>
                       </div>
@@ -96,23 +128,68 @@ const StudentView = () => {
         </TabsContent>
       ))}
     </Tabs>
+    </>
   );
 };
 
 const TrainerView = () => (
-    <Card>
+    <>
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold tracking-tight">Gerenciar Treinos</h1>
+        <div className="flex gap-2">
+            <Button variant="outline"><PlusCircle className="mr-2 h-4 w-4" />Atribuir Treino</Button>
+            <Button><PlusCircle className="mr-2 h-4 w-4" />Criar Template</Button>
+        </div>
+      </div>
+      <Card>
         <CardHeader>
-            <CardTitle>Workout Templates</CardTitle>
-            <CardDescription>Create and manage reusable workout templates for your students.</CardDescription>
+            <CardTitle>Templates de Treino</CardTitle>
+            <CardDescription>Crie e gerencie templates reutilizáveis para seus alunos.</CardDescription>
         </CardHeader>
-        <CardContent className="text-center">
-             <Button variant="outline">
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Create New Template
-            </Button>
-            <p className="text-sm text-muted-foreground mt-4">Your created templates will appear here.</p>
+        <CardContent>
+             <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nome do Template</TableHead>
+                    <TableHead>Foco</TableHead>
+                    <TableHead>Dificuldade</TableHead>
+                    <TableHead>Nº de Alunos</TableHead>
+                    <TableHead><span className="sr-only">Ações</span></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {workoutTemplates.map((template) => (
+                    <TableRow key={template.id}>
+                      <TableCell className="font-medium">{template.name}</TableCell>
+                      <TableCell>
+                          <Badge variant="secondary">{template.focus}</Badge>
+                      </TableCell>
+                       <TableCell>
+                          <Badge variant="outline">{template.difficulty}</Badge>
+                       </TableCell>
+                      <TableCell>{template.assignments}</TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                    <Edit className="h-4 w-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                                <DropdownMenuItem>Editar</DropdownMenuItem>
+                                <DropdownMenuItem>Duplicar</DropdownMenuItem>
+                                <DropdownMenuItem>Atribuir a Alunos</DropdownMenuItem>
+                                <DropdownMenuItem className="text-destructive">Excluir</DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+            </Table>
         </CardContent>
     </Card>
+    </>
 )
 
 export default function WorkoutsPage() {
@@ -120,12 +197,6 @@ export default function WorkoutsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">
-            {userRole === "Student" ? "My Workouts" : "Workout Management"}
-        </h1>
-        {userRole === "Trainer" && <Button><PlusCircle className="mr-2 h-4 w-4" />Assign Workout</Button>}
-      </div>
       {userRole === "Student" ? <StudentView /> : <TrainerView />}
     </div>
   );

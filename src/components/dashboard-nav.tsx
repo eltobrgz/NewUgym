@@ -1,8 +1,9 @@
+
 "use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Dumbbell, LayoutDashboard, BarChart, Calendar, ListChecks, Settings, Users, ShieldCheck } from "lucide-react";
+import { Dumbbell, LayoutDashboard, BarChart, Calendar, ListChecks, Settings, Users, ShieldCheck, LineChart } from "lucide-react";
 
 import {
   SidebarContent,
@@ -16,27 +17,28 @@ import { useUserRole } from "@/contexts/user-role-context";
 const navConfig = {
   student: [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { name: "My Workouts", href: "/dashboard/workouts", icon: BarChart },
-    { name: "Calendar", href: "/dashboard/calendar", icon: Calendar },
-    { name: "Tasks", href: "/dashboard/tasks", icon: ListChecks },
+    { name: "Meus Treinos", href: "/dashboard/workouts", icon: BarChart },
+    { name: "Meu Progresso", href: "/dashboard/progress", icon: LineChart },
+    { name: "Calendário", href: "/dashboard/calendar", icon: Calendar },
+    { name: "Tarefas", href: "/dashboard/tasks", icon: ListChecks },
   ],
   trainer: [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { name: "Students", href: "/dashboard/students", icon: Users },
-    { name: "Workouts", href: "/dashboard/workouts", icon: BarChart },
-    { name: "Calendar", href: "/dashboard/calendar", icon: Calendar },
-    { name: "Tasks", href: "/dashboard/tasks", icon: ListChecks },
+    { name: "Alunos", href: "/dashboard/students", icon: Users },
+    { name: "Treinos", href: "/dashboard/workouts", icon: BarChart },
+    { name: "Calendário", href: "/dashboard/calendar", icon: Calendar },
+    { name: "Tarefas", href: "/dashboard/tasks", icon: ListChecks },
   ],
   gym: [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { name: "Trainers", href: "/dashboard/trainers", icon: ShieldCheck },
-    { name: "Members", href: "/dashboard/members", icon: Users },
-    { name: "Calendar", href: "/dashboard/calendar", icon: Calendar },
+    { name:á: "Treinadores", href: "/dashboard/trainers", icon: ShieldCheck },
+    { name: "Membros", href: "/dashboard/members", icon: Users },
+    { name: "Calendário", href: "/dashboard/calendar", icon: Calendar },
   ],
 };
 
 const commonNav = [
-  { name: "Settings", href: "/dashboard/settings", icon: Settings },
+  { name: "Configurações", href: "/dashboard/settings", icon: Settings },
 ];
 
 export function DashboardNav() {
@@ -61,7 +63,7 @@ export function DashboardNav() {
             <SidebarMenuItem key={item.name}>
               <SidebarMenuButton
                 asChild
-                isActive={pathname === item.href}
+                isActive={pathname.startsWith(item.href)}
                 tooltip={item.name}
               >
                 <Link href={item.href}>
