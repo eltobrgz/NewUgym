@@ -563,6 +563,13 @@ export const SidebarMenuButton = React.forwardRef<
   ) => {
     const Comp = asChild ? Slot : "button"
     const { isMobile, state } = useSidebar()
+    
+    const buttonContent = (
+      <>
+        {isActive && <div className="absolute left-0 h-6 w-1 rounded-r-full bg-primary" />}
+        {children}
+      </>
+    );
 
     const button = (
       <Comp
@@ -573,10 +580,13 @@ export const SidebarMenuButton = React.forwardRef<
         className={cn(sidebarMenuButtonVariants({ variant, size, isActive }), className)}
         {...props}
       >
-        <>
-          {isActive && <div className="absolute left-0 h-6 w-1 rounded-r-full bg-primary" />}
-          {children}
-        </>
+        {asChild ? (
+            <span className="relative w-full flex items-center gap-3">
+              {buttonContent}
+            </span>
+        ) : (
+          buttonContent
+        )}
       </Comp>
     )
 
