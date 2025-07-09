@@ -1,4 +1,5 @@
 
+import Link from 'next/link';
 import {
   Table,
   TableBody,
@@ -29,6 +30,7 @@ import { Progress } from "@/components/ui/progress";
 
 const students = [
   {
+    id: "alex-johnson",
     name: "Alex Johnson",
     email: "alex.j@email.com",
     avatar: "https://placehold.co/100x100.png",
@@ -37,6 +39,7 @@ const students = [
     progress: 75,
   },
   {
+    id: "maria-garcia",
     name: "Maria Garcia",
     email: "maria.g@email.com",
     avatar: "https://placehold.co/100x100.png",
@@ -45,6 +48,7 @@ const students = [
     progress: 90,
   },
   {
+    id: "david-chen",
     name: "David Chen",
     email: "david.c@email.com",
     avatar: "https://placehold.co/100x100.png",
@@ -53,6 +57,7 @@ const students = [
     progress: 40,
   },
   {
+    id: "emily-white",
     name: "Emily White",
     email: "emily.w@email.com",
     avatar: "https://placehold.co/100x100.png",
@@ -123,7 +128,9 @@ export default function StudentsPage() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem>View Progress</DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                           <Link href={`/dashboard/students/${student.id}/progress`}>View Progress</Link>
+                        </DropdownMenuItem>
                         <DropdownMenuItem>Assign Workout</DropdownMenuItem>
                         <DropdownMenuItem>Send Message</DropdownMenuItem>
                       </DropdownMenuContent>
