@@ -5,7 +5,6 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -44,14 +43,14 @@ export function UserNav() {
   };
   
   const triggerContent = (
-    <div className="flex w-full items-center gap-2 rounded-md p-1 text-left transition-colors hover:bg-accent">
+    <div className="flex w-full items-center gap-3 rounded-md p-2 text-left transition-colors hover:bg-accent">
         <Avatar className="h-9 w-9">
           <AvatarImage src={`https://placehold.co/100x100.png`} alt={`@${user.name}`} data-ai-hint="person portrait"/>
           <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
         </Avatar>
         <div className={cn("flex-1 truncate duration-200", state === "collapsed" ? "opacity-0 w-0" : "opacity-100 w-auto")}>
-            <p className="text-sm font-medium leading-none text-card-foreground">{user.name}</p>
-            <p className="text-xs leading-none text-muted-foreground truncate">
+            <p className="text-base font-medium leading-none text-card-foreground">{user.name}</p>
+            <p className="text-sm leading-none text-muted-foreground truncate">
             {user.email}
           </p>
         </div>

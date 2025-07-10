@@ -498,7 +498,7 @@ export const SidebarMenu = React.forwardRef<
   <ul
     ref={ref}
     data-sidebar="menu"
-    className={cn("flex w-full min-w-0 flex-col gap-1 px-2", className)}
+    className={cn("relative flex w-full min-w-0 flex-col gap-1 px-2", className)}
     {...props}
   />
 ))
@@ -518,7 +518,7 @@ export const SidebarMenuItem = React.forwardRef<
 SidebarMenuItem.displayName = "SidebarMenuItem"
 
 const sidebarMenuButtonVariants = cva(
-  "peer/menu-button relative flex w-full items-center gap-3 overflow-hidden rounded-md p-2 text-left text-sm outline-none ring-ring transition-[width,height,padding] hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 active:bg-accent active:text-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-[[data-sidebar=menu-action]]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[state=open]:hover:bg-accent data-[state=open]:hover:text-accent-foreground group-data-[collapsible=icon]:!size-9 group-data-[collapsible=icon]:!p-2 [&>span:last-child]:truncate [&>svg]:size-5 [&>svg]:shrink-0",
+  "peer/menu-button group-data-[collapsible=icon]:justify-center relative flex w-full items-center gap-3 overflow-hidden rounded-md p-2 text-left text-base outline-none ring-ring transition-colors focus-visible:ring-2 active:bg-accent active:text-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-[[data-sidebar=menu-action]]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[state=open]:hover:bg-accent data-[state=open]:hover:text-accent-foreground group-data-[collapsible=icon]:!size-9 group-data-[collapsible=icon]:!p-2 [&>span:last-child]:truncate [&>svg]:size-5 [&>svg]:shrink-0",
   {
     variants: {
       variant: {
@@ -527,13 +527,13 @@ const sidebarMenuButtonVariants = cva(
           "bg-background shadow-[0_0_0_1px_hsl(var(--border))] hover:bg-accent hover:text-accent-foreground hover:shadow-[0_0_0_1px_hsl(var(--accent))]",
       },
       size: {
-        default: "h-9 text-sm",
+        default: "h-10 text-base font-medium",
         sm: "h-8 text-xs",
         lg: "h-12 text-sm group-data-[collapsible=icon]:!p-0",
       },
       isActive: {
-        true: "bg-accent font-medium text-accent-foreground",
-        false: "",
+        true: "text-primary-foreground",
+        false: "text-muted-foreground",
       }
     },
     defaultVariants: {
@@ -569,7 +569,6 @@ export const SidebarMenuButton = React.forwardRef<
     
     const buttonContent = (
       <>
-        {isActive && <div className="absolute left-0 h-6 w-1 rounded-r-full bg-primary" />}
         {children}
       </>
     );
@@ -580,7 +579,7 @@ export const SidebarMenuButton = React.forwardRef<
         data-sidebar="menu-button"
         data-size={size}
         data-active={isActive}
-        className={cn(sidebarMenuButtonVariants({ variant, size, isActive }), className)}
+        className={cn(sidebarMenuButtonVariants({ variant, size, isActive }), className, isActive ? "bg-primary/10 hover:bg-primary/20 text-primary" : "hover:bg-accent")}
         {...props}
       >
         {asChild ? (

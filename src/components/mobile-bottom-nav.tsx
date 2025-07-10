@@ -35,14 +35,16 @@ export function MobileBottomNav() {
             )}
             aria-label={item.name}
           >
-            <item.icon className="w-6 h-6" />
+            <item.icon className="w-6 h-6 mb-1" />
+            <span className="text-xs sr-only">{item.name}</span>
           </Link>
         ))}
         
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
                  <button type="button" className="inline-flex flex-col items-center justify-center px-5 hover:bg-muted group text-muted-foreground">
-                    <MoreHorizontal className="w-6 h-6" />
+                    <MoreHorizontal className="w-6 h-6 mb-1" />
+                     <span className="text-xs sr-only">Mais</span>
                 </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" side="top" className="w-48 mb-2">

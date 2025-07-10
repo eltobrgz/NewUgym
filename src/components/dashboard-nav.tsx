@@ -59,7 +59,7 @@ const ThemeToggleButton = () => {
 
     if (state === 'collapsed') {
          return (
-            <Button variant="ghost" size="icon" onClick={toggleTheme} className="h-9 w-9 rounded-full">
+            <Button variant="ghost" size="icon" onClick={toggleTheme} className="h-9 w-9 rounded-lg">
                 <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
                 <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
                 <span className="sr-only">Toggle theme</span>
@@ -68,8 +68,8 @@ const ThemeToggleButton = () => {
     }
 
     return (
-        <Button variant="ghost" onClick={toggleTheme} className="w-full justify-start gap-2 px-2">
-            <div className="flex items-center gap-2">
+        <Button variant="ghost" onClick={toggleTheme} className="w-full justify-start gap-3 p-2 text-base font-medium text-muted-foreground">
+            <div className="flex items-center gap-3">
                 <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
                 <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
                 <span className="min-w-0">Alterar Tema</span>
@@ -93,7 +93,7 @@ export function DashboardNav() {
             <div className={cn("flex items-center gap-2", state === "collapsed" && "justify-center")}>
               <Dumbbell className="size-7 shrink-0 text-primary" />
               <div className={cn("duration-200", state === "collapsed" ? "opacity-0 w-0" : "opacity-100 w-auto")}>
-                <span className="text-lg font-bold whitespace-nowrap" data-testid="sidebar-title">
+                <span className="text-xl font-bold whitespace-nowrap" data-testid="sidebar-title">
                     Ugym
                 </span>
               </div>
@@ -120,7 +120,6 @@ export function DashboardNav() {
         </SidebarMenu>
         
         <div>
-          <Separator className="my-2"/>
           <SidebarMenu>
             {commonNav.map((item) => (
               <SidebarMenuItem key={item.name}>
@@ -140,6 +139,8 @@ export function DashboardNav() {
                 <ThemeToggleButton />
              </SidebarMenuItem>
           </SidebarMenu>
+
+          <Separator className="my-2"/>
 
           <SidebarFooter className="p-2 mt-2">
             <UserNav />
