@@ -19,7 +19,7 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { MoreHorizontal, PlusCircle, List, LayoutGrid, Trash2, Edit } from "lucide-react";
+import { MoreHorizontal, PlusCircle, List, LayoutGrid, Trash2, Edit, Search } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -52,6 +52,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { allUsers, type DirectoryUser } from "@/lib/user-directory";
 
 type Trainer = {
   id: string;
@@ -66,9 +67,85 @@ type Trainer = {
 const initialTrainers: Trainer[] = [
   { id: "trn-1", name: "John Carter", email: "john.carter@email.com", avatar: "https://placehold.co/100x100.png", initials: "JC", status: "Ativo", clients: 15 },
   { id: "trn-2", name: "Sophie Brown", email: "sophie.brown@email.com", avatar: "https://placehold.co/100x100.png", initials: "SB", status: "Ativo", clients: 12 },
-  { id: "trn-3", name: "Michael Rodriguez", email: "michael.r@email.com", avatar: "https://placehold.co/100x100.png", initials: "MR", status: "De Licença", clients: 5 },
-  { id: "trn-4", name: "Sarah Miller", email: "sarah.m@email.com", avatar: "https://placehold.co/100x100.png", initials: "SM", status: "Ativo", clients: 18 },
 ];
+
+
+const AddTrainerDialog = ({ open, onOpenChange, onAddTrainer }: { open: boolean, onOpenChange: (open: boolean) => void, onAddTrainer: (trainer: Trainer) => void}) => {
+    const [searchTerm, setSearchTerm] = useState('');
+    const [searchResults, setSearchResults] = useState<DirectoryUser[]>([]);
+    
+    const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const term = e.target.value.toLowerCase();
+        setSearchTerm(term);
+        if (term.length > 2) {
+            const results = allUsers.filter(user => 
+                user.email.toLowerCase().includes(term) && user.role === 'Trainer'
+            );
+            setSearchResults(results);
+        } else {
+            setSearchResults([]);
+        }
+    }
+
+    const handleAddClick = (user: DirectoryUser) => {
+        const newTrainer: Trainer = {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            avatar: "https://placehold.co/100x100.png",
+            initials: user.name.split(" ").map(n => n[0]).join("").toUpperCase(),
+            status: "Ativo",
+            clients: 0,
+        };
+        onAddTrainer(newTrainer);
+        setSearchTerm('');
+        setSearchResults([]);
+    }
+
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogTrigger asChild>
+                <Button className="w-full sm:w-auto">
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Adicionar Personal
+                </Button>
+            </DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Vincular Novo Personal</DialogTitle>
+                    <DialogDescription>
+                    Procure por um personal existente pelo email para adicioná-lo à sua academia.
+                    </DialogDescription>
+                </DialogHeader>
+                 <div className="space-y-4">
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input 
+                            value={searchTerm}
+                            onChange={handleSearch}
+                            placeholder="Digite o email do personal..."
+                            className="pl-9"
+                        />
+                    </div>
+                    <div className="space-y-2 max-h-60 overflow-y-auto">
+                        {searchResults.map(user => (
+                            <div key={user.id} className="flex items-center justify-between p-2 border rounded-md">
+                                <div>
+                                    <p className="font-semibold">{user.name}</p>
+                                    <p className="text-sm text-muted-foreground">{user.email}</p>
+                                </div>
+                                <Button size="sm" onClick={() => handleAddClick(user)}>Adicionar</Button>
+                            </div>
+                        ))}
+                        {searchTerm.length > 2 && searchResults.length === 0 && (
+                            <p className="text-center text-sm text-muted-foreground">Nenhum personal encontrado com este email.</p>
+                        )}
+                    </div>
+                </div>
+            </DialogContent>
+        </Dialog>
+    )
+}
 
 export default function TrainersPage() {
     const [trainers, setTrainers] = useState<Trainer[]>(initialTrainers);
@@ -77,42 +154,19 @@ export default function TrainersPage() {
     const [editingTrainer, setEditingTrainer] = useState<Trainer | null>(null);
     const { toast } = useToast();
 
-    const handleAddTrainer = (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        const formData = new FormData(e.currentTarget);
-        const name = formData.get('name') as string;
-        const email = formData.get('email') as string;
-
-        const newTrainer: Trainer = {
-            id: `trn-${Date.now()}`,
-            name,
-            email,
-            avatar: "https://placehold.co/100x100.png",
-            initials: name.split(' ').map(n => n[0]).join(''),
-            status: "Ativo",
-            clients: 0,
-        };
+    const handleAddTrainer = (newTrainer: Trainer) => {
+        if (trainers.some(t => t.id === newTrainer.id)) {
+            toast({ title: "Personal já existe", description: `${newTrainer.name} já faz parte da sua equipe.`, variant: "destructive" });
+            return;
+        }
         setTrainers(prev => [newTrainer, ...prev]);
         setIsAddDialogOpen(false);
-        toast({ title: "Treinador Convidado!", description: `Um convite foi enviado para ${email}.` });
-    };
-
-    const handleEditTrainer = (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        if (!editingTrainer) return;
-
-        const formData = new FormData(e.currentTarget);
-        const name = formData.get('name') as string;
-        const email = formData.get('email') as string;
-        
-        setTrainers(prev => prev.map(t => t.id === editingTrainer.id ? { ...t, name, email } : t));
-        setEditingTrainer(null);
-        toast({ title: "Treinador Atualizado", description: "As informações foram salvas." });
+        toast({ title: "Personal Adicionado!", description: `${newTrainer.name} foi adicionado à sua academia.` });
     };
 
     const handleDeleteTrainer = (trainerId: string) => {
         setTrainers(prev => prev.filter(t => t.id !== trainerId));
-        toast({ title: "Treinador Removido", variant: 'destructive' });
+        toast({ title: "Personal Removido", variant: 'destructive' });
     };
 
     return (
@@ -124,55 +178,22 @@ export default function TrainersPage() {
                     <Button variant={view === 'list' ? 'secondary' : 'ghost'} size="icon" onClick={() => setView('list')}><List className="h-5 w-5"/></Button>
                     <Button variant={view === 'grid' ? 'secondary' : 'ghost'} size="icon" onClick={() => setView('grid')}><LayoutGrid className="h-5 w-5"/></Button>
                 </div>
-                <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button className="w-full sm:w-auto">
-                      <PlusCircle className="mr-2 h-4 w-4" />
-                      Adicionar Personal
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Adicionar Novo Personal</DialogTitle>
-                      <DialogDescription>Insira o email para convidar um novo personal para a academia.</DialogDescription>
-                    </DialogHeader>
-                    <form onSubmit={handleAddTrainer} className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="name">Nome Completo</Label>
-                        <Input id="name" name="name" placeholder="Ex: Carlos Souza" required />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="email">Email</Label>
-                        <Input id="email" name="email" type="email" placeholder="carlos.souza@example.com" required />
-                      </div>
-                      <DialogFooter>
-                        <Button type="submit">Adicionar Personal</Button>
-                      </DialogFooter>
-                    </form>
-                  </DialogContent>
-                </Dialog>
+                <AddTrainerDialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen} onAddTrainer={handleAddTrainer} />
             </div>
           </div>
             
-            {/* Edit Dialog */}
             <Dialog open={!!editingTrainer} onOpenChange={(isOpen) => !isOpen && setEditingTrainer(null)}>
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>Editar Personal</DialogTitle>
+                        <DialogDescription>A edição de perfis está desativada na visualização da academia.</DialogDescription>
                     </DialogHeader>
-                    <form onSubmit={handleEditTrainer} className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="name-edit">Nome Completo</Label>
-                            <Input id="name-edit" name="name" defaultValue={editingTrainer?.name} required />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="email-edit">Email</Label>
-                            <Input id="email-edit" name="email" type="email" defaultValue={editingTrainer?.email} required />
-                        </div>
-                        <DialogFooter>
-                            <Button type="submit">Salvar Alterações</Button>
-                        </DialogFooter>
-                    </form>
+                    <div className="space-y-4 text-sm text-muted-foreground">
+                        <p>Para editar informações de um personal, o próprio usuário deve fazê-lo em suas configurações de perfil.</p>
+                    </div>
+                    <DialogFooter>
+                        <Button type="button" variant="outline" onClick={() => setEditingTrainer(null)}>Fechar</Button>
+                    </DialogFooter>
                 </DialogContent>
             </Dialog>
 
@@ -218,7 +239,7 @@ export default function TrainersPage() {
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent align="end">
                                     <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                                    <DropdownMenuItem onSelect={() => setEditingTrainer(trainer)}><Edit className="mr-2 h-4 w-4"/>Editar</DropdownMenuItem>
+                                    <DropdownMenuItem onSelect={() => setEditingTrainer(trainer)}><Edit className="mr-2 h-4 w-4"/>Ver Perfil</DropdownMenuItem>
                                     <DropdownMenuItem>Ver Agenda</DropdownMenuItem>
                                     <DropdownMenuItem>Atribuir Membro</DropdownMenuItem>
                                     <DropdownMenuSeparator />

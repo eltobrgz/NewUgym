@@ -20,7 +20,7 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { MoreHorizontal, PlusCircle, Edit, Trash2 } from "lucide-react";
+import { MoreHorizontal, PlusCircle, Edit, Trash2, Search } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -35,6 +35,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { allUsers, type DirectoryUser } from "@/lib/user-directory";
 
 type Member = {
   id: string;
@@ -51,11 +52,41 @@ const initialMembers: Member[] = [
   { id: "mem-1", name: "Olivia Martin", email: "olivia.martin@email.com", avatar: "https://placehold.co/100x100.png", initials: "OM", status: "Ativo", plan: "Pro Anual", joinDate: "2023-07-15" },
   { id: "mem-2", name: "Jackson Lee", email: "jackson.lee@email.com", avatar: "https://placehold.co/100x100.png", initials: "JL", status: "Ativo", plan: "Pro Mensal", joinDate: "2023-08-20" },
   { id: "mem-3", name: "Isabella Nguyen", email: "isabella.nguyen@email.com", avatar: "https://placehold.co/100x100.png", initials: "IN", status: "Inativo", plan: "Básico Mensal", joinDate: "2023-03-10" },
-  { id: "mem-4", name: "William Kim", email: "will@email.com", avatar: "https://placehold.co/100x100.png", initials: "WK", status: "Ativo", plan: "Pro Anual", joinDate: "2024-01-05" },
-  { id: "mem-5", name: "Sofia Davis", email: "sofia.davis@email.com", avatar: "https://placehold.co/100x100.png", initials: "SD", status: "Ativo", plan: "Pro Mensal", joinDate: "2024-02-18" },
 ];
 
-const AddMemberDialog = ({ open, onOpenChange, onSubmit }: { open: boolean, onOpenChange: (open: boolean) => void, onSubmit: (e: React.FormEvent<HTMLFormElement>) => void}) => {
+const AddMemberDialog = ({ open, onOpenChange, onAddMember }: { open: boolean, onOpenChange: (open: boolean) => void, onAddMember: (member: Member) => void}) => {
+    const [searchTerm, setSearchTerm] = useState('');
+    const [searchResults, setSearchResults] = useState<DirectoryUser[]>([]);
+    
+    const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const term = e.target.value.toLowerCase();
+        setSearchTerm(term);
+        if (term.length > 2) {
+            const results = allUsers.filter(user => 
+                user.email.toLowerCase().includes(term) && user.role === 'Student'
+            );
+            setSearchResults(results);
+        } else {
+            setSearchResults([]);
+        }
+    }
+
+    const handleAddClick = (user: DirectoryUser) => {
+        const newMember: Member = {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            avatar: "https://placehold.co/100x100.png",
+            initials: user.name.split(" ").map(n => n[0]).join("").toUpperCase(),
+            status: "Ativo",
+            plan: "Nenhum",
+            joinDate: new Date().toISOString().split("T")[0],
+        };
+        onAddMember(newMember);
+        setSearchTerm('');
+        setSearchResults([]);
+    }
+
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogTrigger asChild>
@@ -66,25 +97,36 @@ const AddMemberDialog = ({ open, onOpenChange, onSubmit }: { open: boolean, onOp
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Adicionar Novo Membro</DialogTitle>
+                <DialogTitle>Vincular Novo Membro</DialogTitle>
                 <DialogDescription>
-                  Insira o email do membro para convidá-lo para a academia.
+                  Procure por um usuário existente pelo email para adicioná-lo como membro da academia.
                 </DialogDescription>
               </DialogHeader>
-              <form onSubmit={onSubmit} className="space-y-4">
-                 <div className="space-y-2">
-                  <Label htmlFor="name">Nome Completo</Label>
-                  <Input id="name" name="name" placeholder="Ex: João da Silva" required />
+              <div className="space-y-4">
+                 <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input 
+                    value={searchTerm}
+                    onChange={handleSearch}
+                    placeholder="Digite o email do membro..."
+                    className="pl-9"
+                  />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input id="email" name="email" type="email" placeholder="joao.silva@example.com" required />
+                <div className="space-y-2 max-h-60 overflow-y-auto">
+                    {searchResults.map(user => (
+                        <div key={user.id} className="flex items-center justify-between p-2 border rounded-md">
+                            <div>
+                                <p className="font-semibold">{user.name}</p>
+                                <p className="text-sm text-muted-foreground">{user.email}</p>
+                            </div>
+                            <Button size="sm" onClick={() => handleAddClick(user)}>Adicionar</Button>
+                        </div>
+                    ))}
+                    {searchTerm.length > 2 && searchResults.length === 0 && (
+                        <p className="text-center text-sm text-muted-foreground">Nenhum usuário encontrado com este email.</p>
+                    )}
                 </div>
-                <DialogFooter>
-                  <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-                  <Button type="submit">Adicionar Membro</Button>
-                </DialogFooter>
-              </form>
+              </div>
             </DialogContent>
         </Dialog>
     )
@@ -99,36 +141,16 @@ export default function MembersPage() {
   const router = useRouter();
 
 
-  const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>, memberId?: string) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const name = formData.get("name") as string;
-    const email = formData.get("email") as string;
-    const plan = formData.get("plan") as string; // This might be removed if plan assignment happens elsewhere
-
-    if (memberId) {
-      // Editing
-      setMembers(members.map(m => m.id === memberId ? { ...m, name, email } : m));
-      toast({ title: "Membro Atualizado", description: "As informações do membro foram salvas." });
-      setEditingMember(null);
-    } else {
-      // Adding
-      const newMember: Member = {
-        id: `mem-${Date.now()}`,
-        name,
-        email,
-        plan: "Nenhum", // Default plan, to be assigned
-        avatar: "https://placehold.co/100x100.png",
-        initials: name.split(" ").map(n => n[0]).join("").toUpperCase(),
-        status: "Ativo",
-        joinDate: new Date().toISOString().split("T")[0],
-      };
+  const handleAddMember = (newMember: Member) => {
+      if (members.some(m => m.id === newMember.id)) {
+          toast({ title: "Membro já existe", description: `${newMember.name} já faz parte da sua academia.`, variant: "destructive" });
+          return;
+      }
       setMembers([newMember, ...members]);
-      toast({ title: "Membro Adicionado!", description: `${name} foi adicionado. Agora você pode registrar o primeiro pagamento.` });
+      toast({ title: "Membro Adicionado!", description: `${newMember.name} foi adicionado. Agora você pode registrar o primeiro pagamento.` });
       setIsAddDialogOpen(false);
-      setNewlyAddedMember(newMember); // Trigger the payment dialog
-    }
-  };
+      setNewlyAddedMember(newMember);
+  }
 
   const handleDeactivate = (memberId: string) => {
     setMembers(members.map(m => m.id === memberId ? { ...m, status: 'Inativo' } : m));
@@ -148,22 +170,14 @@ export default function MembersPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Editar Membro</DialogTitle>
-            <DialogDescription>Preencha os detalhes do membro abaixo.</DialogDescription>
+            <DialogDescription>A edição de perfis está desativada na visualização da academia.</DialogDescription>
           </DialogHeader>
-          <form onSubmit={(e) => handleFormSubmit(e, editingMember?.id)} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Nome Completo</Label>
-              <Input id="name" name="name" defaultValue={editingMember?.name} required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" name="email" type="email" defaultValue={editingMember?.email} required />
-            </div>
+           <div className="space-y-4 text-sm text-muted-foreground">
+               <p>Para editar informações de um membro, o próprio usuário deve fazê-lo em suas configurações de perfil.</p>
+           </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setEditingMember(null)}>Cancelar</Button>
-              <Button type="submit">Salvar Alterações</Button>
+              <Button type="button" variant="outline" onClick={() => setEditingMember(null)}>Fechar</Button>
             </DialogFooter>
-          </form>
         </DialogContent>
       </Dialog>
       
@@ -185,7 +199,7 @@ export default function MembersPage() {
       <div className="flex flex-col gap-6">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <h1 className="text-3xl font-bold tracking-tight">Gerenciar Membros</h1>
-          <AddMemberDialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen} onSubmit={handleFormSubmit} />
+          <AddMemberDialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen} onAddMember={handleAddMember} />
         </div>
         <Card>
           <CardHeader>
@@ -240,7 +254,7 @@ export default function MembersPage() {
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Ações</DropdownMenuLabel>
                           <DropdownMenuItem onSelect={() => setEditingMember(member)}>
-                            <Edit className="mr-2 h-4 w-4"/>Editar Perfil
+                            <Edit className="mr-2 h-4 w-4"/>Ver Perfil
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <AlertDialog>

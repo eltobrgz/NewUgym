@@ -20,7 +20,7 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { MoreHorizontal, PlusCircle, List, LayoutGrid, Trash2, Edit } from "lucide-react";
+import { MoreHorizontal, PlusCircle, List, LayoutGrid, Trash2, Edit, Search } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -54,6 +54,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { allUsers, type DirectoryUser } from "@/lib/user-directory";
 
 type Student = {
   id: string;
@@ -69,48 +70,102 @@ const initialStudents: Student[] = [
   { id: "alex-johnson", name: "Alex Johnson", email: "alex.j@email.com", avatar: "https://placehold.co/100x100.png", initials: "AJ", lastActive: "2 dias atrás", progress: 75 },
   { id: "maria-garcia", name: "Maria Garcia", email: "maria.g@email.com", avatar: "https://placehold.co/100x100.png", initials: "MG", lastActive: "Hoje", progress: 90 },
   { id: "david-chen", name: "David Chen", email: "david.c@email.com", avatar: "https://placehold.co/100x100.png", initials: "DC", lastActive: "1 semana atrás", progress: 40 },
-  { id: "emily-white", name: "Emily White", email: "emily.w@email.com", avatar: "https://placehold.co/100x100.png", initials: "EW", lastActive: "Ontem", progress: 60 },
 ];
+
+
+const AddStudentDialog = ({ open, onOpenChange, onAddStudent }: { open: boolean, onOpenChange: (open: boolean) => void, onAddStudent: (student: Student) => void}) => {
+    const [searchTerm, setSearchTerm] = useState('');
+    const [searchResults, setSearchResults] = useState<DirectoryUser[]>([]);
+    
+    const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const term = e.target.value.toLowerCase();
+        setSearchTerm(term);
+        if (term.length > 2) {
+            const results = allUsers.filter(user => 
+                user.email.toLowerCase().includes(term) && user.role === 'Student'
+            );
+            setSearchResults(results);
+        } else {
+            setSearchResults([]);
+        }
+    }
+
+    const handleAddClick = (user: DirectoryUser) => {
+        const newStudent: Student = {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            avatar: "https://placehold.co/100x100.png",
+            initials: user.name.split(" ").map(n => n[0]).join("").toUpperCase(),
+            lastActive: 'Agora',
+            progress: 0,
+        };
+        onAddStudent(newStudent);
+        setSearchTerm('');
+        setSearchResults([]);
+    }
+
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogTrigger asChild>
+                <Button className="w-full sm:w-auto">
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Adicionar Aluno
+                </Button>
+            </DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Vincular Novo Aluno</DialogTitle>
+                    <DialogDescription>
+                    Procure por um aluno existente pelo email para adicioná-lo à sua lista.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input 
+                            value={searchTerm}
+                            onChange={handleSearch}
+                            placeholder="Digite o email do aluno..."
+                            className="pl-9"
+                        />
+                    </div>
+                    <div className="space-y-2 max-h-60 overflow-y-auto">
+                        {searchResults.map(user => (
+                            <div key={user.id} className="flex items-center justify-between p-2 border rounded-md">
+                                <div>
+                                    <p className="font-semibold">{user.name}</p>
+                                    <p className="text-sm text-muted-foreground">{user.email}</p>
+                                </div>
+                                <Button size="sm" onClick={() => handleAddClick(user)}>Adicionar</Button>
+                            </div>
+                        ))}
+                        {searchTerm.length > 2 && searchResults.length === 0 && (
+                            <p className="text-center text-sm text-muted-foreground">Nenhum aluno encontrado com este email.</p>
+                        )}
+                    </div>
+              </div>
+            </DialogContent>
+        </Dialog>
+    )
+}
 
 export default function StudentsPage() {
   const [students, setStudents] = useState<Student[]>(initialStudents);
   const [view, setView] = useState<'list' | 'grid'>('list');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const { toast } = useToast();
 
-  const handleAddStudent = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const name = formData.get('name') as string;
-    const email = formData.get('email') as string;
-
-    const newStudent: Student = {
-      id: `student-${Date.now()}`,
-      name,
-      email,
-      avatar: "https://placehold.co/100x100.png",
-      initials: name.split(' ').map(n => n[0]).join(''),
-      lastActive: "Agora",
-      progress: 0,
-    };
+  const handleAddStudent = (newStudent: Student) => {
+    if (students.some(s => s.id === newStudent.id)) {
+        toast({ title: "Aluno já existe", description: `${newStudent.name} já está na sua lista de alunos.`, variant: "destructive" });
+        return;
+    }
     setStudents(prev => [newStudent, ...prev]);
     setIsAddDialogOpen(false);
-    toast({ title: "Aluno Adicionado!", description: `${name} foi adicionado à sua lista. Agora você pode atribuir um treino.` });
+    toast({ title: "Aluno Adicionado!", description: `${newStudent.name} foi adicionado à sua lista. Agora você pode atribuir um treino.` });
   };
 
-  const handleEditStudent = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!editingStudent) return;
-
-    const formData = new FormData(e.currentTarget);
-    const name = formData.get('name') as string;
-    const email = formData.get('email') as string;
-    
-    setStudents(prev => prev.map(s => s.id === editingStudent.id ? { ...s, name, email } : s));
-    setEditingStudent(null);
-    toast({ title: "Aluno Atualizado", description: "As informações foram salvas." });
-  };
 
   const handleDeleteStudent = (studentId: string) => {
     setStudents(prev => prev.filter(s => s.id !== studentId));
@@ -127,56 +182,9 @@ export default function StudentsPage() {
                 <Button variant={view === 'list' ? 'secondary' : 'ghost'} size="icon" onClick={() => setView('list')}><List className="h-5 w-5"/></Button>
                 <Button variant={view === 'grid' ? 'secondary' : 'ghost'} size="icon" onClick={() => setView('grid')}><LayoutGrid className="h-5 w-5"/></Button>
             </div>
-             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button className="w-full sm:w-auto">
-                      <PlusCircle className="mr-2 h-4 w-4" />
-                      Adicionar Aluno
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Adicionar Novo Aluno</DialogTitle>
-                      <DialogDescription>Insira o email do aluno para convidá-lo.</DialogDescription>
-                    </DialogHeader>
-                    <form onSubmit={handleAddStudent} className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="name">Nome Completo</Label>
-                        <Input id="name" name="name" placeholder="Ex: Maria Silva" required />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="email">Email</Label>
-                        <Input id="email" name="email" type="email" placeholder="maria.silva@example.com" required />
-                      </div>
-                      <DialogFooter>
-                        <Button type="submit">Adicionar Aluno</Button>
-                      </DialogFooter>
-                    </form>
-                  </DialogContent>
-                </Dialog>
+             <AddStudentDialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen} onAddStudent={handleAddStudent} />
         </div>
       </div>
-
-       <Dialog open={!!editingStudent} onOpenChange={(isOpen) => !isOpen && setEditingStudent(null)}>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Editar Aluno</DialogTitle>
-                </DialogHeader>
-                <form onSubmit={handleEditStudent} className="space-y-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="name-edit">Nome Completo</Label>
-                        <Input id="name-edit" name="name" defaultValue={editingStudent?.name} required />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="email-edit">Email</Label>
-                        <Input id="email-edit" name="email" type="email" defaultValue={editingStudent?.email} required />
-                    </div>
-                    <DialogFooter>
-                        <Button type="submit">Salvar Alterações</Button>
-                    </DialogFooter>
-                </form>
-            </DialogContent>
-        </Dialog>
 
       {view === 'list' ? (
       <Card>
@@ -224,7 +232,6 @@ export default function StudentsPage() {
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Ações</DropdownMenuLabel>
                         <DropdownMenuItem asChild><Link href={`/dashboard/students/${student.id}/progress`}>Ver Progresso</Link></DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => setEditingStudent(student)}>Editar</DropdownMenuItem>
                         <DropdownMenuItem>Atribuir Treino</DropdownMenuItem>
                          <DropdownMenuSeparator />
                         <AlertDialog>
