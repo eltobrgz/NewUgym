@@ -139,7 +139,7 @@ const AddTransactionDialog = ({ open, onOpenChange, prefilledMemberId, onAdd, pl
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogTrigger asChild>
-                <Button className="w-full">
+                <Button className="w-full sm:w-auto">
                     <PlusCircle className="mr-2 h-4 w-4" />
                     Adicionar Transação
                 </Button>
@@ -343,7 +343,12 @@ export default function FinancePage() {
 
   const filteredTransactions = transactions.filter(t => {
     if (filter === "all") return true;
-    return t.status.toLowerCase() === filter;
+    const statusMap = {
+        paid: "Pago",
+        pending: "Pendente",
+        overdue: "Atrasado"
+    };
+    return t.status === (statusMap[filter as keyof typeof statusMap] || "");
   });
 
   return (
@@ -369,8 +374,8 @@ export default function FinancePage() {
         </div>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-6">
-          <div className="lg:col-span-5 flex flex-col gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 flex flex-col gap-6">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <Card>
                 <CardHeader>
@@ -496,7 +501,7 @@ export default function FinancePage() {
               </CardContent>
             </Card>
         </div>
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-1">
             <Card>
                 <CardHeader>
                     <CardTitle>Planos de Assinatura</CardTitle>
@@ -529,3 +534,5 @@ export default function FinancePage() {
     </div>
   );
 }
+
+    

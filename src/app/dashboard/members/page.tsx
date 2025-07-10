@@ -19,7 +19,6 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
-  CardFooter,
 } from "@/components/ui/card";
 import { MoreHorizontal, PlusCircle, Edit, Trash2 } from "lucide-react";
 import {
@@ -68,20 +67,18 @@ const AddMemberDialog = ({ open, onOpenChange, onSubmit }: { open: boolean, onOp
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Adicionar Novo Membro</DialogTitle>
-                <DialogDescription>Preencha os detalhes do membro abaixo.</DialogDescription>
+                <DialogDescription>
+                  Insira o email do membro para convidá-lo para a academia.
+                </DialogDescription>
               </DialogHeader>
               <form onSubmit={onSubmit} className="space-y-4">
-                <div className="space-y-2">
+                 <div className="space-y-2">
                   <Label htmlFor="name">Nome Completo</Label>
-                  <Input id="name" name="name" required />
+                  <Input id="name" name="name" placeholder="Ex: João da Silva" required />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
-                  <Input id="email" name="email" type="email" required />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="plan">Plano de Membro</Label>
-                  <Input id="plan" name="plan" required />
+                  <Input id="email" name="email" type="email" placeholder="joao.silva@example.com" required />
                 </div>
                 <DialogFooter>
                   <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
@@ -107,11 +104,11 @@ export default function MembersPage() {
     const formData = new FormData(e.currentTarget);
     const name = formData.get("name") as string;
     const email = formData.get("email") as string;
-    const plan = formData.get("plan") as string;
+    const plan = formData.get("plan") as string; // This might be removed if plan assignment happens elsewhere
 
     if (memberId) {
       // Editing
-      setMembers(members.map(m => m.id === memberId ? { ...m, name, email, plan } : m));
+      setMembers(members.map(m => m.id === memberId ? { ...m, name, email } : m));
       toast({ title: "Membro Atualizado", description: "As informações do membro foram salvas." });
       setEditingMember(null);
     } else {
@@ -120,14 +117,14 @@ export default function MembersPage() {
         id: `mem-${Date.now()}`,
         name,
         email,
-        plan,
+        plan: "Nenhum", // Default plan, to be assigned
         avatar: "https://placehold.co/100x100.png",
         initials: name.split(" ").map(n => n[0]).join("").toUpperCase(),
         status: "Ativo",
         joinDate: new Date().toISOString().split("T")[0],
       };
       setMembers([newMember, ...members]);
-      toast({ title: "Membro Adicionado!", description: `${name} foi adicionado.` });
+      toast({ title: "Membro Adicionado!", description: `${name} foi adicionado. Agora você pode registrar o primeiro pagamento.` });
       setIsAddDialogOpen(false);
       setNewlyAddedMember(newMember); // Trigger the payment dialog
     }
@@ -161,10 +158,6 @@ export default function MembersPage() {
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input id="email" name="email" type="email" defaultValue={editingMember?.email} required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="plan">Plano de Membro</Label>
-              <Input id="plan" name="plan" defaultValue={editingMember?.plan} required />
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setEditingMember(null)}>Cancelar</Button>
@@ -277,11 +270,10 @@ export default function MembersPage() {
               </TableBody>
             </Table>
           </CardContent>
-           <CardFooter className="border-t p-4 justify-center">
-                <AddMemberDialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen} onSubmit={handleFormSubmit} />
-           </CardFooter>
         </Card>
       </div>
     </>
   );
 }
+
+    

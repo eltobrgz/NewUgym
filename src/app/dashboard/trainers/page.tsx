@@ -94,7 +94,7 @@ export default function TrainersPage() {
         };
         setTrainers(prev => [newTrainer, ...prev]);
         setIsAddDialogOpen(false);
-        toast({ title: "Treinador Adicionado!", description: `${name} foi adicionado à equipe.` });
+        toast({ title: "Treinador Convidado!", description: `Um convite foi enviado para ${email}.` });
     };
 
     const handleEditTrainer = (e: React.FormEvent<HTMLFormElement>) => {
@@ -134,16 +134,16 @@ export default function TrainersPage() {
                   <DialogContent>
                     <DialogHeader>
                       <DialogTitle>Adicionar Novo Personal</DialogTitle>
-                      <DialogDescription>Preencha os detalhes para adicionar um novo treinador ao sistema.</DialogDescription>
+                      <DialogDescription>Insira o email para convidar um novo personal para a academia.</DialogDescription>
                     </DialogHeader>
                     <form onSubmit={handleAddTrainer} className="space-y-4">
                       <div className="space-y-2">
                         <Label htmlFor="name">Nome Completo</Label>
-                        <Input id="name" name="name" required />
+                        <Input id="name" name="name" placeholder="Ex: Carlos Souza" required />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="email">Email</Label>
-                        <Input id="email" name="email" type="email" required />
+                        <Input id="email" name="email" type="email" placeholder="carlos.souza@example.com" required />
                       </div>
                       <DialogFooter>
                         <Button type="submit">Adicionar Personal</Button>
@@ -269,3 +269,5 @@ export default function TrainersPage() {
         </div>
     );
 }
+
+    

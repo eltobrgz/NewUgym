@@ -96,7 +96,7 @@ export default function StudentsPage() {
     };
     setStudents(prev => [newStudent, ...prev]);
     setIsAddDialogOpen(false);
-    toast({ title: "Aluno Adicionado!", description: `${name} foi adicionado à sua lista.` });
+    toast({ title: "Aluno Adicionado!", description: `${name} foi adicionado à sua lista. Agora você pode atribuir um treino.` });
   };
 
   const handleEditStudent = (e: React.FormEvent<HTMLFormElement>) => {
@@ -137,16 +137,16 @@ export default function StudentsPage() {
                   <DialogContent>
                     <DialogHeader>
                       <DialogTitle>Adicionar Novo Aluno</DialogTitle>
-                      <DialogDescription>Preencha os detalhes para adicionar um novo aluno.</DialogDescription>
+                      <DialogDescription>Insira o email do aluno para convidá-lo.</DialogDescription>
                     </DialogHeader>
                     <form onSubmit={handleAddStudent} className="space-y-4">
                       <div className="space-y-2">
                         <Label htmlFor="name">Nome Completo</Label>
-                        <Input id="name" name="name" required />
+                        <Input id="name" name="name" placeholder="Ex: Maria Silva" required />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="email">Email</Label>
-                        <Input id="email" name="email" type="email" required />
+                        <Input id="email" name="email" type="email" placeholder="maria.silva@example.com" required />
                       </div>
                       <DialogFooter>
                         <Button type="submit">Adicionar Aluno</Button>
@@ -277,3 +277,5 @@ export default function StudentsPage() {
     </div>
   );
 }
+
+    
