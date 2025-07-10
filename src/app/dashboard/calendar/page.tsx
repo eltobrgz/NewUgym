@@ -43,8 +43,8 @@ export default function CalendarPage() {
     addEvent({ title, date: dateStr, time, type, description });
 
     toast({
-        title: "Event Added!",
-        description: "The new event has been added to the calendar.",
+        title: "Evento Adicionado!",
+        description: "O novo evento foi adicionado ao calendário.",
     });
     setAddModalOpen(false);
     e.currentTarget.reset();
@@ -65,53 +65,53 @@ export default function CalendarPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-        <h1 className="text-3xl font-bold tracking-tight">Event Calendar</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Calendário de Eventos</h1>
         <Dialog open={isAddModalOpen} onOpenChange={setAddModalOpen}>
             <DialogTrigger asChild>
                 <Button className="w-full sm:w-auto">
                     <PlusCircle className="mr-2 h-4 w-4" />
-                    Add New Event
+                    Adicionar Novo Evento
                 </Button>
             </DialogTrigger>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Add New Event</DialogTitle>
-                    <DialogDescription>Fill in the details for the new event.</DialogDescription>
+                    <DialogTitle>Adicionar Novo Evento</DialogTitle>
+                    <DialogDescription>Preencha os detalhes para o novo evento.</DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleAddEvent} className="space-y-4">
                     <div className="space-y-2">
-                        <Label htmlFor="event-title">Event Title</Label>
-                        <Input id="event-title" name="event-title" placeholder="E.g., Morning Yoga" required />
+                        <Label htmlFor="event-title">Título do Evento</Label>
+                        <Input id="event-title" name="event-title" placeholder="Ex: Aula de Yoga" required />
                     </div>
                      <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                            <Label htmlFor="event-date">Date</Label>
+                            <Label htmlFor="event-date">Data</Label>
                             <Input id="event-date" name="event-date" type="date" required />
                         </div>
                          <div className="space-y-2">
-                            <Label htmlFor="event-time">Time</Label>
+                            <Label htmlFor="event-time">Hora</Label>
                             <Input id="event-time" name="event-time" type="time" required />
                         </div>
                      </div>
                      <div className="space-y-2">
-                        <Label htmlFor="event-type">Type</Label>
+                        <Label htmlFor="event-type">Tipo</Label>
                          <Select name="event-type" required>
                             <SelectTrigger id="event-type">
-                                <SelectValue placeholder="Select event type" />
+                                <SelectValue placeholder="Selecione o tipo" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="class">Class</SelectItem>
-                                <SelectItem value="event">Event</SelectItem>
-                                <SelectItem value="seminar">Seminar</SelectItem>
+                                <SelectItem value="class">Aula</SelectItem>
+                                <SelectItem value="event">Evento</SelectItem>
+                                <SelectItem value="seminar">Seminário</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
                      <div className="space-y-2">
-                        <Label htmlFor="event-description">Description</Label>
-                        <Input id="event-description" name="event-description" placeholder="A brief description of the event."/>
+                        <Label htmlFor="event-description">Descrição</Label>
+                        <Input id="event-description" name="event-description" placeholder="Uma breve descrição do evento."/>
                     </div>
                     <DialogFooter>
-                        <Button type="submit">Add Event</Button>
+                        <Button type="submit">Adicionar Evento</Button>
                     </DialogFooter>
                 </form>
             </DialogContent>
@@ -164,10 +164,10 @@ export default function CalendarPage() {
         <Card>
           <CardHeader>
             <CardTitle>
-              Events for {date ? date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric'}) : "..."}
+              Eventos para {date ? date.toLocaleDateString('pt-BR', { month: 'long', day: 'numeric', year: 'numeric'}) : "..."}
             </CardTitle>
             <CardDescription>
-              {selectedDayEvents.length > 0 ? `You have ${selectedDayEvents.length} event(s) today.` : "No events scheduled for this day."}
+              {selectedDayEvents.length > 0 ? `Você tem ${selectedDayEvents.length} evento(s) hoje.` : "Nenhum evento agendado para este dia."}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -187,7 +187,7 @@ export default function CalendarPage() {
               </div>
             ) : (
               <div className="text-center text-sm text-muted-foreground py-8">
-                <p>Select a date with a colored dot to see event details.</p>
+                <p>Selecione uma data com um ponto colorido para ver os detalhes do evento.</p>
               </div>
             )}
           </CardContent>

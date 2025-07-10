@@ -15,27 +15,27 @@ import { useUserRole } from "@/contexts/user-role-context";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { cn } from "@/lib/utils";
 
 // --- Data for Student Dashboard ---
 const studentMetrics = [
-  { title: "Workouts Completed", value: "12/20", icon: Dumbbell, change: "+2 this week" },
-  { title: "Active Streak", value: "5 days", icon: Activity, change: "Keep it up!" },
-  { title: "Upcoming Events", value: "3", icon: Calendar, change: "Yoga class tomorrow" },
-  { title: "Pending Tasks", value: "2", icon: ListChecks, change: "Leg day plan" }
+  { title: "Treinos Concluídos", value: "12/20", icon: Dumbbell, change: "+2 esta semana" },
+  { title: "Série Ativa", value: "5 dias", icon: Activity, change: "Continue assim!" },
+  { title: "Próximos Eventos", value: "3", icon: Calendar, change: "Aula de Yoga amanhã" },
+  { title: "Tarefas Pendentes", value: "2", icon: ListChecks, change: "Plano de pernas" }
 ];
 
 const studentWorkoutData = [
-  { day: 'Mon', minutes: 60 }, { day: 'Tue', minutes: 45 }, { day: 'Wed', minutes: 75 },
-  { day: 'Thu', minutes: 30 }, { day: 'Fri', minutes: 90 }, { day: 'Sat', minutes: 0 }, { day: 'Sun', minutes: 20 },
+  { day: 'Seg', minutes: 60 }, { day: 'Ter', minutes: 45 }, { day: 'Qua', minutes: 75 },
+  { day: 'Qui', minutes: 30 }, { day: 'Sex', minutes: 90 }, { day: 'Sáb', minutes: 0 }, { day: 'Dom', minutes: 20 },
 ];
-const studentChartConfig = { minutes: { label: 'Minutes', color: 'hsl(var(--primary))' } };
+const studentChartConfig = { minutes: { label: 'Minutos', color: 'hsl(var(--primary))' } };
 
 const studentRecentActivity = [
-    { type: 'workout', description: 'Completed Leg Day workout', time: '2h ago', icon: Dumbbell, status: 'done' },
-    { type: 'task', description: 'Updated meal plan', time: '5h ago', icon: ListChecks, status: 'done' },
-    { type: 'event', description: 'Joined the "Summer Shred" challenge', time: '1d ago', icon: Calendar, status: 'joined' },
+    { type: 'workout', description: 'Concluiu o treino de Pernas', time: '2h atrás', icon: Dumbbell, status: 'feito' },
+    { type: 'task', description: 'Atualizou o plano de refeições', time: '5h atrás', icon: ListChecks, status: 'feito' },
+    { type: 'event', description: 'Inscreveu-se no desafio "Verão Total"', time: '1d atrás', icon: Calendar, status: 'inscrito' },
 ];
 
 const StudentDashboard = () => (
@@ -57,8 +57,8 @@ const StudentDashboard = () => (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
             <Card className="col-span-4">
                 <CardHeader>
-                    <CardTitle>Workout Duration</CardTitle>
-                    <CardDescription>Your workout minutes for the last 7 days.</CardDescription>
+                    <CardTitle>Duração dos Treinos</CardTitle>
+                    <CardDescription>Seus minutos de treino nos últimos 7 dias.</CardDescription>
                 </CardHeader>
                 <CardContent className="pl-2">
                     <ChartContainer config={studentChartConfig} className="h-[250px] w-full">
@@ -73,8 +73,8 @@ const StudentDashboard = () => (
             </Card>
             <Card className="col-span-4 lg:col-span-3">
                 <CardHeader>
-                    <CardTitle>Recent Activity</CardTitle>
-                    <CardDescription>A log of your recent actions.</CardDescription>
+                    <CardTitle>Atividade Recente</CardTitle>
+                    <CardDescription>Um registro de suas ações recentes.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="space-y-4">
@@ -85,7 +85,7 @@ const StudentDashboard = () => (
                                     <p className="text-sm font-medium">{activity.description}</p>
                                     <p className="text-xs text-muted-foreground">{activity.time}</p>
                                 </div>
-                                <Badge variant={activity.status === 'joined' ? 'default' : 'secondary'} className={cn(activity.status === 'done' && 'bg-green-500/10 text-green-400 border-green-500/20')}>{activity.status}</Badge>
+                                <Badge variant={activity.status === 'inscrito' ? 'default' : 'secondary'} className={cn(activity.status === 'feito' && 'bg-green-500/10 text-green-400 border-green-500/20')}>{activity.status}</Badge>
                             </div>
                         ))}
                     </div>
@@ -97,10 +97,10 @@ const StudentDashboard = () => (
 
 // --- Data for Trainer Dashboard ---
 const trainerMetrics = [
-    { title: "Active Students", value: "15", icon: Users, change: "+1 new this month" },
-    { title: "Workouts Assigned", value: "45", icon: Dumbbell, change: "5 pending review" },
-    { title: "Upcoming Sessions", value: "8", icon: Calendar, change: "2 today" },
-    { title: "Overdue Tasks", value: "1", icon: AlertTriangle, change: "Follow up with Jane" }
+    { title: "Alunos Ativos", value: "15", icon: Users, change: "+1 novo este mês" },
+    { title: "Treinos Atribuídos", value: "45", icon: Dumbbell, change: "5 pendentes de revisão" },
+    { title: "Sessões Próximas", value: "8", icon: Calendar, change: "2 hoje" },
+    { title: "Tarefas Atrasadas", value: "1", icon: AlertTriangle, change: "Follow-up com a Joana" }
 ];
 
 const studentEngagementData = [
@@ -112,8 +112,8 @@ const studentEngagementData = [
 ];
 
 const studentsNeedingAttention = [
-    { name: 'David Chen', reason: 'Low workout progress (40%)', avatar: 'https://placehold.co/100x100.png', initials: 'DC', id: 'david-chen' },
-    { name: 'Sofia Davis', reason: 'Inactive for 15 days', avatar: 'https://placehold.co/100x100.png', initials: 'SD', id: 'sofia-davis'},
+    { name: 'David Chen', reason: 'Baixo progresso de treino (40%)', avatar: 'https://placehold.co/100x100.png', initials: 'DC', id: 'david-chen' },
+    { name: 'Sofia Davis', reason: 'Inativa há 15 dias', avatar: 'https://placehold.co/100x100.png', initials: 'SD', id: 'sofia-davis'},
 ]
 
 const TrainerDashboard = () => (
@@ -135,8 +135,8 @@ const TrainerDashboard = () => (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
             <Card className="col-span-4">
                 <CardHeader>
-                    <CardTitle>Student Engagement</CardTitle>
-                    <CardDescription>Workout progress vs. days since last active.</CardDescription>
+                    <CardTitle>Engajamento dos Alunos</CardTitle>
+                    <CardDescription>Progresso de treino vs. dias desde a última atividade.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <ResponsiveContainer width="100%" height={250}>
@@ -145,16 +145,16 @@ const TrainerDashboard = () => (
                             <XAxis dataKey="student" />
                             <Tooltip content={<ChartTooltipContent indicator="dot" />} />
                             <Legend />
-                            <Bar dataKey="progress" name="Progress (%)" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                            <Bar dataKey="lastActive" name="Last Active (Days)" fill="hsl(var(--secondary))" radius={[4, 4, 0, 0]} />
+                            <Bar dataKey="progress" name="Progresso (%)" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                            <Bar dataKey="lastActive" name="Últ. Atividade (Dias)" fill="hsl(var(--secondary))" radius={[4, 4, 0, 0]} />
                         </BarChart>
                     </ResponsiveContainer>
                 </CardContent>
             </Card>
             <Card className="col-span-4 lg:col-span-3">
                 <CardHeader>
-                    <CardTitle>Students Needing Attention</CardTitle>
-                    <CardDescription>Students with low activity or progress.</CardDescription>
+                    <CardTitle>Alunos Precisando de Atenção</CardTitle>
+                    <CardDescription>Alunos com baixa atividade ou progresso.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="space-y-4">
@@ -169,7 +169,7 @@ const TrainerDashboard = () => (
                                     <p className="text-sm text-muted-foreground">{student.reason}</p>
                                 </div>
                                 <Button variant="outline" size="sm" asChild>
-                                    <Link href={`/dashboard/students/${student.id}/progress`}>View</Link>
+                                    <Link href={`/dashboard/students/${student.id}/progress`}>Ver</Link>
                                 </Button>
                            </div>
                         ))}
@@ -183,21 +183,21 @@ const TrainerDashboard = () => (
 
 // --- Data for Gym Dashboard ---
 const gymMetrics = [
-    { title: "Total Members", value: "258", icon: Users, change: <span className="text-green-500 flex items-center"><ArrowUp className="h-4 w-4"/>+12 this month</span> },
-    { title: "Active Trainers", value: "12", icon: UserCheck, change: "All active" },
-    { title: "Classes Today", value: "6", icon: Calendar, change: "Spin class at 6 PM" },
-    { title: "Facility Tasks", value: "3", icon: ListChecks, change: "Check equipment" }
+    { title: "Total de Membros", value: "258", icon: Users, change: <span className="text-green-500 flex items-center"><ArrowUp className="h-4 w-4"/>+12 este mês</span> },
+    { title: "Treinadores Ativos", value: "12", icon: UserCheck, change: "Todos ativos" },
+    { title: "Aulas Hoje", value: "6", icon: Calendar, change: "Aula de Spinning às 18h" },
+    { title: "Manutenção", value: "3", icon: ListChecks, change: "Verificar equipamentos" }
 ];
 
 const memberGrowthData = [
-  { month: 'Jan', new: 15 }, { month: 'Feb', new: 22 }, { month: 'Mar', new: 18 },
-  { month: 'Apr', new: 25 }, { month: 'May', new: 30 }, { month: 'Jun', new: 28 },
+  { month: 'Jan', new: 15 }, { month: 'Fev', new: 22 }, { month: 'Mar', new: 18 },
+  { month: 'Abr', new: 25 }, { month: 'Mai', new: 30 }, { month: 'Jun', new: 28 },
 ];
-const gymChartConfig = { new: { label: 'New Members', color: 'hsl(var(--primary))' } };
+const gymChartConfig = { new: { label: 'Novos Membros', color: 'hsl(var(--primary))' } };
 
 const gymRecentAnnouncements = [
-    { title: 'Summer Shred Challenge Starts Next Week!', icon: Megaphone, date: '2 days ago' },
-    { title: 'New Yoga mats have arrived.', icon: FileText, date: '4 days ago' },
+    { title: 'Desafio Verão Total começa na próxima semana!', icon: Megaphone, date: '2 dias atrás' },
+    { title: 'Novos tapetes de Yoga chegaram.', icon: FileText, date: '4 dias atrás' },
 ]
 
 const GymDashboard = () => (
@@ -219,8 +219,8 @@ const GymDashboard = () => (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
             <Card className="col-span-4">
                 <CardHeader>
-                    <CardTitle>New Member Growth</CardTitle>
-                    <CardDescription>Monthly new member sign-ups.</CardDescription>
+                    <CardTitle>Crescimento de Novos Membros</CardTitle>
+                    <CardDescription>Novas inscrições de membros mensalmente.</CardDescription>
                 </CardHeader>
                 <CardContent className="pl-2">
                      <ChartContainer config={gymChartConfig} className="h-[250px] w-full">
@@ -235,8 +235,8 @@ const GymDashboard = () => (
             </Card>
             <Card className="col-span-4 lg:col-span-3">
                 <CardHeader>
-                    <CardTitle>Recent Announcements & Events</CardTitle>
-                    <CardDescription>Latest updates for your members.</CardDescription>
+                    <CardTitle>Anúncios e Eventos Recentes</CardTitle>
+                    <CardDescription>Últimas atualizações para seus membros.</CardDescription>
                 </CardHeader>
                 <CardContent>
                      <div className="space-y-4">
@@ -252,11 +252,11 @@ const GymDashboard = () => (
                          <div className="flex items-center gap-4">
                                 <div className="bg-secondary p-2 rounded-full"><Calendar className="h-5 w-5 text-muted-foreground" /></div>
                                 <div className="flex-1">
-                                    <p className="text-sm font-medium">Upcoming: Nutrition Seminar</p>
-                                    <p className="text-xs text-muted-foreground">In 3 days</p>
+                                    <p className="text-sm font-medium">Próximo: Seminário de Nutrição</p>
+                                    <p className="text-xs text-muted-foreground">Em 3 dias</p>
                                 </div>
                                 <Button variant="outline" size="sm" asChild>
-                                    <Link href="/dashboard/calendar">View Calendar</Link>
+                                    <Link href="/dashboard/calendar">Ver Calendário</Link>
                                 </Button>
                            </div>
                     </div>
@@ -308,7 +308,7 @@ export default function DashboardPage() {
     <div className="flex flex-col gap-6">
       <WelcomeAlert />
       <h1 className="text-3xl font-bold tracking-tight">
-        {userRole} Dashboard
+        Dashboard do {userRole === 'Student' ? 'Aluno' : userRole === 'Trainer' ? 'Personal' : 'Gym'}
       </h1>
       {renderDashboardByRole(userRole)}
     </div>

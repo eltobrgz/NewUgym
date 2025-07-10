@@ -14,12 +14,12 @@ export type Task = {
 };
 
 const initialTasks: Task[] = [
-  { id: "TASK-8782", title: "Plan next month's workout cycle", status: "In Progress", assignee: "Sarah Coach", dueDate: "2024-08-10" },
-  { id: "TASK-7878", title: "Follow up with new student", status: "To Do", assignee: "Sarah Coach", dueDate: "2024-08-05" },
-  { id: "TASK-4582", title: "Renew gym membership", status: "Done", assignee: "Alex Robinson", dueDate: "2024-07-30" },
-  { id: "TASK-1245", title: "Update client progress charts", status: "Canceled", assignee: "Sarah Coach", dueDate: "2024-08-02" },
-  { id: "TASK-9874", title: "Prepare for yoga seminar", status: "To Do", assignee: "Jane", dueDate: "2024-08-14" },
-  { id: "TASK-3456", title: "Clean and check squat rack", status: "Done", assignee: "FitZone Admin", dueDate: "2024-08-01" },
+  { id: "TASK-8782", title: "Planejar o ciclo de treino do próximo mês", status: "In Progress", assignee: "Sarah Coach", dueDate: "2024-08-10" },
+  { id: "TASK-7878", title: "Fazer follow-up com novo aluno", status: "To Do", assignee: "Sarah Coach", dueDate: "2024-08-05" },
+  { id: "TASK-4582", title: "Renovar a assinatura da academia", status: "Done", assignee: "Alex Robinson", dueDate: "2024-07-30" },
+  { id: "TASK-1245", title: "Atualizar gráficos de progresso dos clientes", status: "Canceled", assignee: "Sarah Coach", dueDate: "2024-08-02" },
+  { id: "TASK-9874", title: "Preparar para o seminário de yoga", status: "To Do", assignee: "Jane", dueDate: "2024-08-14" },
+  { id: "TASK-3456", title: "Limpar e verificar o rack de agachamento", status: "Done", assignee: "FitZone Admin", dueDate: "2024-08-01" },
 ];
 
 

@@ -32,11 +32,11 @@ import { useUserRole } from "@/contexts/user-role-context";
 import { TasksContext, Task, TaskStatus } from "@/contexts/tasks-context";
 
 
-const statusVariant: { [key in TaskStatus]: "default" | "secondary" | "destructive" | "outline" } = {
-  "In Progress": "secondary",
-  "To Do": "outline",
-  "Done": "default",
-  "Canceled": "destructive",
+const statusVariant: { [key in TaskStatus]: { variant: "default" | "secondary" | "destructive" | "outline", text: string }} = {
+  "In Progress": { variant: "secondary", text: "Em Progresso" },
+  "To Do": { variant: "outline", text: "A Fazer" },
+  "Done": { variant: "default", text: "Feito" },
+  "Canceled": { variant: "destructive", text: "Cancelado" },
 };
 
 export default function TasksPage() {
@@ -56,12 +56,12 @@ export default function TasksPage() {
     if (editingTask) {
       // Edit task
       updateTask(editingTask.id, { title, assignee, dueDate });
-      toast({ title: "Task Updated" });
+      toast({ title: "Tarefa Atualizada" });
       setEditingTask(null);
     } else {
       // Add new task
       addTask({ title, assignee, dueDate, status: "To Do" });
-      toast({ title: "Task Added" });
+      toast({ title: "Tarefa Adicionada" });
     }
     setIsDialogOpen(false);
   };
@@ -73,13 +73,13 @@ export default function TasksPage() {
 
   const handleDelete = (taskId: string) => {
     deleteTask(taskId);
-    toast({ title: "Task Deleted", variant: "destructive" });
+    toast({ title: "Tarefa Excluída", variant: "destructive" });
   };
 
   const filteredTasks = tasks.filter(task => {
     if (userRole === 'Student') {
-        // Students see tasks assigned to them (by name or "You")
-        return task.assignee === user.name || task.assignee === 'You';
+        // Students see tasks assigned to them (by name or "Você")
+        return task.assignee === user.name || task.assignee === 'Você';
     }
     // Trainers and Gyms see all tasks
     return true;
@@ -90,25 +90,25 @@ export default function TasksPage() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editingTask ? 'Edit Task' : 'Add New Task'}</DialogTitle>
-            <DialogDescription>Fill in the details below to create a new task.</DialogDescription>
+            <DialogTitle>{editingTask ? 'Editar Tarefa' : 'Adicionar Nova Tarefa'}</DialogTitle>
+            <DialogDescription>Preencha os detalhes abaixo para criar uma nova tarefa.</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleFormSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="title">Title</Label>
+              <Label htmlFor="title">Título</Label>
               <Input id="title" name="title" defaultValue={editingTask?.title} required />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="assignee">Assignee</Label>
+              <Label htmlFor="assignee">Responsável</Label>
               <Input id="assignee" name="assignee" defaultValue={editingTask?.assignee} required />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="dueDate">Due Date</Label>
+              <Label htmlFor="dueDate">Data de Vencimento</Label>
               <Input id="dueDate" name="dueDate" type="date" defaultValue={editingTask?.dueDate} required />
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-              <Button type="submit">{editingTask ? 'Save Changes' : 'Add Task'}</Button>
+              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancelar</Button>
+              <Button type="submit">{editingTask ? 'Salvar Alterações' : 'Adicionar Tarefa'}</Button>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -116,31 +116,31 @@ export default function TasksPage() {
 
       <div className="flex flex-col gap-6">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-          <h1 className="text-3xl font-bold tracking-tight">Tasks</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Tarefas</h1>
           <Button onClick={() => handleOpenDialog()} className="w-full sm:w-auto">
             <PlusCircle className="mr-2 h-4 w-4" />
-            Add New Task
+            Adicionar Nova Tarefa
           </Button>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>Task List</CardTitle>
-            <CardDescription>Manage and track all assigned tasks.</CardDescription>
+            <CardTitle>Lista de Tarefas</CardTitle>
+            <CardDescription>Gerencie e acompanhe todas as tarefas atribuídas.</CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[50px]">
-                    <span className="sr-only">Complete</span>
+                    <span className="sr-only">Concluir</span>
                   </TableHead>
-                  <TableHead>Title</TableHead>
+                  <TableHead>Título</TableHead>
                   <TableHead className="hidden md:table-cell">Status</TableHead>
-                  <TableHead className="hidden md:table-cell">Assignee</TableHead>
-                  <TableHead className="hidden sm:table-cell">Due Date</TableHead>
+                  <TableHead className="hidden md:table-cell">Responsável</TableHead>
+                  <TableHead className="hidden sm:table-cell">Vencimento</TableHead>
                   <TableHead className="w-[50px]">
-                    <span className="sr-only">Actions</span>
+                    <span className="sr-only">Ações</span>
                   </TableHead>
                 </TableRow>
               </TableHeader>
@@ -149,15 +149,15 @@ export default function TasksPage() {
                   <TableRow key={task.id} className={task.status === 'Done' ? 'text-muted-foreground line-through' : ''}>
                     <TableCell>
                       <Checkbox 
-                        aria-label={`Select task ${task.id}`} 
+                        aria-label={`Selecionar tarefa ${task.id}`} 
                         checked={task.status === 'Done'}
                         onCheckedChange={(checked) => toggleTaskStatus(task.id, Boolean(checked))}
                       />
                     </TableCell>
                     <TableCell className="font-medium">{task.title}</TableCell>
                     <TableCell className="hidden md:table-cell">
-                      <Badge variant={statusVariant[task.status] || "default"} className="capitalize">
-                        {task.status}
+                      <Badge variant={statusVariant[task.status]?.variant || "default"} className="capitalize">
+                        {statusVariant[task.status].text}
                       </Badge>
                     </TableCell>
                     <TableCell className="hidden md:table-cell">{task.assignee}</TableCell>
@@ -166,30 +166,30 @@ export default function TasksPage() {
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" className="h-8 w-8 p-0">
-                            <span className="sr-only">Open menu</span>
+                            <span className="sr-only">Abrir menu</span>
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          <DropdownMenuLabel>Ações</DropdownMenuLabel>
                           <DropdownMenuItem onSelect={() => handleOpenDialog(task)}>
-                            <Edit className="mr-2 h-4 w-4"/>Edit Task
+                            <Edit className="mr-2 h-4 w-4"/>Editar Tarefa
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
                                 <DropdownMenuItem onSelect={e => e.preventDefault()} className="text-destructive">
-                                    <Trash2 className="mr-2 h-4 w-4"/>Delete Task
+                                    <Trash2 className="mr-2 h-4 w-4"/>Excluir Tarefa
                                 </DropdownMenuItem>
                             </AlertDialogTrigger>
                             <AlertDialogContent>
                                 <AlertDialogHeader>
-                                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                    <AlertDialogDescription>This action will permanently delete this task.</AlertDialogDescription>
+                                    <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+                                    <AlertDialogDescription>Esta ação excluirá permanentemente esta tarefa.</AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                    <AlertDialogAction onClick={() => handleDelete(task.id)}>Confirm</AlertDialogAction>
+                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => handleDelete(task.id)}>Confirmar</AlertDialogAction>
                                 </AlertDialogFooter>
                             </AlertDialogContent>
                           </AlertDialog>

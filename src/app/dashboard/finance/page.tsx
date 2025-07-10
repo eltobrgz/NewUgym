@@ -49,18 +49,18 @@ type Transaction = {
 };
 
 const initialTransactions: Transaction[] = [
-  { id: "TRN-001", member: "Olivia Martin", amount: 99.99, status: "Paid", date: "2024-07-28", plan: "Pro Annual" },
-  { id: "TRN-002", member: "Jackson Lee", amount: 29.99, status: "Pending", date: "2024-08-01", plan: "Pro Monthly" },
-  { id: "TRN-003", member: "Isabella Nguyen", amount: 15.00, status: "Overdue", date: "2024-07-10", plan: "Basic Monthly" },
-  { id: "TRN-004", member: "William Kim", amount: 99.99, status: "Paid", date: "2024-07-25", plan: "Pro Annual" },
-  { id: "TRN-005", member: "Sofia Davis", amount: 29.99, status: "Paid", date: "2024-07-18", plan: "Pro Monthly" },
-  { id: "TRN-006", member: "David Chen", amount: 29.99, status: "Pending", date: "2024-08-02", plan: "Pro Monthly" },
+  { id: "TRN-001", member: "Olivia Martin", amount: 99.99, status: "Paid", date: "2024-07-28", plan: "Pro Anual" },
+  { id: "TRN-002", member: "Jackson Lee", amount: 29.99, status: "Pending", date: "2024-08-01", plan: "Pro Mensal" },
+  { id: "TRN-003", member: "Isabella Nguyen", amount: 15.00, status: "Overdue", date: "2024-07-10", plan: "Básico Mensal" },
+  { id: "TRN-004", member: "William Kim", amount: 99.99, status: "Paid", date: "2024-07-25", plan: "Pro Anual" },
+  { id: "TRN-005", member: "Sofia Davis", amount: 29.99, status: "Paid", date: "2024-07-18", plan: "Pro Mensal" },
+  { id: "TRN-006", member: "David Chen", amount: 29.99, status: "Pending", date: "2024-08-02", plan: "Pro Mensal" },
 ];
 
-const statusStyles: { [key in TransactionStatus]: { variant: "default" | "secondary" | "destructive" | "outline", className?: string }} = {
-  "Paid": { variant: "secondary", className: "bg-green-500/10 text-green-400 border-green-500/20" },
-  "Pending": { variant: "secondary", className: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20" },
-  "Overdue": { variant: "destructive" },
+const statusStyles: { [key in TransactionStatus]: { variant: "default" | "secondary" | "destructive" | "outline", className?: string, text: string }} = {
+  "Paid": { variant: "secondary", className: "bg-green-500/10 text-green-400 border-green-500/20", text: "Pago" },
+  "Pending": { variant: "secondary", className: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20", text: "Pendente" },
+  "Overdue": { variant: "destructive", text: "Atrasado" },
 };
 
 export default function FinancePage() {
@@ -84,18 +84,18 @@ export default function FinancePage() {
 
   const handleStatusChange = (id: string, newStatus: TransactionStatus) => {
     setTransactions(prev => prev.map(t => t.id === id ? { ...t, status: newStatus } : t));
-    toast({ title: "Status Updated", description: `Transaction ${id} has been marked as ${newStatus}.` });
+    toast({ title: "Status Atualizado", description: `A transação ${id} foi marcada como ${newStatus}.` });
   };
 
   const handleCancelTransaction = (id: string) => {
     setTransactions(prev => prev.filter(t => t.id !== id));
-    toast({ title: "Transaction Canceled", description: `Transaction ${id} has been removed.`, variant: "destructive" });
+    toast({ title: "Transação Cancelada", description: `A transação ${id} foi removida.`, variant: "destructive" });
   };
   
-  const handleExport = (type: 'CSV' | 'Report') => {
+  const handleExport = (type: 'CSV' | 'Relatório') => {
       toast({
-          title: "Export Started",
-          description: `Your ${type} file is being generated and will be downloaded shortly.`
+          title: "Exportação Iniciada",
+          description: `Seu arquivo ${type} está sendo gerado e será baixado em breve.`
       })
   }
 
@@ -113,7 +113,7 @@ export default function FinancePage() {
     }
 
     setTransactions(prev => [newTransaction, ...prev]);
-    toast({ title: "Transaction Added", description: `New transaction for ${newTransaction.member} has been created.` });
+    toast({ title: "Transação Adicionada", description: `Nova transação para ${newTransaction.member} foi criada.` });
     setIsAddDialogOpen(false);
   };
 
@@ -140,27 +140,27 @@ export default function FinancePage() {
                 </DialogTrigger>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Add New Transaction</DialogTitle>
-                        <DialogDescription>Fill in the details to create a new transaction record.</DialogDescription>
+                        <DialogTitle>Adicionar Nova Transação</DialogTitle>
+                        <DialogDescription>Preencha os detalhes para criar um novo registro de transação.</DialogDescription>
                     </DialogHeader>
                     <form onSubmit={handleAddTransaction} className="space-y-4">
                          <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <Label htmlFor="member">Member</Label>
+                                <Label htmlFor="member">Membro</Label>
                                 <Input id="member" name="member" required />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="plan">Plan</Label>
+                                <Label htmlFor="plan">Plano</Label>
                                 <Input id="plan" name="plan" required />
                             </div>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                            <div className="space-y-2">
-                                <Label htmlFor="amount">Amount (R$)</Label>
+                                <Label htmlFor="amount">Valor (R$)</Label>
                                 <Input id="amount" name="amount" type="number" step="0.01" required />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="date">Date</Label>
+                                <Label htmlFor="date">Data</Label>
                                 <Input id="date" name="date" type="date" defaultValue={new Date().toISOString().split("T")[0]} required />
                             </div>
                         </div>
@@ -168,17 +168,17 @@ export default function FinancePage() {
                             <Label htmlFor="status">Status</Label>
                             <Select name="status" required defaultValue="Paid">
                                 <SelectTrigger id="status">
-                                    <SelectValue placeholder="Select status" />
+                                    <SelectValue placeholder="Selecione o status" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="Paid">Paid</SelectItem>
-                                    <SelectItem value="Pending">Pending</SelectItem>
-                                    <SelectItem value="Overdue">Overdue</SelectItem>
+                                    <SelectItem value="Paid">Pago</SelectItem>
+                                    <SelectItem value="Pending">Pendente</SelectItem>
+                                    <SelectItem value="Overdue">Atrasado</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
                         <DialogFooter>
-                            <Button type="submit">Add Transaction</Button>
+                            <Button type="submit">Adicionar Transação</Button>
                         </DialogFooter>
                     </form>
                 </DialogContent>
@@ -257,7 +257,7 @@ export default function FinancePage() {
                   <TableCell className="hidden md:table-cell">{transaction.date}</TableCell>
                   <TableCell>
                     <Badge variant={statusStyles[transaction.status]?.variant || "default"} className={cn(statusStyles[transaction.status]?.className)}>
-                      {transaction.status}
+                      {statusStyles[transaction.status]?.text}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">{formatCurrency(transaction.amount)}</TableCell>
@@ -288,12 +288,12 @@ export default function FinancePage() {
                             </AlertDialogTrigger>
                             <AlertDialogContent>
                                 <AlertDialogHeader>
-                                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                    <AlertDialogDescription>This will permanently cancel the transaction for {transaction.member}.</AlertDialogDescription>
+                                    <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+                                    <AlertDialogDescription>Isso cancelará permanentemente a transação para {transaction.member}.</AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                    <AlertDialogAction onClick={() => handleCancelTransaction(transaction.id)}>Confirm</AlertDialogAction>
+                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => handleCancelTransaction(transaction.id)}>Confirmar</AlertDialogAction>
                                 </AlertDialogFooter>
                             </AlertDialogContent>
                         </AlertDialog>

@@ -59,15 +59,15 @@ type Trainer = {
   email: string;
   avatar: string;
   initials: string;
-  status: "Active" | "On Leave";
+  status: "Ativo" | "De Licença";
   clients: number;
 };
 
 const initialTrainers: Trainer[] = [
-  { id: "trn-1", name: "John Carter", email: "john.carter@email.com", avatar: "https://placehold.co/100x100.png", initials: "JC", status: "Active", clients: 15 },
-  { id: "trn-2", name: "Sophie Brown", email: "sophie.brown@email.com", avatar: "https://placehold.co/100x100.png", initials: "SB", status: "Active", clients: 12 },
-  { id: "trn-3", name: "Michael Rodriguez", email: "michael.r@email.com", avatar: "https://placehold.co/100x100.png", initials: "MR", status: "On Leave", clients: 5 },
-  { id: "trn-4", name: "Sarah Miller", email: "sarah.m@email.com", avatar: "https://placehold.co/100x100.png", initials: "SM", status: "Active", clients: 18 },
+  { id: "trn-1", name: "John Carter", email: "john.carter@email.com", avatar: "https://placehold.co/100x100.png", initials: "JC", status: "Ativo", clients: 15 },
+  { id: "trn-2", name: "Sophie Brown", email: "sophie.brown@email.com", avatar: "https://placehold.co/100x100.png", initials: "SB", status: "Ativo", clients: 12 },
+  { id: "trn-3", name: "Michael Rodriguez", email: "michael.r@email.com", avatar: "https://placehold.co/100x100.png", initials: "MR", status: "De Licença", clients: 5 },
+  { id: "trn-4", name: "Sarah Miller", email: "sarah.m@email.com", avatar: "https://placehold.co/100x100.png", initials: "SM", status: "Ativo", clients: 18 },
 ];
 
 export default function TrainersPage() {
@@ -89,7 +89,7 @@ export default function TrainersPage() {
             email,
             avatar: "https://placehold.co/100x100.png",
             initials: name.split(' ').map(n => n[0]).join(''),
-            status: "Active",
+            status: "Ativo",
             clients: 0,
         };
         setTrainers(prev => [newTrainer, ...prev]);
@@ -118,7 +118,7 @@ export default function TrainersPage() {
     return (
         <div className="flex flex-col gap-6">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <h1 className="text-3xl font-bold tracking-tight">Manage Trainers</h1>
+            <h1 className="text-3xl font-bold tracking-tight">Gerenciar Personais</h1>
             <div className="flex items-center gap-2">
                 <div className="flex items-center rounded-md bg-muted p-1">
                     <Button variant={view === 'list' ? 'secondary' : 'ghost'} size="icon" onClick={() => setView('list')}><List className="h-5 w-5"/></Button>
@@ -128,17 +128,17 @@ export default function TrainersPage() {
                   <DialogTrigger asChild>
                     <Button className="w-full sm:w-auto">
                       <PlusCircle className="mr-2 h-4 w-4" />
-                      Add New Trainer
+                      Adicionar Personal
                     </Button>
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
-                      <DialogTitle>Add New Trainer</DialogTitle>
-                      <DialogDescription>Fill in the details to add a new trainer to the system.</DialogDescription>
+                      <DialogTitle>Adicionar Novo Personal</DialogTitle>
+                      <DialogDescription>Preencha os detalhes para adicionar um novo treinador ao sistema.</DialogDescription>
                     </DialogHeader>
                     <form onSubmit={handleAddTrainer} className="space-y-4">
                       <div className="space-y-2">
-                        <Label htmlFor="name">Full Name</Label>
+                        <Label htmlFor="name">Nome Completo</Label>
                         <Input id="name" name="name" required />
                       </div>
                       <div className="space-y-2">
@@ -146,7 +146,7 @@ export default function TrainersPage() {
                         <Input id="email" name="email" type="email" required />
                       </div>
                       <DialogFooter>
-                        <Button type="submit">Add Trainer</Button>
+                        <Button type="submit">Adicionar Personal</Button>
                       </DialogFooter>
                     </form>
                   </DialogContent>
@@ -158,11 +158,11 @@ export default function TrainersPage() {
             <Dialog open={!!editingTrainer} onOpenChange={(isOpen) => !isOpen && setEditingTrainer(null)}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Edit Trainer</DialogTitle>
+                        <DialogTitle>Editar Personal</DialogTitle>
                     </DialogHeader>
                     <form onSubmit={handleEditTrainer} className="space-y-4">
                         <div className="space-y-2">
-                            <Label htmlFor="name-edit">Full Name</Label>
+                            <Label htmlFor="name-edit">Nome Completo</Label>
                             <Input id="name-edit" name="name" defaultValue={editingTrainer?.name} required />
                         </div>
                         <div className="space-y-2">
@@ -170,7 +170,7 @@ export default function TrainersPage() {
                             <Input id="email-edit" name="email" type="email" defaultValue={editingTrainer?.email} required />
                         </div>
                         <DialogFooter>
-                            <Button type="submit">Save Changes</Button>
+                            <Button type="submit">Salvar Alterações</Button>
                         </DialogFooter>
                     </form>
                 </DialogContent>
@@ -179,17 +179,17 @@ export default function TrainersPage() {
             {view === 'list' ? (
                 <Card>
                     <CardHeader>
-                        <CardTitle>Trainer Staff</CardTitle>
-                        <CardDescription>Oversee all personal trainers at your facility.</CardDescription>
+                        <CardTitle>Equipe de Personais</CardTitle>
+                        <CardDescription>Gerencie todos os personais da sua academia.</CardDescription>
                     </CardHeader>
                     <CardContent>
                       <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead>Trainer</TableHead>
+                            <TableHead>Personal</TableHead>
                             <TableHead className="hidden sm:table-cell">Status</TableHead>
-                            <TableHead>Clients</TableHead>
-                            <TableHead><span className="sr-only">Actions</span></TableHead>
+                            <TableHead>Clientes</TableHead>
+                            <TableHead><span className="sr-only">Ações</span></TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -208,7 +208,7 @@ export default function TrainersPage() {
                                 </div>
                               </TableCell>
                               <TableCell className="hidden sm:table-cell">
-                                <Badge variant={trainer.status === "Active" ? "default" : "secondary"}>{trainer.status}</Badge>
+                                <Badge variant={trainer.status === "Ativo" ? "default" : "secondary"}>{trainer.status}</Badge>
                               </TableCell>
                               <TableCell>{trainer.clients}</TableCell>
                               <TableCell>
@@ -217,23 +217,23 @@ export default function TrainersPage() {
                                     <Button aria-haspopup="true" size="icon" variant="ghost"><MoreHorizontal className="h-4 w-4" /></Button>
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent align="end">
-                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                    <DropdownMenuItem onSelect={() => setEditingTrainer(trainer)}><Edit className="mr-2 h-4 w-4"/>Edit</DropdownMenuItem>
-                                    <DropdownMenuItem>View Schedule</DropdownMenuItem>
-                                    <DropdownMenuItem>Assign Member</DropdownMenuItem>
+                                    <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                                    <DropdownMenuItem onSelect={() => setEditingTrainer(trainer)}><Edit className="mr-2 h-4 w-4"/>Editar</DropdownMenuItem>
+                                    <DropdownMenuItem>Ver Agenda</DropdownMenuItem>
+                                    <DropdownMenuItem>Atribuir Membro</DropdownMenuItem>
                                     <DropdownMenuSeparator />
                                     <AlertDialog>
                                         <AlertDialogTrigger asChild>
-                                            <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive"><Trash2 className="mr-2 h-4 w-4"/>Remove Trainer</DropdownMenuItem>
+                                            <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive"><Trash2 className="mr-2 h-4 w-4"/>Remover Personal</DropdownMenuItem>
                                         </AlertDialogTrigger>
                                         <AlertDialogContent>
                                             <AlertDialogHeader>
-                                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                                <AlertDialogDescription>This will permanently remove {trainer.name} from the system. This action cannot be undone.</AlertDialogDescription>
+                                                <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+                                                <AlertDialogDescription>Isso removerá permanentemente {trainer.name} do sistema. Esta ação não pode ser desfeita.</AlertDialogDescription>
                                             </AlertDialogHeader>
                                             <AlertDialogFooter>
-                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                <AlertDialogAction onClick={() => handleDeleteTrainer(trainer.id)}>Confirm</AlertDialogAction>
+                                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                                <AlertDialogAction onClick={() => handleDeleteTrainer(trainer.id)}>Confirmar</AlertDialogAction>
                                             </AlertDialogFooter>
                                         </AlertDialogContent>
                                     </AlertDialog>
@@ -259,8 +259,8 @@ export default function TrainersPage() {
                                 <CardDescription>{trainer.email}</CardDescription>
                             </CardHeader>
                             <CardContent className="text-center">
-                                <p className="text-sm text-muted-foreground">{trainer.clients} Clients</p>
-                                <Badge variant={trainer.status === "Active" ? "default" : "secondary"} className="mt-2">{trainer.status}</Badge>
+                                <p className="text-sm text-muted-foreground">{trainer.clients} Clientes</p>
+                                <Badge variant={trainer.status === "Ativo" ? "default" : "secondary"} className="mt-2">{trainer.status}</Badge>
                             </CardContent>
                         </Card>
                     ))}

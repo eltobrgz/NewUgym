@@ -22,10 +22,10 @@ type EventsState = Record<string, Event[]>;
 type RegistrationsState = Record<string, Set<string>>;
 
 const initialEventsData: EventsState = {
-  "2024-08-01": [{ id: "evt1", date: "2024-08-01", title: "Yoga Class", time: "18:00", description: "Relaxing yoga session for all levels.", type: "class" }],
-  "2024-08-05": [{ id: "evt2", date: "2024-08-05", title: "Team Workout", time: "10:00", description: "High-intensity group workout.", type: "event" }],
-  "2024-08-15": [{ id: "evt3", date: "2024-08-15", title: "Nutrition Seminar", time: "14:00", description: "Learn about sports nutrition.", type: "seminar" }],
-  "2024-08-22": [{ id: "evt4", date: "2024-08-22", title: "Yoga Class", time: "18:00", description: "Advanced Vinyasa flow.", type: "class" }],
+  "2024-08-01": [{ id: "evt1", date: "2024-08-01", title: "Aula de Yoga", time: "18:00", description: "Sessão de yoga relaxante para todos os níveis.", type: "class" }],
+  "2024-08-05": [{ id: "evt2", date: "2024-08-05", title: "Treino em Equipe", time: "10:00", description: "Treino em grupo de alta intensidade.", type: "event" }],
+  "2024-08-15": [{ id: "evt3", date: "2024-08-15", title: "Seminário de Nutrição", time: "14:00", description: "Aprenda sobre nutrição esportiva.", type: "seminar" }],
+  "2024-08-22": [{ id: "evt4", date: "2024-08-22", title: "Aula de Yoga", time: "18:00", description: "Fluxo Vinyasa avançado.", type: "class" }],
 };
 
 interface EventsContextType {

@@ -69,9 +69,9 @@ export function SignupForm() {
               <SelectValue placeholder="Selecione seu perfil" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="student">Aluno</SelectItem>
-              <SelectItem value="trainer">Personal Trainer</SelectItem>
-              <SelectItem value="gym">Academia</SelectItem>
+              <SelectItem value="Student">Aluno</SelectItem>
+              <SelectItem value="Trainer">Personal Trainer</SelectItem>
+              <SelectItem value="Gym">Academia</SelectItem>
             </SelectContent>
           </Select>
         </div>

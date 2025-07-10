@@ -66,10 +66,10 @@ type Student = {
 };
 
 const initialStudents: Student[] = [
-  { id: "alex-johnson", name: "Alex Johnson", email: "alex.j@email.com", avatar: "https://placehold.co/100x100.png", initials: "AJ", lastActive: "2 days ago", progress: 75 },
-  { id: "maria-garcia", name: "Maria Garcia", email: "maria.g@email.com", avatar: "https://placehold.co/100x100.png", initials: "MG", lastActive: "Today", progress: 90 },
-  { id: "david-chen", name: "David Chen", email: "david.c@email.com", avatar: "https://placehold.co/100x100.png", initials: "DC", lastActive: "1 week ago", progress: 40 },
-  { id: "emily-white", name: "Emily White", email: "emily.w@email.com", avatar: "https://placehold.co/100x100.png", initials: "EW", lastActive: "Yesterday", progress: 60 },
+  { id: "alex-johnson", name: "Alex Johnson", email: "alex.j@email.com", avatar: "https://placehold.co/100x100.png", initials: "AJ", lastActive: "2 dias atrás", progress: 75 },
+  { id: "maria-garcia", name: "Maria Garcia", email: "maria.g@email.com", avatar: "https://placehold.co/100x100.png", initials: "MG", lastActive: "Hoje", progress: 90 },
+  { id: "david-chen", name: "David Chen", email: "david.c@email.com", avatar: "https://placehold.co/100x100.png", initials: "DC", lastActive: "1 semana atrás", progress: 40 },
+  { id: "emily-white", name: "Emily White", email: "emily.w@email.com", avatar: "https://placehold.co/100x100.png", initials: "EW", lastActive: "Ontem", progress: 60 },
 ];
 
 export default function StudentsPage() {
@@ -91,12 +91,12 @@ export default function StudentsPage() {
       email,
       avatar: "https://placehold.co/100x100.png",
       initials: name.split(' ').map(n => n[0]).join(''),
-      lastActive: "Just now",
+      lastActive: "Agora",
       progress: 0,
     };
     setStudents(prev => [newStudent, ...prev]);
     setIsAddDialogOpen(false);
-    toast({ title: "Student Added!", description: `${name} has been added to your roster.` });
+    toast({ title: "Aluno Adicionado!", description: `${name} foi adicionado à sua lista.` });
   };
 
   const handleEditStudent = (e: React.FormEvent<HTMLFormElement>) => {
@@ -109,19 +109,19 @@ export default function StudentsPage() {
     
     setStudents(prev => prev.map(s => s.id === editingStudent.id ? { ...s, name, email } : s));
     setEditingStudent(null);
-    toast({ title: "Student Updated", description: "The information has been saved." });
+    toast({ title: "Aluno Atualizado", description: "As informações foram salvas." });
   };
 
   const handleDeleteStudent = (studentId: string) => {
     setStudents(prev => prev.filter(s => s.id !== studentId));
-    toast({ title: "Student Removed", variant: 'destructive' });
+    toast({ title: "Aluno Removido", variant: 'destructive' });
   };
 
 
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-        <h1 className="text-3xl font-bold tracking-tight">Manage Students</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Gerenciar Alunos</h1>
         <div className="flex items-center gap-2">
             <div className="flex items-center rounded-md bg-muted p-1">
                 <Button variant={view === 'list' ? 'secondary' : 'ghost'} size="icon" onClick={() => setView('list')}><List className="h-5 w-5"/></Button>
@@ -131,17 +131,17 @@ export default function StudentsPage() {
                   <DialogTrigger asChild>
                     <Button className="w-full sm:w-auto">
                       <PlusCircle className="mr-2 h-4 w-4" />
-                      Add New Student
+                      Adicionar Aluno
                     </Button>
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
-                      <DialogTitle>Add New Student</DialogTitle>
-                      <DialogDescription>Fill in the details to add a new student.</DialogDescription>
+                      <DialogTitle>Adicionar Novo Aluno</DialogTitle>
+                      <DialogDescription>Preencha os detalhes para adicionar um novo aluno.</DialogDescription>
                     </DialogHeader>
                     <form onSubmit={handleAddStudent} className="space-y-4">
                       <div className="space-y-2">
-                        <Label htmlFor="name">Full Name</Label>
+                        <Label htmlFor="name">Nome Completo</Label>
                         <Input id="name" name="name" required />
                       </div>
                       <div className="space-y-2">
@@ -149,7 +149,7 @@ export default function StudentsPage() {
                         <Input id="email" name="email" type="email" required />
                       </div>
                       <DialogFooter>
-                        <Button type="submit">Add Student</Button>
+                        <Button type="submit">Adicionar Aluno</Button>
                       </DialogFooter>
                     </form>
                   </DialogContent>
@@ -160,11 +160,11 @@ export default function StudentsPage() {
        <Dialog open={!!editingStudent} onOpenChange={(isOpen) => !isOpen && setEditingStudent(null)}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Edit Student</DialogTitle>
+                    <DialogTitle>Editar Aluno</DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleEditStudent} className="space-y-4">
                     <div className="space-y-2">
-                        <Label htmlFor="name-edit">Full Name</Label>
+                        <Label htmlFor="name-edit">Nome Completo</Label>
                         <Input id="name-edit" name="name" defaultValue={editingStudent?.name} required />
                     </div>
                     <div className="space-y-2">
@@ -172,7 +172,7 @@ export default function StudentsPage() {
                         <Input id="email-edit" name="email" type="email" defaultValue={editingStudent?.email} required />
                     </div>
                     <DialogFooter>
-                        <Button type="submit">Save Changes</Button>
+                        <Button type="submit">Salvar Alterações</Button>
                     </DialogFooter>
                 </form>
             </DialogContent>
@@ -181,17 +181,17 @@ export default function StudentsPage() {
       {view === 'list' ? (
       <Card>
         <CardHeader>
-          <CardTitle>Student Roster</CardTitle>
-          <CardDescription>View and manage your assigned students.</CardDescription>
+          <CardTitle>Lista de Alunos</CardTitle>
+          <CardDescription>Visualize e gerencie seus alunos.</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Student</TableHead>
-                <TableHead className="hidden sm:table-cell">Last Active</TableHead>
-                <TableHead>Workout Progress</TableHead>
-                <TableHead><span className="sr-only">Actions</span></TableHead>
+                <TableHead>Aluno</TableHead>
+                <TableHead className="hidden sm:table-cell">Última Atividade</TableHead>
+                <TableHead>Progresso do Treino</TableHead>
+                <TableHead><span className="sr-only">Ações</span></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -222,23 +222,23 @@ export default function StudentsPage() {
                         <Button aria-haspopup="true" size="icon" variant="ghost"><MoreHorizontal className="h-4 w-4" /></Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem asChild><Link href={`/dashboard/students/${student.id}/progress`}>View Progress</Link></DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => setEditingStudent(student)}>Edit</DropdownMenuItem>
-                        <DropdownMenuItem>Assign Workout</DropdownMenuItem>
+                        <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                        <DropdownMenuItem asChild><Link href={`/dashboard/students/${student.id}/progress`}>Ver Progresso</Link></DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => setEditingStudent(student)}>Editar</DropdownMenuItem>
+                        <DropdownMenuItem>Atribuir Treino</DropdownMenuItem>
                          <DropdownMenuSeparator />
                         <AlertDialog>
                             <AlertDialogTrigger asChild>
-                                <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">Remove Student</DropdownMenuItem>
+                                <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">Remover Aluno</DropdownMenuItem>
                             </AlertDialogTrigger>
                             <AlertDialogContent>
                                 <AlertDialogHeader>
-                                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                    <AlertDialogDescription>This will permanently remove {student.name}. This action cannot be undone.</AlertDialogDescription>
+                                    <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+                                    <AlertDialogDescription>Isso removerá permanentemente {student.name}. Esta ação não pode ser desfeita.</AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                    <AlertDialogAction onClick={() => handleDeleteStudent(student.id)}>Confirm</AlertDialogAction>
+                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => handleDeleteStudent(student.id)}>Confirmar</AlertDialogAction>
                                 </AlertDialogFooter>
                             </AlertDialogContent>
                         </AlertDialog>
@@ -261,14 +261,14 @@ export default function StudentsPage() {
                             <AvatarFallback>{student.initials}</AvatarFallback>
                         </Avatar>
                         <CardTitle>{student.name}</CardTitle>
-                        <CardDescription>Last active: {student.lastActive}</CardDescription>
+                        <CardDescription>Ativo: {student.lastActive}</CardDescription>
                     </CardHeader>
                     <CardContent className="flex flex-col items-center">
                         <div className="w-full px-4">
                           <Progress value={student.progress} className="h-2" />
-                          <p className="text-sm text-muted-foreground mt-2">{student.progress}% progress</p>
+                          <p className="text-sm text-muted-foreground mt-2">{student.progress}% de progresso</p>
                         </div>
-                        <Button variant="link" size="sm" asChild className="mt-2"><Link href={`/dashboard/students/${student.id}/progress`}>View Details</Link></Button>
+                        <Button variant="link" size="sm" asChild className="mt-2"><Link href={`/dashboard/students/${student.id}/progress`}>Ver Detalhes</Link></Button>
                     </CardContent>
                 </Card>
             ))}

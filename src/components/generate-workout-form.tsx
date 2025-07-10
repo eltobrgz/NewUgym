@@ -20,11 +20,11 @@ type GenerateWorkoutFormProps = {
 
 // Re-define the schema here for client-side validation
 const GenerateWorkoutInputSchema = z.object({
-  goal: z.string().describe('The primary fitness goal (e.g., Hypertrophy, Strength, Endurance, Weight Loss).'),
-  level: z.string().describe('The user\'s experience level (Beginner, Intermediate, Advanced).'),
-  daysPerWeek: z.number().min(1).max(7).describe('How many days per week the user can train.'),
-  sessionDuration: z.number().min(15).max(120).describe('The average duration of each training session in minutes.'),
-  notes: z.string().optional().describe('Any additional notes or preferences from the user (e.g., equipment limitations, specific exercises to include/avoid).'),
+  goal: z.string().describe('O principal objetivo de fitness (ex: Hipertrofia, Força, Resistência, Perda de Peso).'),
+  level: z.string().describe('O nível de experiência do usuário (Iniciante, Intermediário, Avançado).'),
+  daysPerWeek: z.number().min(1).max(7).describe('Quantos dias por semana o usuário pode treinar.'),
+  sessionDuration: z.number().min(15).max(120).describe('A duração média de cada sessão de treino em minutos.'),
+  notes: z.string().optional().describe('Quaisquer notas ou preferências adicionais do usuário (ex: limitações de equipamento, exercícios específicos para incluir/evitar).'),
 });
 
 export function GenerateWorkoutForm({ onPlanGenerated }: GenerateWorkoutFormProps) {
@@ -34,8 +34,8 @@ export function GenerateWorkoutForm({ onPlanGenerated }: GenerateWorkoutFormProp
   const form = useForm<GenerateWorkoutInput>({
     resolver: zodResolver(GenerateWorkoutInputSchema),
     defaultValues: {
-      goal: 'Hypertrophy',
-      level: 'Beginner',
+      goal: 'Hipertrofia',
+      level: 'Iniciante',
       daysPerWeek: 3,
       sessionDuration: 60,
       notes: '',
@@ -49,8 +49,8 @@ export function GenerateWorkoutForm({ onPlanGenerated }: GenerateWorkoutFormProp
       const plan = await generateWorkoutPlan(values);
       setGeneratedPlan(plan);
     } catch (error) {
-      console.error("Error generating workout plan:", error);
-      // Here you would show a toast to the user
+      console.error("Erro ao gerar plano de treino:", error);
+      // Aqui você pode mostrar um toast para o usuário
     } finally {
       setIsLoading(false);
     }
@@ -72,7 +72,7 @@ export function GenerateWorkoutForm({ onPlanGenerated }: GenerateWorkoutFormProp
                         <ul className="mt-2 list-disc pl-5 text-sm space-y-1 text-muted-foreground">
                             {day.exercises.map((ex, exIndex) => (
                                 <li key={exIndex}>
-                                    {ex.name}: {ex.sets && `${ex.sets} sets de`} {ex.reps && `${ex.reps} reps`} {ex.duration && ex.duration} {ex.rest && `(descanso: ${ex.rest})`}
+                                    {ex.name}: {ex.sets && `${ex.sets} séries de`} {ex.reps && `${ex.reps} reps`} {ex.duration && ex.duration} {ex.rest && `(descanso: ${ex.rest})`}
                                 </li>
                             ))}
                         </ul>
@@ -126,7 +126,7 @@ export function GenerateWorkoutForm({ onPlanGenerated }: GenerateWorkoutFormProp
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione seu nível" />
-                      </SelectTrigger>
+                      </Trigger>
                     </FormControl>
                     <SelectContent>
                       <SelectItem value="Beginner">Iniciante</SelectItem>
