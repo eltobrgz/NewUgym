@@ -13,31 +13,32 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useUserRole } from "@/contexts/user-role-context";
+import { format, parse } from 'date-fns';
+
+type EventType = 'class' | 'event' | 'seminar';
 
 type Event = {
   id: string;
   title: string;
   time: string;
   description: string;
-  type: 'class' | 'event' | 'seminar';
+  type: EventType;
 };
 
-const initialEvents: Record<string, Event[]> = {
-  "2024-08-01": [{ id: "evt1", title: "Yoga Class", time: "6:00 PM", description: "Relaxing yoga session for all levels.", type: "class" }],
-  "2024-08-05": [{ id: "evt2", title: "Team Workout", time: "10:00 AM", description: "High-intensity group workout.", type: "event" }],
-  "2024-08-15": [{ id: "evt3", title: "Nutrition Seminar", time: "2:00 PM", description: "Learn about sports nutrition.", type: "seminar" }],
-  "2024-08-22": [{ id: "evt4", title: "Yoga Class", time: "6:00 PM", description: "Advanced Vinyasa flow.", type: "class" }],
+const initialEventsData: Record<string, Event[]> = {
+  "2024-08-01": [{ id: "evt1", title: "Yoga Class", time: "18:00", description: "Relaxing yoga session for all levels.", type: "class" }],
+  "2024-08-05": [{ id: "evt2", title: "Team Workout", time: "10:00", description: "High-intensity group workout.", type: "event" }],
+  "2024-08-15": [{ id: "evt3", title: "Nutrition Seminar", time: "14:00", description: "Learn about sports nutrition.", type: "seminar" }],
+  "2024-08-22": [{ id: "evt4", title: "Yoga Class", time: "18:00", description: "Advanced Vinyasa flow.", type: "class" }],
 };
 
-const datesWithEvents = Object.keys(initialEvents).map(d => {
-  const [year, month, day] = d.split('-').map(Number);
-  return new Date(year, month - 1, day);
-});
+const getEventDateKey = (d: Date): string => format(d, 'yyyy-MM-dd');
 
 export default function CalendarPage() {
   const { userRole } = useUserRole();
   const [date, setDate] = useState<Date | undefined>(undefined);
   const [isAddModalOpen, setAddModalOpen] = useState(false);
+  const [events, setEvents] = useState(initialEventsData);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [registeredEvents, setRegisteredEvents] = useState<Set<string>>(new Set());
   const { toast } = useToast();
@@ -49,11 +50,33 @@ export default function CalendarPage() {
 
   const handleAddEvent = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const title = formData.get('event-title') as string;
+    const dateStr = formData.get('event-date') as string;
+    const time = formData.get('event-time') as string;
+    const type = formData.get('event-type') as EventType;
+    const description = formData.get('event-description') as string;
+    
+    const eventDate = parse(dateStr, 'yyyy-MM-dd', new Date());
+    const dateKey = getEventDateKey(eventDate);
+
+    const newEvent: Event = { id: `evt-${Date.now()}`, title, time, type, description };
+
+    setEvents(prev => {
+        const newEvents = {...prev};
+        if (!newEvents[dateKey]) {
+            newEvents[dateKey] = [];
+        }
+        newEvents[dateKey].push(newEvent);
+        return newEvents;
+    });
+
     toast({
-        title: "Evento Adicionado!",
-        description: "O novo evento foi adicionado ao calendário.",
+        title: "Event Added!",
+        description: "The new event has been added to the calendar.",
     });
     setAddModalOpen(false);
+    e.currentTarget.reset();
   }
 
   const handleRegister = (eventId: string) => {
@@ -64,8 +87,9 @@ export default function CalendarPage() {
     });
   }
 
-  const selectedDateString = date ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}` : '';
-  const selectedDayEvents = initialEvents[selectedDateString] || [];
+  const selectedDateString = date ? getEventDateKey(date) : '';
+  const selectedDayEvents = events[selectedDateString] || [];
+  const datesWithEvents = Object.keys(events).map(d => parse(d, 'yyyy-MM-dd', new Date()));
 
   return (
     <div className="flex flex-col gap-6">
@@ -86,19 +110,21 @@ export default function CalendarPage() {
                 <form onSubmit={handleAddEvent} className="space-y-4">
                     <div className="space-y-2">
                         <Label htmlFor="event-title">Event Title</Label>
-                        <Input id="event-title" placeholder="E.g., Morning Yoga" required />
+                        <Input id="event-title" name="event-title" placeholder="E.g., Morning Yoga" required />
                     </div>
-                     <div className="space-y-2">
-                        <Label htmlFor="event-date">Date</Label>
-                        <Input id="event-date" type="date" required />
-                    </div>
-                     <div className="space-y-2">
-                        <Label htmlFor="event-time">Time</Label>
-                        <Input id="event-time" type="time" required />
-                    </div>
+                     <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="event-date">Date</Label>
+                            <Input id="event-date" name="event-date" type="date" required />
+                        </div>
+                         <div className="space-y-2">
+                            <Label htmlFor="event-time">Time</Label>
+                            <Input id="event-time" name="event-time" type="time" required />
+                        </div>
+                     </div>
                      <div className="space-y-2">
                         <Label htmlFor="event-type">Type</Label>
-                         <Select required>
+                         <Select name="event-type" required>
                             <SelectTrigger id="event-type">
                                 <SelectValue placeholder="Select event type" />
                             </SelectTrigger>
@@ -108,6 +134,10 @@ export default function CalendarPage() {
                                 <SelectItem value="seminar">Seminar</SelectItem>
                             </SelectContent>
                         </Select>
+                    </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="event-description">Description</Label>
+                        <Input id="event-description" name="event-description" placeholder="A brief description of the event."/>
                     </div>
                     <DialogFooter>
                         <Button type="submit">Add Event</Button>
@@ -124,7 +154,7 @@ export default function CalendarPage() {
             <DialogDescription>{selectedEvent?.description}</DialogDescription>
           </DialogHeader>
           <div className="flex items-center text-sm text-muted-foreground gap-4 py-4">
-            <span>{selectedEvent?.time}</span>
+            <span>{selectedEvent?.time && format(parse(selectedEvent.time, 'HH:mm', new Date()), 'p')}</span>
             <Badge variant={selectedEvent?.type === 'class' ? 'default' : 'secondary'}>{selectedEvent?.type}</Badge>
           </div>
           {userRole === "Student" && (
@@ -177,7 +207,7 @@ export default function CalendarPage() {
                     <div className="flex items-start space-x-3 rounded-lg border p-3 hover:bg-accent transition-colors">
                       <div className="flex-1">
                         <p className="font-semibold">{event.title}</p>
-                        <p className="text-sm text-muted-foreground">{event.time}</p>
+                        <p className="text-sm text-muted-foreground">{event.time && format(parse(event.time, 'HH:mm', new Date()), 'p')}</p>
                       </div>
                       <Badge variant={event.type === 'class' ? 'default' : 'secondary'}>{event.type}</Badge>
                     </div>
