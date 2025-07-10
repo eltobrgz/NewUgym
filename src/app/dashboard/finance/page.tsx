@@ -374,165 +374,164 @@ export default function FinancePage() {
         </div>
       </div>
       
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 flex flex-col gap-6">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Faturamento Total</CardTitle>
-                  <CardDescription>Soma de todas as transações pagas.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-3xl font-bold">{formatCurrency(summary.paid)}</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Pagamentos Pendentes</CardTitle>
-                  <CardDescription>Valor total aguardando pagamento.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-3xl font-bold">{formatCurrency(summary.pending)}</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Inadimplência</CardTitle>
-                  <CardDescription>Valor total de mensalidades atrasadas.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-3xl font-bold text-destructive">{formatCurrency(summary.overdue)}</p>
-                </CardContent>
-              </Card>
-            </div>
-
+      <div className="flex flex-col gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Card>
               <CardHeader>
-                <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-                  <div>
-                    <CardTitle>Histórico de Transações</CardTitle>
-                    <CardDescription>Visualize e gerencie todos os pagamentos.</CardDescription>
-                  </div>
-                  <div className="w-full sm:w-auto">
-                    <Tabs defaultValue="all" onValueChange={setFilter} className="w-full">
-                      <TabsList className="grid w-full grid-cols-4">
-                        <TabsTrigger value="all">Todos</TabsTrigger>
-                        <TabsTrigger value="paid">Pago</TabsTrigger>
-                        <TabsTrigger value="pending">Pendente</TabsTrigger>
-                        <TabsTrigger value="overdue">Atrasado</TabsTrigger>
-                      </TabsList>
-                    </Tabs>
-                  </div>
-                </div>
+                <CardTitle>Faturamento Total</CardTitle>
+                <CardDescription>Soma de todas as transações pagas.</CardDescription>
               </CardHeader>
               <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Membro</TableHead>
-                      <TableHead className="hidden sm:table-cell">Plano</TableHead>
-                      <TableHead>Tipo</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Valor</TableHead>
-                      <TableHead>
-                        <span className="sr-only">Ações</span>
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredTransactions.map((transaction) => (
-                      <TableRow key={transaction.id}>
-                        <TableCell className="font-medium">{transaction.member}</TableCell>
-                        <TableCell className="hidden sm:table-cell">{transaction.plan}</TableCell>
-                         <TableCell>
-                            <Badge variant={transaction.type === 'Primeiro Pagamento' ? 'default' : 'secondary'} className={cn(transaction.type === 'Primeiro Pagamento' && 'bg-blue-500/10 text-blue-400 border-blue-500/20')}>
-                              {transaction.type}
-                            </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={statusStyles[transaction.status]?.variant || "default"} className={cn(statusStyles[transaction.status]?.className)}>
-                            {statusStyles[transaction.status]?.text}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">{formatCurrency(transaction.amount)}</TableCell>
-                        <TableCell>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button aria-haspopup="true" size="icon" variant="ghost">
-                                <MoreHorizontal className="h-4 w-4" />
-                                <span className="sr-only">Toggle menu</span>
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                              <DropdownMenuItem><Eye className="mr-2 h-4 w-4"/>Ver Detalhes</DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem onSelect={() => handleStatusChange(transaction.id, 'Pago')} disabled={transaction.status === 'Pago'}>
-                                  <CheckCircle className="mr-2 h-4 w-4 text-green-500" /> Marcar como Pago
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onSelect={() => handleStatusChange(transaction.id, 'Pendente')} disabled={transaction.status === 'Pendente'}>
-                                  <AlertTriangle className="mr-2 h-4 w-4 text-yellow-500" />Marcar como Pendente
-                              </DropdownMenuItem>
-                               <DropdownMenuSeparator />
-                              <AlertDialog>
-                                  <AlertDialogTrigger asChild>
-                                      <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">
-                                        <XCircle className="mr-2 h-4 w-4"/> Cancelar Transação
-                                      </DropdownMenuItem>
-                                  </AlertDialogTrigger>
-                                  <AlertDialogContent>
-                                      <AlertDialogHeader>
-                                          <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
-                                          <AlertDialogDescription>Isso cancelará permanentemente a transação para {transaction.member}.</AlertDialogDescription>
-                                      </AlertDialogHeader>
-                                      <AlertDialogFooter>
-                                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                          <AlertDialogAction onClick={() => handleCancelTransaction(transaction.id)}>Confirmar</AlertDialogAction>
-                                      </AlertDialogFooter>
-                                  </AlertDialogContent>
-                              </AlertDialog>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                <p className="text-3xl font-bold">{formatCurrency(summary.paid)}</p>
               </CardContent>
             </Card>
-        </div>
-        <div className="lg:col-span-1">
             <Card>
-                <CardHeader>
-                    <CardTitle>Planos de Assinatura</CardTitle>
-                    <CardDescription>Gerencie os planos disponíveis.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Plano</TableHead>
-                                <TableHead className="text-right">Preço</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {plans.map(plan => (
-                                <TableRow key={plan.id}>
-                                    <TableCell className="font-medium">{plan.name} <Badge variant="outline" className="ml-2">{plan.recurrence}</Badge></TableCell>
-                                    <TableCell className="text-right">{formatCurrency(plan.price)}</TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </CardContent>
-                <CardFooter className="border-t pt-4">
-                   <AddPlanDialog onAdd={handleAddPlan} />
-                </CardFooter>
+              <CardHeader>
+                <CardTitle>Pagamentos Pendentes</CardTitle>
+                <CardDescription>Valor total aguardando pagamento.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-3xl font-bold">{formatCurrency(summary.pending)}</p>
+              </CardContent>
             </Card>
-        </div>
+            <Card>
+              <CardHeader>
+                <CardTitle>Inadimplência</CardTitle>
+                <CardDescription>Valor total de mensalidades atrasadas.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-3xl font-bold text-destructive">{formatCurrency(summary.overdue)}</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div>
+                  <CardTitle>Histórico de Transações</CardTitle>
+                  <CardDescription>Visualize e gerencie todos os pagamentos.</CardDescription>
+                </div>
+                <div className="w-full sm:w-auto">
+                  <Tabs defaultValue="all" onValueChange={setFilter} className="w-full">
+                    <TabsList className="grid w-full grid-cols-4">
+                      <TabsTrigger value="all">Todos</TabsTrigger>
+                      <TabsTrigger value="paid">Pago</TabsTrigger>
+                      <TabsTrigger value="pending">Pendente</TabsTrigger>
+                      <TabsTrigger value="overdue">Atrasado</TabsTrigger>
+                    </TabsList>
+                  </Tabs>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Membro</TableHead>
+                    <TableHead className="hidden sm:table-cell">Plano</TableHead>
+                    <TableHead>Tipo</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Valor</TableHead>
+                    <TableHead>
+                      <span className="sr-only">Ações</span>
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredTransactions.map((transaction) => (
+                    <TableRow key={transaction.id}>
+                      <TableCell className="font-medium">{transaction.member}</TableCell>
+                      <TableCell className="hidden sm:table-cell">{transaction.plan}</TableCell>
+                       <TableCell>
+                          <Badge variant={transaction.type === 'Primeiro Pagamento' ? 'default' : 'secondary'} className={cn(transaction.type === 'Primeiro Pagamento' && 'bg-blue-500/10 text-blue-400 border-blue-500/20')}>
+                            {transaction.type}
+                          </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={statusStyles[transaction.status]?.variant || "default"} className={cn(statusStyles[transaction.status]?.className)}>
+                          {statusStyles[transaction.status]?.text}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">{formatCurrency(transaction.amount)}</TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button aria-haspopup="true" size="icon" variant="ghost">
+                              <MoreHorizontal className="h-4 w-4" />
+                              <span className="sr-only">Toggle menu</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                            <DropdownMenuItem><Eye className="mr-2 h-4 w-4"/>Ver Detalhes</DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onSelect={() => handleStatusChange(transaction.id, 'Pago')} disabled={transaction.status === 'Pago'}>
+                                <CheckCircle className="mr-2 h-4 w-4 text-green-500" /> Marcar como Pago
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => handleStatusChange(transaction.id, 'Pendente')} disabled={transaction.status === 'Pendente'}>
+                                <AlertTriangle className="mr-2 h-4 w-4 text-yellow-500" />Marcar como Pendente
+                            </DropdownMenuItem>
+                             <DropdownMenuSeparator />
+                            <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                    <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">
+                                      <XCircle className="mr-2 h-4 w-4"/> Cancelar Transação
+                                    </DropdownMenuItem>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+                                        <AlertDialogDescription>Isso cancelará permanentemente a transação para {transaction.member}.</AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                        <AlertDialogAction onClick={() => handleCancelTransaction(transaction.id)}>Confirmar</AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        
+          <Card>
+              <CardHeader>
+                  <CardTitle>Planos de Assinatura</CardTitle>
+                  <CardDescription>Gerencie os planos disponíveis.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                  <Table>
+                      <TableHeader>
+                          <TableRow>
+                              <TableHead>Plano</TableHead>
+                              <TableHead className="text-right">Preço</TableHead>
+                          </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                          {plans.map(plan => (
+                              <TableRow key={plan.id}>
+                                  <TableCell className="font-medium">{plan.name} <Badge variant="outline" className="ml-2">{plan.recurrence}</Badge></TableCell>
+                                  <TableCell className="text-right">{formatCurrency(plan.price)}</TableCell>
+                              </TableRow>
+                          ))}
+                      </TableBody>
+                  </Table>
+              </CardContent>
+              <CardFooter className="border-t pt-4">
+                 <AddPlanDialog onAdd={handleAddPlan} />
+              </CardFooter>
+          </Card>
       </div>
     </div>
   );
 }
+
+    
 
     
