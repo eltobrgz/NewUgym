@@ -11,7 +11,7 @@ export function DashboardView({ children }: { children: ReactNode }) {
   const { isMobile } = useSidebar();
   return (
       <>
-        <Sidebar>
+        <Sidebar collapsible="none">
             <DashboardNav />
         </Sidebar>
         <SidebarInset>
