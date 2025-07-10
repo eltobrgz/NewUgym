@@ -2,10 +2,12 @@
 "use client"
 
 import { createContext, useContext, useState, ReactNode } from 'react';
+import { allUsers as userDirectory } from '@/lib/user-directory';
 
 export type UserRole = "Student" | "Trainer" | "Gym";
 
 export interface User {
+  id: string; // Add ID to user object
   name: string;
   email: string;
   // Student specific
@@ -30,17 +32,32 @@ interface UserRoleContextType {
 
 const UserRoleContext = createContext<UserRoleContextType | undefined>(undefined);
 
-// Mock data now includes some incomplete profiles
+// Find users from the directory to use as mock data
+const mockStudent = userDirectory.find(u => u.id === 'stu-001');
+const mockTrainer = userDirectory.find(u => u.id === 'trn-001');
+const mockGym = userDirectory.find(u => u.id === 'gym-001');
+
 const MOCK_USERS: Record<UserRole, User> = {
-    Student: { name: "Alex Robinson", email: "alex.rob@example.com" }, // Incomplete profile
+    Student: { 
+        id: mockStudent!.id,
+        name: mockStudent!.name,
+        email: mockStudent!.email 
+    }, // Incomplete profile
     Trainer: { 
-        name: "Sarah Coach", 
-        email: "sarah.c@example.com", 
+        id: mockTrainer!.id,
+        name: mockTrainer!.name, 
+        email: mockTrainer!.email, 
         cref: "123456-G/SP", 
         specializations: "Treinamento Funcional, Nutrição Esportiva", 
         bio: "Personal trainer com mais de 10 anos de experiência."
     }, // Complete profile
-    Gym: { name: "FitZone Admin", email: "admin@fitzone.com", phone: "(11) 98765-4321", address: "Rua dos Atletas, 123" }, // Complete profile
+    Gym: { 
+        id: mockGym!.id,
+        name: mockGym!.name, 
+        email: mockGym!.email, 
+        phone: "(11) 98765-4321", 
+        address: "Rua dos Atletas, 123" 
+    }, // Complete profile
 }
 
 // Function to check if the profile for a given role is complete

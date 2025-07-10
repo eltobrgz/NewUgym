@@ -2,6 +2,7 @@
 "use client"
 
 import { createContext, useState, ReactNode } from 'react';
+import { allUsers } from '@/lib/user-directory';
 
 export type Exercise = { id: string; name: string; sets: string; reps: string; isCompleted?: boolean };
 export type DailyWorkout = { id:string; day: string; focus: string; exercises: Exercise[]; };
@@ -50,7 +51,7 @@ interface WorkoutsContextType {
     updatePlan: (planId: string, updates: WorkoutPlan) => void;
     deletePlan: (planId: string) => void;
     assignPlanToStudents: (planId: string, studentIds: string[]) => void;
-    getAssignments: (students: {id: string, name: string}[]) => { studentName: string; planName: string; planId: string; }[];
+    getAssignments: () => { studentId: string; studentName: string; planName: string; planId: string; }[];
     setActiveStudentPlan: (studentId: string, planId: string) => void;
     toggleExerciseCompletion: (planId: string, dayId: string, exerciseId: string) => void;
     getStudentPlan: (studentId: string) => WorkoutPlan | null;
@@ -79,7 +80,6 @@ export const WorkoutsProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const assignPlanToStudents = (planId: string, studentIds: string[]) => {
-        // This also sets the assigned plan as active for the student
         setPlans(prev => prev.map(p => {
             if (p.id === planId) {
                 const currentAssigned = new Set(p.assignedTo || []);
@@ -96,13 +96,13 @@ export const WorkoutsProvider = ({ children }: { children: ReactNode }) => {
         setActiveStudentPlans(newActivePlans);
     };
 
-    const getAssignments = (students: {id: string, name: string}[]) => {
-        const assignments: { studentName: string; planName: string; planId: string; }[] = [];
+    const getAssignments = () => {
+        const assignments: { studentId: string; studentName: string; planName: string; planId: string; }[] = [];
         plans.forEach(plan => {
             (plan.assignedTo || []).forEach(studentId => {
-                const student = students.find(s => s.id === studentId);
+                const student = allUsers.find(s => s.id === studentId);
                 if (student) {
-                    assignments.push({ studentName: student.name, planName: plan.name, planId: plan.id });
+                    assignments.push({ studentId: student.id, studentName: student.name, planName: plan.name, planId: plan.id });
                 }
             });
         });

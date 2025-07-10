@@ -4,7 +4,7 @@
 import { useState, useId, useEffect, useContext } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { CheckCircle2, Circle, Dumbbell, PlusCircle, Sparkles, Trash2, MoreVertical, GripVertical, Save, X, UserPlus, ChevronDown } from "lucide-react";
+import { CheckCircle2, Circle, Dumbbell, PlusCircle, Sparkles, Trash2, MoreVertical, GripVertical, Save, X, UserPlus } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from '@/lib/utils';
 import { useUserRole } from '@/contexts/user-role-context';
@@ -334,7 +334,7 @@ const TrainerView = () => {
         });
     }
 
-    const assignments = getAssignments(studentsForAssignment);
+    const assignments = getAssignments();
 
 
     return (
@@ -441,17 +441,13 @@ const TrainerView = () => {
                           <TableRow>
                             <TableHead>Aluno</TableHead>
                             <TableHead>Plano Atribuído</TableHead>
-                            <TableHead className="text-right">Ações</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                             {assignments.map((ass, i) => (
-                               <TableRow key={`${ass.planId}-${i}`}>
+                               <TableRow key={`${ass.planId}-${ass.studentId}-${i}`}>
                                    <TableCell className="font-medium">{ass.studentName}</TableCell>
                                    <TableCell>{ass.planName}</TableCell>
-                                   <TableCell className="text-right">
-                                       <Button variant="link" size="sm">Ver Progresso</Button>
-                                   </TableCell>
                                </TableRow>
                             ))}
                         </TableBody>
@@ -477,14 +473,15 @@ const StudentView = () => {
         toggleExerciseCompletion
     } = useContext(WorkoutsContext);
 
-    const studentId = user.name; // Using name as a mock ID
+    const studentId = user.id;
     
-    const myPlans = plans.filter(p => p.owner === studentId);
+    const myPlans = plans.filter(p => p.owner === studentId || (p.assignedTo && p.assignedTo.includes(studentId)));
     const weeklyPlan = activeStudentPlans[studentId] ? plans.find(p => p.id === activeStudentPlans[studentId]) : null;
 
     const [isAiModalOpen, setIsAiModalOpen] = useState(false);
     const [isBuilderOpen, setIsBuilderOpen] = useState(false);
     const [selectedPlan, setSelectedPlan] = useState<WorkoutPlan | null>(null);
+    const [activeTab, setActiveTab] = useState('weekly-plan');
     
     const handleToggleExercise = (planId: string, dayId: string, exerciseId: string) => {
         toggleExerciseCompletion(planId, dayId, exerciseId);
@@ -532,6 +529,7 @@ const StudentView = () => {
         if (plan) {
             setActiveStudentPlan(studentId, planId);
             toast({ title: 'Plano Ativado!', description: `Você começou o plano "${plan.name}".`});
+            setActiveTab('weekly-plan');
         }
     };
 
@@ -559,7 +557,7 @@ const StudentView = () => {
                 </div>
             </div>
 
-            <Tabs defaultValue="weekly-plan">
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
                 <TabsList>
                     <TabsTrigger value="weekly-plan">Meu Plano Semanal</TabsTrigger>
                     <TabsTrigger value="my-plans">Meus Planos Salvos</TabsTrigger>
@@ -626,12 +624,15 @@ const StudentView = () => {
                         </CardHeader>
                         <CardContent>
                             <Table>
-                                <TableHeader><TableRow><TableHead>Nome</TableHead><TableHead>Dificuldade</TableHead><TableHead><span className="sr-only">Ações</span></TableHead></TableRow></TableHeader>
+                                <TableHeader><TableRow><TableHead>Nome</TableHead><TableHead>Dificuldade</TableHead><TableHead>Origem</TableHead><TableHead><span className="sr-only">Ações</span></TableHead></TableRow></TableHeader>
                                 <TableBody>
                                     {myPlans.map((plan) => (
                                         <TableRow key={plan.id}>
                                             <TableCell className="font-medium">{plan.name}</TableCell>
                                             <TableCell><Badge variant="outline">{plan.difficulty}</Badge></TableCell>
+                                            <TableCell>
+                                                <Badge variant={plan.owner ? 'default' : 'secondary'}>{plan.owner ? 'Criado por mim' : 'Recebido'}</Badge>
+                                            </TableCell>
                                             <TableCell className="text-right">
                                                 <Button variant="ghost" size="sm" onClick={() => handleActivatePlan(plan.id)} disabled={activeStudentPlans[studentId] === plan.id}>
                                                     {activeStudentPlans[studentId] === plan.id ? 'Ativo' : 'Ativar'}
@@ -639,8 +640,9 @@ const StudentView = () => {
                                                 <DropdownMenu>
                                                     <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger>
                                                     <DropdownMenuContent>
-                                                        <DropdownMenuItem onSelect={() => handleEditPlan(plan)}>Editar</DropdownMenuItem>
-                                                        <DropdownMenuItem onSelect={() => handleDeletePlan(plan.id)} className="text-destructive">Excluir</DropdownMenuItem>
+                                                        {plan.owner === studentId && <DropdownMenuItem onSelect={() => handleEditPlan(plan)}>Editar</DropdownMenuItem>}
+                                                        {plan.owner === studentId && <DropdownMenuItem onSelect={() => handleDeletePlan(plan.id)} className="text-destructive">Excluir</DropdownMenuItem>}
+                                                        {plan.owner !== studentId && <DropdownMenuItem disabled>Não pode editar um plano recebido</DropdownMenuItem>}
                                                     </DropdownMenuContent>
                                                 </DropdownMenu>
                                             </TableCell>

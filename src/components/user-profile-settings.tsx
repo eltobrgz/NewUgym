@@ -9,7 +9,6 @@ import { useToast } from "@/hooks/use-toast";
 import type { UserRole, User } from "@/contexts/user-role-context";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Upload } from "lucide-react";
 
 const getInitials = (name: string) => {
     if (!name) return "";
@@ -142,10 +141,6 @@ export function UserProfileSettings({ user, role }: { user: User, role: UserRole
                          <AvatarImage src={`https://placehold.co/100x100.png`} alt={user.name} data-ai-hint="person portrait"/>
                         <AvatarFallback className="text-4xl">{getInitials(user.name)}</AvatarFallback>
                     </Avatar>
-                     <Button size="icon" className="absolute bottom-1 right-1 h-8 w-8 rounded-full">
-                        <Upload className="h-4 w-4" />
-                        <span className="sr-only">Upload de foto</span>
-                    </Button>
                 </div>
                 <div className="flex-1">
                     <CardTitle className="text-3xl">{user.name}</CardTitle>

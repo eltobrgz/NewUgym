@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, LineChart, Calendar, Settings, Users, DollarSign, ClipboardList, CheckSquare, Award, UserSquare, LogOut, Sun, Moon } from "lucide-react";
+import { LayoutDashboard, LineChart, Calendar, Settings, Users, DollarSign, ClipboardList, Award, UserSquare, LogOut, Sun, Moon } from "lucide-react";
 import { useUserRole } from "@/contexts/user-role-context";
 import { cn } from "@/lib/utils";
 import { useTheme } from "next-themes";
@@ -16,14 +16,12 @@ export const navConfig = {
     { name: "Meus Treinos", href: "/dashboard/workouts", icon: ClipboardList },
     { name: "Meu Progresso", href: "/dashboard/progress", icon: LineChart },
     { name: "Calendário", href: "/dashboard/calendar", icon: Calendar },
-    { name: "Tarefas", href: "/dashboard/tasks", icon: CheckSquare },
   ],
   trainer: [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { name: "Alunos", href: "/dashboard/students", icon: Users },
     { name: "Treinos", href: "/dashboard/workouts", icon: ClipboardList },
     { name: "Calendário", href: "/dashboard/calendar", icon: Calendar },
-    { name: "Tarefas", href: "/dashboard/tasks", icon: CheckSquare },
   ],
   gym: [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
