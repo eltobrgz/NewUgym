@@ -19,6 +19,7 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
+  CardFooter,
 } from "@/components/ui/card";
 import { MoreHorizontal, PlusCircle, Edit, Trash2 } from "lucide-react";
 import {
@@ -54,6 +55,43 @@ const initialMembers: Member[] = [
   { id: "mem-4", name: "William Kim", email: "will@email.com", avatar: "https://placehold.co/100x100.png", initials: "WK", status: "Ativo", plan: "Pro Anual", joinDate: "2024-01-05" },
   { id: "mem-5", name: "Sofia Davis", email: "sofia.davis@email.com", avatar: "https://placehold.co/100x100.png", initials: "SD", status: "Ativo", plan: "Pro Mensal", joinDate: "2024-02-18" },
 ];
+
+const AddMemberDialog = ({ open, onOpenChange, onSubmit }: { open: boolean, onOpenChange: (open: boolean) => void, onSubmit: (e: React.FormEvent<HTMLFormElement>) => void}) => {
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogTrigger asChild>
+                <Button className="w-full sm:w-auto">
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Adicionar Novo Membro
+                </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Adicionar Novo Membro</DialogTitle>
+                <DialogDescription>Preencha os detalhes do membro abaixo.</DialogDescription>
+              </DialogHeader>
+              <form onSubmit={onSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Nome Completo</Label>
+                  <Input id="name" name="name" required />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input id="email" name="email" type="email" required />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="plan">Plano de Membro</Label>
+                  <Input id="plan" name="plan" required />
+                </div>
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+                  <Button type="submit">Adicionar Membro</Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+        </Dialog>
+    )
+}
 
 export default function MembersPage() {
   const [members, setMembers] = useState<Member[]>(initialMembers);
@@ -102,22 +140,17 @@ export default function MembersPage() {
   
   const handleConfirmPaymentRedirect = () => {
     if (newlyAddedMember) {
-      router.push(`/dashboard/finance?new_member=${encodeURIComponent(newlyAddedMember.name)}`);
+      router.push(`/dashboard/finance?new_member_id=${encodeURIComponent(newlyAddedMember.id)}`);
     }
     setNewlyAddedMember(null);
   };
 
   return (
     <>
-      <Dialog open={isAddDialogOpen || !!editingMember} onOpenChange={(isOpen) => {
-        if (!isOpen) {
-          setIsAddDialogOpen(false);
-          setEditingMember(null);
-        }
-      }}>
+      <Dialog open={!!editingMember} onOpenChange={(isOpen) => !isOpen && setEditingMember(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editingMember ? "Editar Membro" : "Adicionar Novo Membro"}</DialogTitle>
+            <DialogTitle>Editar Membro</DialogTitle>
             <DialogDescription>Preencha os detalhes do membro abaixo.</DialogDescription>
           </DialogHeader>
           <form onSubmit={(e) => handleFormSubmit(e, editingMember?.id)} className="space-y-4">
@@ -134,8 +167,8 @@ export default function MembersPage() {
               <Input id="plan" name="plan" defaultValue={editingMember?.plan} required />
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => { setIsAddDialogOpen(false); setEditingMember(null); }}>Cancelar</Button>
-              <Button type="submit">{editingMember ? "Salvar Alterações" : "Adicionar Membro"}</Button>
+              <Button type="button" variant="outline" onClick={() => setEditingMember(null)}>Cancelar</Button>
+              <Button type="submit">Salvar Alterações</Button>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -159,10 +192,7 @@ export default function MembersPage() {
       <div className="flex flex-col gap-6">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <h1 className="text-3xl font-bold tracking-tight">Gerenciar Membros</h1>
-          <Button onClick={() => setIsAddDialogOpen(true)} className="w-full sm:w-auto">
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Adicionar Novo Membro
-          </Button>
+          <AddMemberDialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen} onSubmit={handleFormSubmit} />
         </div>
         <Card>
           <CardHeader>
@@ -247,10 +277,11 @@ export default function MembersPage() {
               </TableBody>
             </Table>
           </CardContent>
+           <CardFooter className="border-t p-4 justify-center">
+                <AddMemberDialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen} onSubmit={handleFormSubmit} />
+           </CardFooter>
         </Card>
       </div>
     </>
   );
 }
-
-    
