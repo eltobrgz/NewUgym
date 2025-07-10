@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
 import { LayoutDashboard, LineChart, Calendar, Settings, Users, DollarSign, LogOut, ClipboardList, CheckSquare, Award, UserSquare, Moon, Sun, Dumbbell } from "lucide-react";
-
+import { useUserRole } from "@/contexts/user-role-context";
 import {
   SidebarContent,
   SidebarHeader,
