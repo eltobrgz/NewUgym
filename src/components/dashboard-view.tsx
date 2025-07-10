@@ -12,7 +12,10 @@ export function DashboardView({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
-      <Sidebar isCollapsed={isSidebarCollapsed} />
+      <Sidebar 
+        isCollapsed={isSidebarCollapsed} 
+        onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+      />
       <div className={cn(
           "flex flex-col transition-[margin-left] duration-300 ease-in-out",
           isSidebarCollapsed ? "md:ml-20" : "md:ml-64"

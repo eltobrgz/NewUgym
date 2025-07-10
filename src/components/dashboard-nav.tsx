@@ -3,12 +3,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, LineChart, Calendar, Settings, Users, DollarSign, ClipboardList, CheckSquare, Award, UserSquare, LogOut, Sun, Moon, Search } from "lucide-react";
+import { LayoutDashboard, LineChart, Calendar, Settings, Users, DollarSign, ClipboardList, CheckSquare, Award, UserSquare, LogOut, Sun, Moon } from "lucide-react";
 import { useUserRole } from "@/contexts/user-role-context";
 import { cn } from "@/lib/utils";
 import { useTheme } from "next-themes";
 import { Switch } from "./ui/switch";
-import { Input } from "./ui/input";
 import { useEffect, useState } from "react";
 
 export const navConfig = {
@@ -35,10 +34,6 @@ export const navConfig = {
   ],
 };
 
-export const commonNav = [
-  { name: "Configurações", href: "/dashboard/settings", icon: Settings },
-];
-
 export function DashboardNav({ isCollapsed, onLinkClick }: { isCollapsed: boolean, onLinkClick?: () => void }) {
   const pathname = usePathname();
   const { userRole } = useUserRole();
@@ -58,78 +53,71 @@ export function DashboardNav({ isCollapsed, onLinkClick }: { isCollapsed: boolea
     }
   }
 
-  const linkClass = (href: string) =>
+  const linkClass = (href: string, isCollapsed: boolean) =>
     cn(
-      "flex items-center gap-4 p-2.5 rounded-lg transition-colors text-muted-foreground hover:bg-muted-foreground/10 hover:text-foreground",
-      (pathname === href || (href !== "/dashboard" && pathname.startsWith(href)))
-        ? "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground"
-        : "",
+      "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
+      pathname === href || (href !== "/dashboard" && pathname.startsWith(href))
+        ? "bg-primary text-primary-foreground hover:text-primary-foreground"
+        : "hover:bg-muted",
       isCollapsed ? "justify-center" : ""
     );
 
   const renderThemeSwitcher = () => {
     if (!mounted) {
-        return <div className="p-2.5 rounded-lg bg-muted-foreground/5 h-[52px]" />; // Placeholder to prevent layout shift
+        return <div className="h-[52px] w-full" />; // Placeholder
     }
     return (
-        <div className="p-2.5 rounded-lg bg-muted-foreground/5">
-            <div className="flex items-center gap-4">
-            <div className={cn("p-1.5 rounded-lg bg-background shadow-sm", isCollapsed && 'mx-auto')}>
-              {theme === 'dark' ? <Moon className="h-5 w-5 text-muted-foreground" /> : <Sun className="h-5 w-5 text-muted-foreground" />}
+        <div className="p-2">
+            <div className={cn("flex items-center rounded-lg p-2", isCollapsed ? 'justify-center' : 'justify-between')}>
+                <div className={cn("flex items-center gap-3", isCollapsed && "justify-center")}>
+                    <div className="flex items-center justify-center">
+                        {theme === 'dark' ? <Moon className="h-5 w-5 text-muted-foreground" /> : <Sun className="h-5 w-5 text-muted-foreground" />}
+                    </div>
+                    <span className={cn("text-muted-foreground", isCollapsed ? "hidden" : "block")}>
+                        {theme === 'dark' ? 'Escuro' : 'Claro'}
+                    </span>
+                </div>
+                <Switch
+                  checked={theme === 'dark'}
+                  onCheckedChange={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                  className={cn(isCollapsed ? "hidden" : "block")}
+                  aria-label="Toggle theme"
+                />
             </div>
-            <div className={cn("flex-1", isCollapsed ? "hidden" : "block")}>
-              <p className="text-sm font-semibold">{theme === 'dark' ? 'Dark Mode' : 'Light Mode'}</p>
-            </div>
-            <Switch
-              checked={theme === 'dark'}
-              onCheckedChange={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              className={cn(isCollapsed ? "hidden" : "block")}
-            />
-          </div>
         </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-full">
-      <div className={cn("relative my-2", isCollapsed ? "px-2.5" : "px-4")}>
-          <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input 
-            placeholder="Search..." 
-            className={cn("pl-8", isCollapsed ? "hidden" : "block")}
-          />
-          {isCollapsed && (
-            <button className="w-full p-2.5 rounded-lg transition-colors text-muted-foreground hover:bg-muted-foreground/10 hover:text-foreground">
-              <Search className="h-4 w-4 mx-auto" />
-            </button>
-          )}
-      </div>
-      
-      <nav className="flex-1 space-y-2 px-2.5">
+    <div className="flex h-full flex-col">
+      <nav className="flex-1 space-y-2 px-2 py-4">
         {navItems.map((item) => (
           <Link key={item.name} href={item.href} onClick={handleLinkClick}>
-            <div className={linkClass(item.href)}>
+            <div className={linkClass(item.href, isCollapsed)}>
               <item.icon className="h-5 w-5 shrink-0" />
               <span className={cn("truncate", isCollapsed ? "hidden" : "block")}>{item.name}</span>
             </div>
           </Link>
         ))}
       </nav>
-
-      <div className="mt-auto space-y-2 px-2.5 pb-4">
-        <Link href="/dashboard/settings" onClick={handleLinkClick}>
-          <div className={linkClass("/dashboard/settings")}>
-            <Settings className="h-5 w-5 shrink-0" />
-            <span className={cn("truncate", isCollapsed ? "hidden" : "block")}>Configurações</span>
-          </div>
-        </Link>
-        <Link href="/" onClick={handleLinkClick}>
-          <div className="flex items-center gap-4 p-2.5 rounded-lg transition-colors text-muted-foreground hover:bg-muted-foreground/10 hover:text-foreground">
-            <LogOut className="h-5 w-5 shrink-0" />
-            <span className={cn("truncate", isCollapsed ? "hidden" : "block")}>Sair</span>
-          </div>
-        </Link>
-        {renderThemeSwitcher()}
+      <div className="mt-auto border-t">
+        <div className="space-y-1 px-2 py-4">
+            <Link href="/dashboard/settings" onClick={handleLinkClick}>
+                <div className={linkClass("/dashboard/settings", isCollapsed)}>
+                    <Settings className="h-5 w-5 shrink-0" />
+                    <span className={cn("truncate", isCollapsed ? "hidden" : "block")}>Configurações</span>
+                </div>
+            </Link>
+             <Link href="/" onClick={handleLinkClick}>
+                <div className={linkClass("/", isCollapsed)}>
+                    <LogOut className="h-5 w-5 shrink-0" />
+                    <span className={cn("truncate", isCollapsed ? "hidden" : "block")}>Sair</span>
+                </div>
+            </Link>
+        </div>
+        <div className="border-t">
+            {renderThemeSwitcher()}
+        </div>
       </div>
     </div>
   );
