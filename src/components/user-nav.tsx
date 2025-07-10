@@ -24,6 +24,7 @@ import {
 import { useUserRole, UserRole } from "@/contexts/user-role-context";
 import { User, LogOut, Settings, SwatchBook } from "lucide-react";
 import { useSidebar } from "./ui/sidebar";
+import { cn } from "@/lib/utils";
 
 
 export function UserNav() {
@@ -43,12 +44,12 @@ export function UserNav() {
   };
   
   const triggerContent = (
-    <div className="flex items-center w-full gap-2 p-1 rounded-md text-left hover:bg-accent flex-1">
+    <div className="flex w-full items-center gap-2 rounded-md p-1 text-left transition-colors hover:bg-accent">
         <Avatar className="h-9 w-9">
           <AvatarImage src={`https://placehold.co/100x100.png`} alt={`@${user.name}`} data-ai-hint="person portrait"/>
           <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
         </Avatar>
-        <div className="flex-1 truncate" style={{ opacity: state === 'expanded' ? 1 : 0, transition: 'opacity 0.2s ease-in-out' }}>
+        <div className={cn("flex-1 truncate duration-200", state === "collapsed" ? "opacity-0 w-0" : "opacity-100 w-auto")}>
             <p className="text-sm font-medium leading-none text-card-foreground">{user.name}</p>
             <p className="text-xs leading-none text-muted-foreground truncate">
             {user.email}
@@ -60,16 +61,9 @@ export function UserNav() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        {state === 'expanded' ? (
-          <button className="w-full">{triggerContent}</button>
-        ) : (
-          <Button variant="ghost" className="relative h-9 w-9 rounded-full">
-            <Avatar className="h-9 w-9">
-              <AvatarImage src={`https://placehold.co/100x100.png`} alt={`@${user.name}`} data-ai-hint="person portrait"/>
-              <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
-            </Avatar>
-          </Button>
-        )}
+          <button className="w-full">
+            {triggerContent}
+          </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">

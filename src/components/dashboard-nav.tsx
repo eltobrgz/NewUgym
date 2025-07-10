@@ -14,6 +14,7 @@ import {
   SidebarMenuButton,
   SidebarFooter,
   useSidebar,
+  SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { UserNav } from "@/components/user-nav";
 import { Separator } from "./ui/separator";
@@ -88,13 +89,16 @@ export function DashboardNav() {
   return (
     <>
       <SidebarHeader>
-        <div className="flex items-center gap-2.5">
-          <Dumbbell className="size-7 shrink-0 text-primary" />
-          <div className={cn("duration-200", state === "collapsed" ? "opacity-0 w-0" : "opacity-100 w-auto")}>
-            <span className="text-lg font-bold whitespace-nowrap" data-testid="sidebar-title">
-                Ugym
-            </span>
-          </div>
+        <div className="flex items-center justify-between">
+            <div className={cn("flex items-center gap-2", state === "collapsed" && "justify-center")}>
+              <Dumbbell className="size-7 shrink-0 text-primary" />
+              <div className={cn("duration-200", state === "collapsed" ? "opacity-0 w-0" : "opacity-100 w-auto")}>
+                <span className="text-lg font-bold whitespace-nowrap" data-testid="sidebar-title">
+                    Ugym
+                </span>
+              </div>
+            </div>
+             <SidebarTrigger className="hidden sm:flex" />
         </div>
       </SidebarHeader>
       <SidebarContent className="flex flex-col justify-between">
