@@ -28,23 +28,24 @@ export type WorkoutPlan = {
     description: string; 
     difficulty: string; 
     schedule: DailyWorkout[];
-    assignedTo?: string[]; // student ids this plan is assigned to
-    owner?: string; // student id if they created it themselves
+    assignedTo?: string[]; // student ids this plan is assigned to (on templates)
+    owner?: string; // student id if they created it themselves or it's a copy
+    templateId?: string; // The ID of the template this plan was copied from
 };
 
 const mockStudentPlanSchedule: DailyWorkout[] = [
     {
         id: 'day1', day: 'Segunda-feira', focus: 'Peito, Ombros e Tríceps', exercises: [
-            { id: 'ex11', name: 'Supino Reto', sets: '4', reps: '8-12', isCompleted: true },
-            { id: 'ex12', name: 'Desenvolvimento com Halteres', sets: '3', reps: '10', isCompleted: false },
-            { id: 'ex13', name: 'Tríceps na Polia', sets: '3', reps: '12-15', isCompleted: false },
+            { id: 'ex11', name: 'Supino Reto', sets: '4', reps: '8-12', isCompleted: true, setLogs: [], notes: '' },
+            { id: 'ex12', name: 'Desenvolvimento com Halteres', sets: '3', reps: '10', isCompleted: false, setLogs: [], notes: '' },
+            { id: 'ex13', name: 'Tríceps na Polia', sets: '3', reps: '12-15', isCompleted: false, setLogs: [], notes: '' },
         ]
     },
     {
         id: 'day2', day: 'Terça-feira', focus: 'Costas e Bíceps', exercises: [
-            { id: 'ex21', name: 'Barra Fixa', sets: '3', reps: 'Até a falha', isCompleted: false },
-            { id: 'ex22', name: 'Remada Curvada', sets: '4', reps: '8-10', isCompleted: false },
-            { id: 'ex23', name: 'Rosca Direta', sets: '3', reps: '12', isCompleted: false },
+            { id: 'ex21', name: 'Barra Fixa', sets: '3', reps: 'Até a falha', isCompleted: false, setLogs: [], notes: '' },
+            { id: 'ex22', name: 'Remada Curvada', sets: '4', reps: '8-10', isCompleted: false, setLogs: [], notes: '' },
+            { id: 'ex23', name: 'Rosca Direta', sets: '3', reps: '12', isCompleted: false, setLogs: [], notes: '' },
         ]
     },
     { id: 'day3', day: 'Quarta-feira', focus: 'Descanso Ativo', exercises: [] },
@@ -52,10 +53,23 @@ const mockStudentPlanSchedule: DailyWorkout[] = [
 
 
 const initialWorkoutTemplates: WorkoutPlan[] = [
-    { id: "TPL-001", name: "Iniciante Força 3x", difficulty: "Iniciante", description: "Um plano de 3 dias para iniciantes focado em ganho de força.", schedule: mockStudentPlanSchedule, assignedTo: ['alex-johnson'] },
-    { id: "TPL-002", name: "Hipertrofia Full Body", difficulty: "Intermediário", description: "Treino de corpo inteiro para hipertrofia.", schedule: [], assignedTo: ['maria-garcia'] },
+    { id: "TPL-001", name: "Iniciante Força 3x", difficulty: "Iniciante", description: "Um plano de 3 dias para iniciantes focado em ganho de força.", schedule: [], assignedTo: [] },
+    { id: "TPL-002", name: "Hipertrofia Full Body", difficulty: "Intermediário", description: "Treino de corpo inteiro para hipertrofia.", schedule: [], assignedTo: [] },
     { id: "TPL-003", name: "Cardio Intenso 30min", difficulty: "Avançado", description: "Sessão de cardio de alta intensidade.", schedule: [] },
 ];
+
+const initialStudentOwnedPlans: WorkoutPlan[] = [
+    { 
+        id: "STU-PLN-001", 
+        name: "Meu Treino de Força", 
+        difficulty: "Iniciante", 
+        description: "Plano de 3 dias para iniciantes focado em ganho de força.", 
+        schedule: mockStudentPlanSchedule, 
+        owner: 'alex-johnson',
+        templateId: 'TPL-001',
+    }
+]
+
 
 // studentId -> planId
 type ActiveStudentPlans = Record<string, string>;
@@ -63,11 +77,11 @@ type ActiveStudentPlans = Record<string, string>;
 interface WorkoutsContextType {
     plans: WorkoutPlan[];
     activeStudentPlans: ActiveStudentPlans;
-    addPlan: (planData: Omit<WorkoutPlan, 'id'|'assignedTo'>) => void;
+    addPlan: (planData: Omit<WorkoutPlan, 'id'>) => void;
     updatePlan: (planId: string, updates: WorkoutPlan) => void;
     deletePlan: (planId: string) => void;
     assignPlanToStudents: (planId: string, studentIds: string[]) => void;
-    getAssignments: () => { studentId: string; studentName: string; planName: string; planId: string; }[];
+    getAssignments: () => { studentId: string; studentName: string; plan: WorkoutPlan | null; }[];
     setActiveStudentPlan: (studentId: string, planId: string) => void;
     updateExerciseDetails: (planId: string, dayId: string, updatedExercise: Exercise) => void;
     getStudentPlan: (studentId: string) => WorkoutPlan | null;
@@ -77,14 +91,17 @@ interface WorkoutsContextType {
 export const WorkoutsContext = createContext<WorkoutsContextType>({} as WorkoutsContextType);
 
 export const WorkoutsProvider = ({ children }: { children: ReactNode }) => {
-    const [plans, setPlans] = useState<WorkoutPlan[]>(initialWorkoutTemplates);
+    const [plans, setPlans] = useState<WorkoutPlan[]>([...initialWorkoutTemplates, ...initialStudentOwnedPlans]);
     const [activeStudentPlans, setActiveStudentPlans] = useState<ActiveStudentPlans>({
-        'alex-johnson': 'TPL-001' // Mock active plan
+        'alex-johnson': 'STU-PLN-001' // Mock active plan for a student
     });
 
-    const addPlan = (planData: Omit<WorkoutPlan, 'id' | 'assignedTo'>) => {
-        const newPlan = { ...planData, id: `plan-${Date.now()}`, assignedTo: [] };
-        setPlans(prev => [newPlan, ...prev]);
+    const addPlan = (planData: Omit<WorkoutPlan, 'id'>) => {
+        const newPlan = { ...planData, id: `plan-${Date.now()}` };
+        setPlans(prev => [...prev, newPlan]);
+        if(planData.owner) {
+            setActiveStudentPlan(planData.owner, newPlan.id)
+        }
     };
 
     const updatePlan = (planId: string, updates: WorkoutPlan) => {
@@ -96,33 +113,52 @@ export const WorkoutsProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const assignPlanToStudents = (planId: string, studentIds: string[]) => {
-        setPlans(prev => prev.map(p => {
-            if (p.id === planId) {
-                const currentAssigned = new Set(p.assignedTo || []);
-                studentIds.forEach(id => currentAssigned.add(id));
-                return { ...p, assignedTo: Array.from(currentAssigned) };
-            }
-            return p;
-        }));
-        
+        const template = plans.find(p => p.id === planId);
+        if (!template) return;
+
+        const newStudentPlans: WorkoutPlan[] = [];
         const newActivePlans: ActiveStudentPlans = { ...activeStudentPlans };
+
         studentIds.forEach(studentId => {
-            newActivePlans[studentId] = planId;
+            // Check if student already has a plan from this template
+            const existingPlan = plans.find(p => p.owner === studentId && p.templateId === planId);
+            if(existingPlan) {
+                newActivePlans[studentId] = existingPlan.id;
+            } else {
+                // Create a new copy for the student
+                const newPlanForStudent: WorkoutPlan = {
+                    ...template,
+                    id: `stu-pln-${studentId}-${Date.now()}`,
+                    owner: studentId,
+                    templateId: template.id,
+                    assignedTo: undefined, // Clear this for student copies
+                };
+                newStudentPlans.push(newPlanForStudent);
+                newActivePlans[studentId] = newPlanForStudent.id;
+            }
         });
+        
+        setPlans(prev => [...prev, ...newStudentPlans]);
         setActiveStudentPlans(newActivePlans);
     };
 
     const getAssignments = () => {
-        const assignments: { studentId: string; studentName: string; planName: string; planId: string; }[] = [];
-        plans.forEach(plan => {
-            (plan.assignedTo || []).forEach(studentId => {
-                const student = allUsers.find(s => s.id === studentId);
-                if (student) {
-                    assignments.push({ studentId: student.id, studentName: student.name, planName: plan.name, planId: plan.id });
-                }
-            });
+        // This should return a list of students and their active plans
+        const studentPlans = plans.filter(p => p.owner && allUsers.some(u => u.id === p.owner && u.role === 'Student'));
+
+        // This is a simplified logic. A real app would link trainers to students.
+        // For now, let's assume the trainer can see all students.
+        const allStudents = allUsers.filter(u => u.role === 'Student');
+
+        return allStudents.map(student => {
+            const activePlanId = activeStudentPlans[student.id];
+            const plan = activePlanId ? plans.find(p => p.id === activePlanId) : null;
+            return {
+                studentId: student.id,
+                studentName: student.name,
+                plan: plan || null,
+            };
         });
-        return assignments;
     }
 
     const setActiveStudentPlan = (studentId: string, planId: string) => {
@@ -147,7 +183,6 @@ export const WorkoutsProvider = ({ children }: { children: ReactNode }) => {
         }));
     };
 
-
     const getStudentPlan = (studentId: string) => {
         const activePlanId = activeStudentPlans[studentId];
         if (!activePlanId) return null;
@@ -156,18 +191,20 @@ export const WorkoutsProvider = ({ children }: { children: ReactNode }) => {
     
     const getStudentWorkoutProgress = (studentId: string) => {
         const plan = getStudentPlan(studentId);
-        if (!plan || plan.schedule.length === 0) return 0;
+        if (!plan || !plan.schedule || plan.schedule.length === 0) return 0;
 
         let totalExercises = 0;
         let completedExercises = 0;
 
         plan.schedule.forEach(day => {
-            day.exercises.forEach(ex => {
-                totalExercises++;
-                if (ex.isCompleted) {
-                    completedExercises++;
-                }
-            });
+            if (day.exercises && day.exercises.length > 0) {
+                day.exercises.forEach(ex => {
+                    totalExercises++;
+                    if (ex.isCompleted) {
+                        completedExercises++;
+                    }
+                });
+            }
         });
 
         if (totalExercises === 0) return 0;

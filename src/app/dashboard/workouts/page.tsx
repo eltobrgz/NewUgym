@@ -66,7 +66,7 @@ const WorkoutBuilder = ({ open, onOpenChange, onSave, plan: initialPlan }: { ope
                 setName(initialPlan.name);
                 setDescription(initialPlan.description);
                 setDifficulty(initialPlan.difficulty);
-                setSchedule(initialPlan.schedule.length > 0 ? initialPlan.schedule : [{ id: `day-${Date.now()}`, day: 'Segunda-feira', focus: 'Peito e Tríceps', exercises: [] }]);
+                setSchedule(initialPlan.schedule.length > 0 ? JSON.parse(JSON.stringify(initialPlan.schedule)) : [{ id: `day-${Date.now()}`, day: 'Segunda-feira', focus: 'Peito e Tríceps', exercises: [] }]);
             } else {
                  setName('');
                  setDescription('');
@@ -78,7 +78,7 @@ const WorkoutBuilder = ({ open, onOpenChange, onSave, plan: initialPlan }: { ope
 
     const handleSave = (e: React.FormEvent) => {
         e.preventDefault();
-        onSave({ id: initialPlan?.id || `TPL-${Date.now()}`, name, description, difficulty, schedule, assignedTo: initialPlan?.assignedTo || [] });
+        onSave({ ...initialPlan, id: initialPlan?.id || `TPL-${Date.now()}`, name, description, difficulty, schedule, assignedTo: initialPlan?.assignedTo || [] });
         onOpenChange(false);
     };
 
@@ -335,7 +335,7 @@ const TrainerView = () => {
     }
 
     const assignments = getAssignments();
-
+    const planTemplates = plans.filter(p => !p.owner);
 
     return (
     <>
@@ -379,8 +379,8 @@ const TrainerView = () => {
       
       <Tabs defaultValue="templates">
         <TabsList>
-            <TabsTrigger value="templates">Meus Planos</TabsTrigger>
-            <TabsTrigger value="assignments">Alunos Atribuídos</TabsTrigger>
+            <TabsTrigger value="templates">Meus Planos (Modelos)</TabsTrigger>
+            <TabsTrigger value="assignments">Planos de Alunos</TabsTrigger>
         </TabsList>
         <TabsContent value="templates">
             <Card>
@@ -394,18 +394,16 @@ const TrainerView = () => {
                           <TableRow>
                             <TableHead>Nome do Plano</TableHead>
                             <TableHead className="hidden md:table-cell">Dificuldade</TableHead>
-                            <TableHead className="hidden sm:table-cell">Atribuído a</TableHead>
                             <TableHead><span className="sr-only">Ações</span></TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {plans.map((plan) => (
+                          {planTemplates.map((plan) => (
                             <TableRow key={plan.id}>
                               <TableCell className="font-medium">{plan.name}</TableCell>
                                <TableCell className="hidden md:table-cell">
                                   <Badge variant="outline">{plan.difficulty}</Badge>
                                </TableCell>
-                              <TableCell className="hidden sm:table-cell">{plan.assignedTo?.length || 0} aluno(s)</TableCell>
                               <TableCell className="text-right">
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
@@ -436,22 +434,32 @@ const TrainerView = () => {
         <TabsContent value="assignments">
             <Card>
                 <CardHeader>
-                    <CardTitle>Atribuições de Treinos</CardTitle>
-                    <CardDescription>Visualize quais alunos estão seguindo cada plano de treino.</CardDescription>
+                    <CardTitle>Planos de Treino Ativos dos Alunos</CardTitle>
+                    <CardDescription>Visualize e edite o plano de treino de cada um dos seus alunos.</CardDescription>
                 </CardHeader>
                 <CardContent>
                      <Table>
                         <TableHeader>
                           <TableRow>
                             <TableHead>Aluno</TableHead>
-                            <TableHead>Plano Atribuído</TableHead>
+                            <TableHead>Plano Ativo</TableHead>
+                            <TableHead className="text-right">Ações</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {assignments.map((ass, i) => (
-                               <TableRow key={`${ass.planId}-${ass.studentId}-${i}`}>
+                            {assignments.map((ass) => (
+                               <TableRow key={ass.studentId}>
                                    <TableCell className="font-medium">{ass.studentName}</TableCell>
-                                   <TableCell>{ass.planName}</TableCell>
+                                   <TableCell>{ass.plan?.name || "Nenhum plano ativo"}</TableCell>
+                                   <TableCell className="text-right">
+                                       {ass.plan ? (
+                                           <Button variant="outline" size="sm" onClick={() => handleEditPlan(ass.plan!)}>
+                                               <Edit className="mr-2 h-4 w-4"/> Ver/Editar Plano
+                                           </Button>
+                                       ) : (
+                                            <Button variant="secondary" size="sm" disabled>Atribuir um plano</Button>
+                                       )}
+                                   </TableCell>
                                </TableRow>
                             ))}
                         </TableBody>
@@ -473,7 +481,7 @@ const ExerciseTrackerModal = ({ open, onOpenChange, planId, dayId, exercise, onU
             const numSets = parseInt(exercise.sets, 10) || 0;
             const currentLogs = exercise.setLogs || [];
             const newLogs: SetLog[] = Array.from({ length: numSets }, (_, i) => ({
-                id: currentLogs[i]?.id || `set-${i}`,
+                id: currentLogs[i]?.id || `set-${Date.now()}-${i}`,
                 weight: currentLogs[i]?.weight || 0,
                 reps: currentLogs[i]?.reps || 0,
                 isCompleted: currentLogs[i]?.isCompleted || false,
@@ -571,7 +579,7 @@ const StudentView = () => {
 
     const studentId = user.id;
     
-    const myPlans = plans.filter(p => p.owner === studentId || (p.assignedTo && p.assignedTo.includes(studentId)));
+    const myPlans = plans.filter(p => p.owner === studentId);
     const weeklyPlan = activeStudentPlans[studentId] ? plans.find(p => p.id === activeStudentPlans[studentId]) : null;
 
     const [isAiModalOpen, setIsAiModalOpen] = useState(false);
@@ -589,20 +597,20 @@ const StudentView = () => {
 
     const handleAiGeneratedPlan = (planData: GeneratedWorkoutPlan | null) => {
         if (planData) {
-            const newPlan: Omit<WorkoutPlan, 'id' | 'assignedTo'> = {
+            const newPlan: Omit<WorkoutPlan, 'id'> = {
                 name: planData.planName,
                 description: `Plano gerado por IA.`,
                 difficulty: 'IA Gerado',
                 owner: studentId,
                 schedule: planData.weeklySchedule.map((day, index) => ({
-                    id: `day-ai-${index}`, day: day.day, focus: day.focus,
+                    id: `day-ai-${Date.now()}-${index}`, day: day.day, focus: day.focus,
                     exercises: (day.exercises || []).map((ex, exIndex) => ({
-                        id: `ex-ai-${index}-${exIndex}`, name: ex.name, sets: String(ex.sets || ''), reps: String(ex.reps || ex.duration || ''),
+                        id: `ex-ai-${Date.now()}-${index}-${exIndex}`, name: ex.name, sets: String(ex.sets || ''), reps: String(ex.reps || ex.duration || ''),
                     }))
                 })),
             };
             addPlan(newPlan);
-             toast({ title: "Plano de IA Criado!", description: `O novo plano "${planData.planName}" foi adicionado aos seus planos.` });
+             toast({ title: "Plano de IA Criado!", description: `O novo plano "${planData.planName}" foi adicionado e ativado.` });
         }
         setIsAiModalOpen(false);
     };
@@ -689,7 +697,7 @@ const StudentView = () => {
                              {weeklyPlan && weeklyPlan.schedule.length > 0 ? (
                                 <Accordion type="single" collapsible className="w-full" defaultValue={`item-${new Date().getDay()}`}>
                                     {weeklyPlan.schedule.map((day, index) => {
-                                        const isRestDay = day.exercises.length === 0;
+                                        const isRestDay = !day.exercises || day.exercises.length === 0;
                                         const allCompleted = !isRestDay && day.exercises.every(ex => ex.isCompleted);
                                         
                                         return (
@@ -749,7 +757,7 @@ const StudentView = () => {
                                             <TableCell className="font-medium">{plan.name}</TableCell>
                                             <TableCell><Badge variant="outline">{plan.difficulty}</Badge></TableCell>
                                             <TableCell>
-                                                <Badge variant={plan.owner ? 'default' : 'secondary'}>{plan.owner ? 'Criado por mim' : 'Recebido'}</Badge>
+                                                <Badge variant={plan.templateId ? 'secondary' : 'default'}>{plan.templateId ? 'Recebido' : 'Criado por mim'}</Badge>
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <Button variant="ghost" size="sm" onClick={() => handleActivatePlan(plan.id)} disabled={activeStudentPlans[studentId] === plan.id}>
@@ -761,11 +769,9 @@ const StudentView = () => {
                                                         <DropdownMenuItem onSelect={() => handleEditPlan(plan)}>
                                                           <Edit className="mr-2 h-4 w-4"/> Editar
                                                         </DropdownMenuItem>
-                                                        {plan.owner === studentId && (
-                                                            <DropdownMenuItem onSelect={() => handleDeletePlan(plan.id)} className="text-destructive">
-                                                                <Trash2 className="mr-2 h-4 w-4"/> Excluir
-                                                            </DropdownMenuItem>
-                                                        )}
+                                                        <DropdownMenuItem onSelect={() => handleDeletePlan(plan.id)} className="text-destructive">
+                                                            <Trash2 className="mr-2 h-4 w-4"/> Excluir
+                                                        </DropdownMenuItem>
                                                     </DropdownMenuContent>
                                                 </DropdownMenu>
                                             </TableCell>
