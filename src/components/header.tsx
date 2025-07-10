@@ -6,7 +6,7 @@ import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { UserNav } from "@/components/user-nav";
-import { Sidebar } from "./sidebar";
+import { SidebarContent } from "./sidebar-content";
 
 export function Header({ onToggleSidebar }: { onToggleSidebar: () => void; }) {
   const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
@@ -25,7 +25,10 @@ export function Header({ onToggleSidebar }: { onToggleSidebar: () => void; }) {
           </Button>
         </SheetTrigger>
         <SheetContent side="left" className="p-0 flex flex-col w-64">
-           <Sidebar isCollapsed={false} onToggle={() => {}} onMobileLinkClick={() => setIsMobileSheetOpen(false)} />
+           <SidebarContent 
+            isCollapsed={false} 
+            onToggle={() => {}} 
+            onMobileLinkClick={() => setIsMobileSheetOpen(false)} />
         </SheetContent>
       </Sheet>
       <div className="flex w-full items-center justify-end gap-4">

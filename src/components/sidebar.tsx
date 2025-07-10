@@ -1,13 +1,10 @@
 
 "use client";
 
-import { DashboardNav } from "@/components/dashboard-nav";
-import { UserProfile } from "./user-profile";
-import { useUserRole } from "@/contexts/user-role-context";
+import { SidebarContent } from "@/components/sidebar-content";
 import { cn } from "@/lib/utils";
 
 export function Sidebar({ isCollapsed, onToggle, onMobileLinkClick }: { isCollapsed: boolean, onToggle: () => void, onMobileLinkClick?: () => void }) {
-  const { user } = useUserRole();
 
   return (
     <div
@@ -16,8 +13,7 @@ export function Sidebar({ isCollapsed, onToggle, onMobileLinkClick }: { isCollap
         isCollapsed ? "w-20" : "w-64"
       )}
     >
-      <UserProfile isCollapsed={isCollapsed} onToggle={onToggle} user={user} />
-      <DashboardNav isCollapsed={isCollapsed} onLinkClick={onMobileLinkClick} />
+      <SidebarContent isCollapsed={isCollapsed} onToggle={onToggle} onMobileLinkClick={onMobileLinkClick} />
     </div>
   );
 }
