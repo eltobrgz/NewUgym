@@ -3,8 +3,8 @@
 
 import { useState, useId, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { CheckCircle2, Circle, Dumbbell, PlusCircle, Sparkles, Trash2, MoreVertical, GripVertical, Save, X } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { CheckCircle2, Circle, Dumbbell, PlusCircle, Sparkles, Trash2, MoreVertical, GripVertical, Save, X, UserPlus, ChevronDown } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from '@/lib/utils';
 import { useUserRole } from '@/contexts/user-role-context';
@@ -42,19 +42,14 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 
 type Exercise = { id: string; name: string; sets: string; reps: string; isCompleted?: boolean };
 type DailyWorkout = { id: string; day: string; focus: string; exercises: Exercise[]; };
-type WorkoutTemplate = { id: string; name: string; description: string; difficulty: string; schedule: DailyWorkout[]; };
+type WorkoutPlan = { id: string; name: string; description: string; difficulty: string; schedule: DailyWorkout[]; assignedTo?: string[]; };
 
-type WorkoutPlan = { planName: string; weeklySchedule: { day: string; focus: string; exercises?: { name: string; sets?: number; reps?: string; duration?: string; rest?: string }[] }[] };
+type GeneratedWorkoutPlan = { planName: string; weeklySchedule: { day: string; focus: string; exercises?: { name: string; sets?: number; reps?: string; duration?: string; rest?: string }[] }[] };
 
-const initialWorkoutTemplates: WorkoutTemplate[] = [
-    { id: "TPL-001", name: "Iniciante Força 3x", difficulty: "Iniciante", description: "Um plano de 3 dias para iniciantes focado em ganho de força.", schedule: [] },
-    { id: "TPL-002", name: "Hipertrofia Full Body", difficulty: "Intermediário", description: "Treino de corpo inteiro para hipertrofia.", schedule: [] },
+const initialWorkoutTemplates: WorkoutPlan[] = [
+    { id: "TPL-001", name: "Iniciante Força 3x", difficulty: "Iniciante", description: "Um plano de 3 dias para iniciantes focado em ganho de força.", schedule: [], assignedTo: ['alex-johnson'] },
+    { id: "TPL-002", name: "Hipertrofia Full Body", difficulty: "Intermediário", description: "Treino de corpo inteiro para hipertrofia.", schedule: [], assignedTo: ['maria-garcia'] },
     { id: "TPL-003", name: "Cardio Intenso 30min", difficulty: "Avançado", description: "Sessão de cardio de alta intensidade.", schedule: [] },
-];
-
-const initialAssignments = [
-    { studentName: "Alex Johnson", templateName: "Hipertrofia Full Body", assignedDate: "2024-08-15" },
-    { studentName: "Maria Garcia", templateName: "Iniciante Força 3x", assignedDate: "2024-08-14" },
 ];
 
 const studentsForAssignment = [
@@ -64,8 +59,25 @@ const studentsForAssignment = [
   { id: "emily-white", name: "Emily White" },
 ];
 
+const mockStudentPlan: DailyWorkout[] = [
+    {
+        id: 'day1', day: 'Segunda-feira', focus: 'Peito, Ombros e Tríceps', exercises: [
+            { id: 'ex11', name: 'Supino Reto', sets: '4', reps: '8-12', isCompleted: true },
+            { id: 'ex12', name: 'Desenvolvimento com Halteres', sets: '3', reps: '10', isCompleted: false },
+            { id: 'ex13', name: 'Tríceps na Polia', sets: '3', reps: '12-15', isCompleted: false },
+        ]
+    },
+    {
+        id: 'day2', day: 'Terça-feira', focus: 'Costas e Bíceps', exercises: [
+            { id: 'ex21', name: 'Barra Fixa', sets: '3', reps: 'Até a falha', isCompleted: false },
+            { id: 'ex22', name: 'Remada Curvada', sets: '4', reps: '8-10', isCompleted: false },
+            { id: 'ex23', name: 'Rosca Direta', sets: '3', reps: '12', isCompleted: false },
+        ]
+    },
+    { id: 'day3', day: 'Quarta-feira', focus: 'Descanso Ativo', exercises: [] },
+];
 
-const WorkoutBuilder = ({ open, onOpenChange, onSave, template }: { open: boolean, onOpenChange: (open: boolean) => void, onSave: (template: WorkoutTemplate) => void, template: WorkoutTemplate | null }) => {
+const WorkoutBuilder = ({ open, onOpenChange, onSave, plan: initialPlan }: { open: boolean, onOpenChange: (open: boolean) => void, onSave: (plan: WorkoutPlan) => void, plan: WorkoutPlan | null }) => {
     const formId = useId();
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
@@ -73,24 +85,24 @@ const WorkoutBuilder = ({ open, onOpenChange, onSave, template }: { open: boolea
     const [schedule, setSchedule] = useState<DailyWorkout[]>([]);
 
     useEffect(() => {
-        if (template) {
-            setName(template.name);
-            setDescription(template.description);
-            setDifficulty(template.difficulty);
-            setSchedule(template.schedule || []);
-        } else {
-             setName('');
-             setDescription('');
-             setDifficulty('');
-             setSchedule([
-                { id: `day-${Date.now()}`, day: 'Segunda-feira', focus: 'Peito e Tríceps', exercises: [] }
-             ]);
+        if (open) {
+            if (initialPlan) {
+                setName(initialPlan.name);
+                setDescription(initialPlan.description);
+                setDifficulty(initialPlan.difficulty);
+                setSchedule(initialPlan.schedule.length > 0 ? initialPlan.schedule : [{ id: `day-${Date.now()}`, day: 'Segunda-feira', focus: 'Peito e Tríceps', exercises: [] }]);
+            } else {
+                 setName('');
+                 setDescription('');
+                 setDifficulty('');
+                 setSchedule([{ id: `day-${Date.now()}`, day: 'Segunda-feira', focus: 'Peito e Tríceps', exercises: [] }]);
+            }
         }
-    }, [template, open]);
+    }, [initialPlan, open]);
 
     const handleSave = (e: React.FormEvent) => {
         e.preventDefault();
-        onSave({ id: template?.id || `TPL-${Date.now()}`, name, description, difficulty, schedule });
+        onSave({ id: initialPlan?.id || `TPL-${Date.now()}`, name, description, difficulty, schedule });
         onOpenChange(false);
     };
 
@@ -123,35 +135,35 @@ const WorkoutBuilder = ({ open, onOpenChange, onSave, template }: { open: boolea
             <DialogContent className="max-w-6xl w-full h-[95vh] flex flex-col p-0">
                 <DialogHeader className="p-6 pb-0">
                     <div className="flex items-center justify-between">
-                         <DialogTitle className="text-2xl">{template ? 'Editar Template de Treino' : 'Criar Novo Template'}</DialogTitle>
+                         <DialogTitle className="text-2xl">{initialPlan ? 'Editar Plano de Treino' : 'Criar Novo Plano'}</DialogTitle>
                          <div className="flex gap-2">
                              <Button variant="ghost" onClick={() => onOpenChange(false)}><X className="mr-2" /> Cancelar</Button>
-                             <Button type="submit" form={formId}><Save className="mr-2"/> Salvar Template</Button>
+                             <Button type="submit" form={formId}><Save className="mr-2"/> Salvar Plano</Button>
                          </div>
                     </div>
                     <DialogDescription>
-                        Construa um plano de treino semanal detalhado que pode ser reutilizado e atribuído aos seus alunos.
+                        Construa um plano de treino semanal detalhado, com exercícios, séries e repetições.
                     </DialogDescription>
                 </DialogHeader>
                 <form id={formId} onSubmit={handleSave} className="flex-1 overflow-y-auto px-6 space-y-6">
                     <Card>
                         <CardHeader>
-                            <CardTitle>Informações do Template</CardTitle>
+                            <CardTitle>Informações do Plano</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <Label htmlFor="template-name">Nome do Template</Label>
-                                    <Input id="template-name" value={name} onChange={e => setName(e.target.value)} placeholder="Ex: Hipertrofia Intensa 5x" required />
+                                    <Label htmlFor="plan-name">Nome do Plano</Label>
+                                    <Input id="plan-name" value={name} onChange={e => setName(e.target.value)} placeholder="Ex: Hipertrofia Intensa 5x" required />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="template-difficulty">Dificuldade</Label>
-                                    <Input id="template-difficulty" value={difficulty} onChange={e => setDifficulty(e.target.value)} placeholder="Ex: Intermediário" required/>
+                                    <Label htmlFor="plan-difficulty">Dificuldade</Label>
+                                    <Input id="plan-difficulty" value={difficulty} onChange={e => setDifficulty(e.target.value)} placeholder="Ex: Intermediário" required/>
                                 </div>
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="template-description">Descrição</Label>
-                                <Textarea id="template-description" value={description} onChange={e => setDescription(e.target.value)} placeholder="Descreva o foco e objetivo deste template..." />
+                                <Label htmlFor="plan-description">Descrição</Label>
+                                <Textarea id="plan-description" value={description} onChange={e => setDescription(e.target.value)} placeholder="Descreva o foco e objetivo deste plano..." />
                             </div>
                         </CardContent>
                     </Card>
@@ -197,7 +209,7 @@ const WorkoutBuilder = ({ open, onOpenChange, onSave, template }: { open: boolea
     )
 }
 
-const AssignWorkoutModal = ({ open, onOpenChange, templateName }: { open: boolean, onOpenChange: (open: boolean) => void, templateName: string }) => {
+const AssignWorkoutModal = ({ open, onOpenChange, onAssign, planName }: { open: boolean, onOpenChange: (open: boolean) => void, onAssign: (studentIds: string[]) => void, planName: string }) => {
     const { toast } = useToast();
     const [selectedStudents, setSelectedStudents] = useState<Set<string>>(new Set());
 
@@ -210,10 +222,7 @@ const AssignWorkoutModal = ({ open, onOpenChange, templateName }: { open: boolea
             });
             return;
         }
-        toast({
-            title: 'Treino Atribuído!',
-            description: `O template "${templateName}" foi atribuído a ${selectedStudents.size} aluno(s).`,
-        });
+        onAssign(Array.from(selectedStudents));
         onOpenChange(false);
         setSelectedStudents(new Set());
     };
@@ -240,8 +249,8 @@ const AssignWorkoutModal = ({ open, onOpenChange, templateName }: { open: boolea
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Atribuir "{templateName}"</DialogTitle>
-                    <DialogDescription>Selecione os alunos para quem você deseja atribuir este template de treino.</DialogDescription>
+                    <DialogTitle>Atribuir "{planName}"</DialogTitle>
+                    <DialogDescription>Selecione os alunos para quem você deseja atribuir este plano de treino.</DialogDescription>
                 </DialogHeader>
                 <div className="py-4">
                     <div className="flex items-center px-4 pb-2 border-b">
@@ -261,7 +270,7 @@ const AssignWorkoutModal = ({ open, onOpenChange, templateName }: { open: boolea
                 </div>
                 <DialogFooter>
                     <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-                    <Button onClick={handleAssign}>Atribuir</Button>
+                    <Button onClick={handleAssign}>Atribuir a {selectedStudents.size} Aluno(s)</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
@@ -273,16 +282,16 @@ const TrainerView = () => {
     const [isAiModalOpen, setIsAiModalOpen] = useState(false);
     const [isBuilderOpen, setIsBuilderOpen] = useState(false);
     const [isAssignModalOpen, setAssignModalOpen] = useState(false);
-    const [templates, setTemplates] = useState(initialWorkoutTemplates);
-    const [selectedTemplate, setSelectedTemplate] = useState<WorkoutTemplate | null>(null);
+    const [plans, setPlans] = useState<WorkoutPlan[]>(initialWorkoutTemplates);
+    const [selectedPlan, setSelectedPlan] = useState<WorkoutPlan | null>(null);
 
-    const handleAiGeneratedPlan = (plan: WorkoutPlan | null) => {
+    const handleAiGeneratedPlan = (plan: GeneratedWorkoutPlan | null) => {
         if (plan) {
-            const newTemplate: WorkoutTemplate = {
+            const newPlan: WorkoutPlan = {
                 id: `TPL-AI-${Date.now()}`,
                 name: plan.planName,
                 description: `Plano gerado por IA com foco em ${plan.weeklySchedule[0]?.focus || 'geral'}.`,
-                difficulty: 'IA Gerado', // Could be an input in the form
+                difficulty: 'IA Gerado',
                 schedule: plan.weeklySchedule.map((day, index) => ({
                     id: `day-ai-${index}`,
                     day: day.day,
@@ -295,71 +304,102 @@ const TrainerView = () => {
                     }))
                 })),
             };
-            setTemplates(prev => [newTemplate, ...prev]);
+            setPlans(prev => [newPlan, ...prev]);
              toast({
-                title: "Template de IA Criado!",
-                description: `O novo template "${plan.planName}" foi adicionado à sua biblioteca.`,
+                title: "Plano de IA Criado!",
+                description: `O novo plano "${plan.planName}" foi adicionado à sua biblioteca.`,
             });
         }
         setIsAiModalOpen(false);
     };
     
-    const handleSaveTemplate = (template: WorkoutTemplate) => {
-         const isEditing = templates.some(t => t.id === template.id);
+    const handleSavePlan = (plan: WorkoutPlan) => {
+         const isEditing = plans.some(p => p.id === plan.id);
          if (isEditing) {
-             setTemplates(templates.map(t => t.id === template.id ? template : t));
+             setPlans(plans.map(p => p.id === plan.id ? plan : p));
          } else {
-             setTemplates([template, ...templates]);
+             setPlans([plan, ...plans]);
          }
          toast({
-            title: `Template ${isEditing ? 'Atualizado' : 'Criado'}!`,
-            description: `O template de treino "${template.name}" foi salvo com sucesso.`,
+            title: `Plano ${isEditing ? 'Atualizado' : 'Criado'}!`,
+            description: `O plano de treino "${plan.name}" foi salvo com sucesso.`,
         });
     }
 
-    const handleEditTemplate = (template: WorkoutTemplate) => {
-        setSelectedTemplate(template);
+    const handleEditPlan = (plan: WorkoutPlan) => {
+        setSelectedPlan(plan);
         setIsBuilderOpen(true);
     }
     
-    const handleAddNewTemplate = () => {
-        setSelectedTemplate(null);
+    const handleAddNewPlan = () => {
+        setSelectedPlan(null);
         setIsBuilderOpen(true);
     }
     
-    const handleOpenAssignModal = (template: WorkoutTemplate) => {
-        setSelectedTemplate(template);
+    const handleOpenAssignModal = (plan: WorkoutPlan) => {
+        setSelectedPlan(plan);
         setAssignModalOpen(true);
     }
 
-    const handleDeleteTemplate = (templateId: string) => {
-        setTemplates(templates.filter(t => t.id !== templateId));
+    const handleDeletePlan = (planId: string) => {
+        setPlans(plans.filter(p => p.id !== planId));
         toast({
-            title: 'Template Excluído',
-            description: 'O template de treino foi removido da sua biblioteca.',
+            title: 'Plano Excluído',
+            description: 'O plano de treino foi removido da sua biblioteca.',
             variant: 'destructive'
         })
     }
+
+    const handleAssignStudents = (studentIds: string[]) => {
+        if (!selectedPlan) return;
+        setPlans(plans.map(p => {
+            if (p.id === selectedPlan.id) {
+                const currentAssigned = new Set(p.assignedTo || []);
+                studentIds.forEach(id => currentAssigned.add(id));
+                return { ...p, assignedTo: Array.from(currentAssigned) };
+            }
+            return p;
+        }));
+        toast({
+            title: 'Plano Atribuído!',
+            description: `O plano "${selectedPlan.name}" foi atribuído com sucesso.`,
+        });
+    }
+
+    const getAssignments = () => {
+        const assignments: { studentName: string; planName: string; planId: string; }[] = [];
+        plans.forEach(plan => {
+            (plan.assignedTo || []).forEach(studentId => {
+                const student = studentsForAssignment.find(s => s.id === studentId);
+                if (student) {
+                    assignments.push({ studentName: student.name, planName: plan.name, planId: plan.id });
+                }
+            });
+        });
+        return assignments;
+    }
+
 
     return (
     <>
       <WorkoutBuilder 
         open={isBuilderOpen}
         onOpenChange={setIsBuilderOpen}
-        onSave={handleSaveTemplate}
-        template={selectedTemplate}
+        onSave={handleSavePlan}
+        plan={selectedPlan}
       />
-      {selectedTemplate && (
+      {selectedPlan && (
           <AssignWorkoutModal 
             open={isAssignModalOpen}
             onOpenChange={setAssignModalOpen}
-            templateName={selectedTemplate.name}
+            planName={selectedPlan.name}
+            onAssign={handleAssignStudents}
           />
       )}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
         <h1 className="text-3xl font-bold tracking-tight">Gerenciar Treinos</h1>
         <div className="flex gap-2 w-full sm:w-auto">
-            <Button variant="outline" onClick={handleAddNewTemplate} className="flex-1"><PlusCircle className="mr-2 h-4 w-4" />Criar Template</Button>
+            <Button variant="outline" onClick={handleAddNewPlan} className="flex-1"><PlusCircle className="mr-2 h-4 w-4" />Criar Plano</Button>
             <Dialog open={isAiModalOpen} onOpenChange={setIsAiModalOpen}>
                 <DialogTrigger asChild>
                     <Button className="flex-1">
@@ -369,9 +409,9 @@ const TrainerView = () => {
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-[625px]">
                     <DialogHeader>
-                        <DialogTitle>Gerador de Template com IA</DialogTitle>
+                        <DialogTitle>Gerador de Plano com IA</DialogTitle>
                         <DialogDescription>
-                            Descreva os objetivos do template e deixe a IA criar um plano de treino reutilizável.
+                            Descreva os objetivos e deixe a IA criar um plano de treino completo.
                         </DialogDescription>
                     </DialogHeader>
                     <GenerateWorkoutForm onPlanGenerated={handleAiGeneratedPlan} />
@@ -382,33 +422,33 @@ const TrainerView = () => {
       
       <Tabs defaultValue="templates">
         <TabsList>
-            <TabsTrigger value="templates">Templates</TabsTrigger>
+            <TabsTrigger value="templates">Meus Planos</TabsTrigger>
             <TabsTrigger value="assignments">Alunos Atribuídos</TabsTrigger>
         </TabsList>
         <TabsContent value="templates">
             <Card>
                 <CardHeader>
-                    <CardTitle>Templates de Treino</CardTitle>
-                    <CardDescription>Crie e gerencie templates reutilizáveis para seus alunos.</CardDescription>
+                    <CardTitle>Biblioteca de Planos</CardTitle>
+                    <CardDescription>Crie e gerencie planos reutilizáveis para seus alunos.</CardDescription>
                 </CardHeader>
                 <CardContent>
                      <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead>Nome do Template</TableHead>
+                            <TableHead>Nome do Plano</TableHead>
                             <TableHead className="hidden md:table-cell">Dificuldade</TableHead>
-                            <TableHead className="hidden sm:table-cell">Nº de Dias</TableHead>
+                            <TableHead className="hidden sm:table-cell">Atribuído a</TableHead>
                             <TableHead><span className="sr-only">Ações</span></TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {templates.map((template) => (
-                            <TableRow key={template.id}>
-                              <TableCell className="font-medium">{template.name}</TableCell>
+                          {plans.map((plan) => (
+                            <TableRow key={plan.id}>
+                              <TableCell className="font-medium">{plan.name}</TableCell>
                                <TableCell className="hidden md:table-cell">
-                                  <Badge variant="outline">{template.difficulty}</Badge>
+                                  <Badge variant="outline">{plan.difficulty}</Badge>
                                </TableCell>
-                              <TableCell className="hidden sm:table-cell">{template.schedule.length}</TableCell>
+                              <TableCell className="hidden sm:table-cell">{plan.assignedTo?.length || 0} aluno(s)</TableCell>
                               <TableCell className="text-right">
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
@@ -417,9 +457,11 @@ const TrainerView = () => {
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent>
-                                        <DropdownMenuItem onSelect={() => handleEditTemplate(template)}>Editar</DropdownMenuItem>
-                                        <DropdownMenuItem onSelect={() => handleOpenAssignModal(template)}>Atribuir a Alunos</DropdownMenuItem>
-                                        <DropdownMenuItem onSelect={() => handleDeleteTemplate(template.id)} className="text-destructive">Excluir</DropdownMenuItem>
+                                        <DropdownMenuItem onSelect={() => handleEditPlan(plan)}>Editar</DropdownMenuItem>
+                                        <DropdownMenuItem onSelect={() => handleOpenAssignModal(plan)}>
+                                            <UserPlus className="mr-2 h-4 w-4" /> Atribuir a Alunos
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onSelect={() => handleDeletePlan(plan.id)} className="text-destructive">Excluir</DropdownMenuItem>
                                     </DropdownMenuContent>
                                 </DropdownMenu>
                               </TableCell>
@@ -434,23 +476,25 @@ const TrainerView = () => {
             <Card>
                 <CardHeader>
                     <CardTitle>Atribuições de Treinos</CardTitle>
-                    <CardDescription>Visualize quais alunos estão seguindo cada template de treino.</CardDescription>
+                    <CardDescription>Visualize quais alunos estão seguindo cada plano de treino.</CardDescription>
                 </CardHeader>
                 <CardContent>
                      <Table>
                         <TableHeader>
                           <TableRow>
                             <TableHead>Aluno</TableHead>
-                            <TableHead>Template Atribuído</TableHead>
-                            <TableHead className="text-right">Data</TableHead>
+                            <TableHead>Plano Atribuído</TableHead>
+                            <TableHead className="text-right">Ações</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {initialAssignments.map((ass, i) => (
-                               <TableRow key={i}>
+                            {getAssignments().map((ass, i) => (
+                               <TableRow key={`${ass.planId}-${i}`}>
                                    <TableCell className="font-medium">{ass.studentName}</TableCell>
-                                   <TableCell>{ass.templateName}</TableCell>
-                                   <TableCell className="text-right">{ass.assignedDate}</TableCell>
+                                   <TableCell>{ass.planName}</TableCell>
+                                   <TableCell className="text-right">
+                                       <Button variant="link" size="sm">Ver Progresso</Button>
+                                   </TableCell>
                                </TableRow>
                             ))}
                         </TableBody>
@@ -463,112 +507,181 @@ const TrainerView = () => {
     )
 }
 
-const mockStudentPlan: DailyWorkout[] = [
-    {
-        id: 'day1', day: 'Segunda-feira', focus: 'Peito, Ombros e Tríceps', exercises: [
-            { id: 'ex11', name: 'Supino Reto', sets: '4', reps: '8-12', isCompleted: true },
-            { id: 'ex12', name: 'Desenvolvimento com Halteres', sets: '3', reps: '10', isCompleted: false },
-            { id: 'ex13', name: 'Tríceps na Polia', sets: '3', reps: '12-15', isCompleted: false },
-        ]
-    },
-    {
-        id: 'day2', day: 'Terça-feira', focus: 'Costas e Bíceps', exercises: [
-            { id: 'ex21', name: 'Barra Fixa', sets: '3', reps: 'Até a falha', isCompleted: false },
-            { id: 'ex22', name: 'Remada Curvada', sets: '4', reps: '8-10', isCompleted: false },
-            { id: 'ex23', name: 'Rosca Direta', sets: '3', reps: '12', isCompleted: false },
-        ]
-    },
-    { id: 'day3', day: 'Quarta-feira', focus: 'Descanso Ativo', exercises: [] },
-    {
-        id: 'day4', day: 'Quinta-feira', focus: 'Pernas', exercises: [
-            { id: 'ex41', name: 'Agachamento Livre', sets: '4', reps: '8-10', isCompleted: false },
-            { id: 'ex42', name: 'Leg Press', sets: '3', reps: '12-15', isCompleted: false },
-            { id: 'ex43', name: 'Cadeira Extensora', sets: '3', reps: '15', isCompleted: false },
-        ]
-    },
-    { id: 'day5', day: 'Sexta-feira', focus: 'Cardio e Abdômen', exercises: [] },
-    { id: 'day6', day: 'Sábado', focus: 'Descanso', exercises: [] },
-    { id: 'day7', day: 'Domingo', focus: 'Descanso', exercises: [] },
-];
-
 const StudentView = () => {
-    const [weeklyPlan, setWeeklyPlan] = useState(mockStudentPlan);
+    const { toast } = useToast();
+    const [weeklyPlan, setWeeklyPlan] = useState<DailyWorkout[]>(mockStudentPlan);
+    const [myPlans, setMyPlans] = useState<WorkoutPlan[]>([]);
+    const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+    const [isBuilderOpen, setIsBuilderOpen] = useState(false);
+    const [selectedPlan, setSelectedPlan] = useState<WorkoutPlan | null>(null);
     
     const handleToggleExercise = (dayId: string, exerciseId: string) => {
         setWeeklyPlan(plan => 
             plan.map(day => {
                 if (day.id === dayId) {
-                    return {
-                        ...day,
-                        exercises: day.exercises.map(ex => {
-                            if (ex.id === exerciseId) {
-                                return { ...ex, isCompleted: !ex.isCompleted };
-                            }
-                            return ex;
-                        })
-                    };
+                    return { ...day, exercises: day.exercises.map(ex => ex.id === exerciseId ? { ...ex, isCompleted: !ex.isCompleted } : ex) };
                 }
                 return day;
             })
         );
     };
 
+    const handleAiGeneratedPlan = (plan: GeneratedWorkoutPlan | null) => {
+        if (plan) {
+            const newPlan: WorkoutPlan = {
+                id: `PLN-AI-${Date.now()}`,
+                name: plan.planName,
+                description: `Plano gerado por IA com foco em ${plan.weeklySchedule[0]?.focus || 'geral'}.`,
+                difficulty: 'IA Gerado',
+                schedule: plan.weeklySchedule.map((day, index) => ({
+                    id: `day-ai-${index}`, day: day.day, focus: day.focus,
+                    exercises: (day.exercises || []).map((ex, exIndex) => ({
+                        id: `ex-ai-${index}-${exIndex}`, name: ex.name, sets: String(ex.sets || ''), reps: String(ex.reps || ex.duration || ''),
+                    }))
+                })),
+            };
+            setMyPlans(prev => [newPlan, ...prev]);
+             toast({ title: "Plano de IA Criado!", description: `O novo plano "${plan.planName}" foi adicionado aos seus planos.` });
+        }
+        setIsAiModalOpen(false);
+    };
+
+    const handleSavePlan = (plan: WorkoutPlan) => {
+         const isEditing = myPlans.some(p => p.id === plan.id);
+         if (isEditing) {
+             setMyPlans(myPlans.map(p => p.id === plan.id ? plan : p));
+         } else {
+             setMyPlans([plan, ...myPlans]);
+         }
+         toast({ title: `Plano ${isEditing ? 'Atualizado' : 'Criado'}!`, description: `Seu plano "${plan.name}" foi salvo com sucesso.` });
+    };
+
+    const handleAddNewPlan = () => { setSelectedPlan(null); setIsBuilderOpen(true); };
+    const handleEditPlan = (plan: WorkoutPlan) => { setSelectedPlan(plan); setIsBuilderOpen(true); };
+    const handleDeletePlan = (planId: string) => {
+        setMyPlans(myPlans.filter(p => p.id !== planId));
+        toast({ title: 'Plano Excluído', variant: 'destructive' });
+    };
+    const handleActivatePlan = (plan: WorkoutPlan) => {
+        setWeeklyPlan(plan.schedule);
+        toast({ title: 'Plano Ativado!', description: `Você começou o plano "${plan.name}".`});
+    };
+
     return (
         <div className="flex flex-col gap-6">
-            <h1 className="text-3xl font-bold tracking-tight">Meu Plano de Treino</h1>
+            <WorkoutBuilder open={isBuilderOpen} onOpenChange={setIsBuilderOpen} onSave={handleSavePlan} plan={selectedPlan} />
+            <Dialog open={isAiModalOpen} onOpenChange={setIsAiModalOpen}>
+                <DialogTrigger asChild>
+                    <Button className="sr-only">Criar com IA</Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[625px]">
+                    <DialogHeader>
+                        <DialogTitle>Gerador de Plano com IA</DialogTitle>
+                        <DialogDescription>Descreva seus objetivos e deixe a IA criar um plano de treino para você.</DialogDescription>
+                    </DialogHeader>
+                    <GenerateWorkoutForm onPlanGenerated={handleAiGeneratedPlan} />
+                </DialogContent>
+            </Dialog>
 
-            <Card>
-                <CardHeader>
-                    <CardTitle>Plano Semanal</CardTitle>
-                    <CardDescription>Seu plano de treino para esta semana. Marque os exercícios conforme os completa.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <Accordion type="single" collapsible className="w-full" defaultValue={`item-${new Date().getDay()}`}>
-                        {weeklyPlan.map((day, index) => {
-                            const isRestDay = day.exercises.length === 0;
-                             const allCompleted = !isRestDay && day.exercises.every(ex => ex.isCompleted);
-                            
-                            return (
-                                <AccordionItem value={`item-${index+1}`} key={day.id}>
-                                    <AccordionTrigger>
-                                        <div className="flex justify-between items-center w-full pr-4">
-                                            <div className="flex items-center gap-3">
-                                                 {allCompleted ? <CheckCircle2 className="h-5 w-5 text-green-500" /> : <Dumbbell className="h-5 w-5 text-muted-foreground" />}
-                                                <span className="font-semibold">{day.day}</span> - <span className="text-muted-foreground">{day.focus}</span>
-                                            </div>
-                                             {isRestDay && <Badge variant="outline">Descanso</Badge>}
-                                        </div>
-                                    </AccordionTrigger>
-                                    <AccordionContent>
-                                        {isRestDay ? (
-                                            <p className="text-muted-foreground pl-10">Aproveite para descansar e se recuperar para o próximo treino!</p>
-                                        ) : (
-                                            <div className="pl-6 space-y-4">
-                                                {day.exercises.map(exercise => (
-                                                    <div key={exercise.id} className="flex items-center">
-                                                        <Checkbox 
-                                                            id={`${day.id}-${exercise.id}`}
-                                                            checked={exercise.isCompleted}
-                                                            onCheckedChange={() => handleToggleExercise(day.id, exercise.id)}
-                                                            className="h-5 w-5"
-                                                        />
-                                                        <label htmlFor={`${day.id}-${exercise.id}`} className="ml-3 flex-1">
-                                                            <span className={cn("font-medium", exercise.isCompleted && "line-through text-muted-foreground")}>{exercise.name}</span>
-                                                            <span className="text-muted-foreground ml-2">
-                                                                {exercise.sets} séries x {exercise.reps} reps
-                                                            </span>
-                                                        </label>
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <h1 className="text-3xl font-bold tracking-tight">Meus Treinos</h1>
+                <div className="flex gap-2 w-full sm:w-auto">
+                    <Button variant="outline" onClick={handleAddNewPlan} className="flex-1"><PlusCircle className="mr-2 h-4 w-4" />Criar Plano</Button>
+                    <Button onClick={() => setIsAiModalOpen(true)} className="flex-1"><Sparkles className="mr-2 h-4 w-4" />Criar com IA</Button>
+                </div>
+            </div>
+
+            <Tabs defaultValue="weekly-plan">
+                <TabsList>
+                    <TabsTrigger value="weekly-plan">Meu Plano Semanal</TabsTrigger>
+                    <TabsTrigger value="my-plans">Meus Planos Salvos</TabsTrigger>
+                </TabsList>
+                <TabsContent value="weekly-plan">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Plano Ativo</CardTitle>
+                            <CardDescription>Seu plano de treino para esta semana. Marque os exercícios conforme os completa.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                             {weeklyPlan.length > 0 ? (
+                                <Accordion type="single" collapsible className="w-full" defaultValue={`item-${new Date().getDay()}`}>
+                                    {weeklyPlan.map((day, index) => {
+                                        const isRestDay = day.exercises.length === 0;
+                                        const allCompleted = !isRestDay && day.exercises.every(ex => ex.isCompleted);
+                                        
+                                        return (
+                                            <AccordionItem value={`item-${index+1}`} key={day.id}>
+                                                <AccordionTrigger>
+                                                    <div className="flex justify-between items-center w-full pr-4">
+                                                        <div className="flex items-center gap-3">
+                                                            {allCompleted ? <CheckCircle2 className="h-5 w-5 text-green-500" /> : <Dumbbell className="h-5 w-5 text-muted-foreground" />}
+                                                            <span className="font-semibold">{day.day}</span> - <span className="text-muted-foreground">{day.focus}</span>
+                                                        </div>
+                                                        {isRestDay && <Badge variant="outline">Descanso</Badge>}
                                                     </div>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </AccordionContent>
-                                </AccordionItem>
-                            )
-                        })}
-                    </Accordion>
-                </CardContent>
-            </Card>
+                                                </AccordionTrigger>
+                                                <AccordionContent>
+                                                    {isRestDay ? (
+                                                        <p className="text-muted-foreground pl-10">Aproveite para descansar e se recuperar para o próximo treino!</p>
+                                                    ) : (
+                                                        <div className="pl-6 space-y-4">
+                                                            {day.exercises.map(exercise => (
+                                                                <div key={exercise.id} className="flex items-center">
+                                                                    <Checkbox id={`${day.id}-${exercise.id}`} checked={exercise.isCompleted} onCheckedChange={() => handleToggleExercise(day.id, exercise.id)} className="h-5 w-5" />
+                                                                    <label htmlFor={`${day.id}-${exercise.id}`} className="ml-3 flex-1">
+                                                                        <span className={cn("font-medium", exercise.isCompleted && "line-through text-muted-foreground")}>{exercise.name}</span>
+                                                                        <span className="text-muted-foreground ml-2">{exercise.sets} séries x {exercise.reps} reps</span>
+                                                                    </label>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </AccordionContent>
+                                            </AccordionItem>
+                                        )
+                                    })}
+                                </Accordion>
+                             ) : (
+                                 <div className="text-center py-10">
+                                     <p className="text-muted-foreground">Você ainda não tem um plano de treino ativo.</p>
+                                     <p className="text-muted-foreground">Crie um novo plano ou ative um da sua biblioteca!</p>
+                                 </div>
+                             )}
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+                <TabsContent value="my-plans">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Biblioteca de Planos</CardTitle>
+                            <CardDescription>Gerencie seus planos de treino salvos e ative-os quando quiser.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <Table>
+                                <TableHeader><TableRow><TableHead>Nome</TableHead><TableHead>Dificuldade</TableHead><TableHead><span className="sr-only">Ações</span></TableHead></TableRow></TableHeader>
+                                <TableBody>
+                                    {myPlans.map((plan) => (
+                                        <TableRow key={plan.id}>
+                                            <TableCell className="font-medium">{plan.name}</TableCell>
+                                            <TableCell><Badge variant="outline">{plan.difficulty}</Badge></TableCell>
+                                            <TableCell className="text-right">
+                                                <Button variant="ghost" size="sm" onClick={() => handleActivatePlan(plan)}>Ativar</Button>
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger>
+                                                    <DropdownMenuContent>
+                                                        <DropdownMenuItem onSelect={() => handleEditPlan(plan)}>Editar</DropdownMenuItem>
+                                                        <DropdownMenuItem onSelect={() => handleDeletePlan(plan.id)} className="text-destructive">Excluir</DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+            </Tabs>
         </div>
     )
 }
