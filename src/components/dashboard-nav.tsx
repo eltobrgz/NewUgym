@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { useTheme } from "next-themes";
 import { Switch } from "./ui/switch";
 import { Input } from "./ui/input";
+import { useEffect, useState } from "react";
 
 export const navConfig = {
   student: [
@@ -42,6 +43,11 @@ export function DashboardNav({ isCollapsed, onLinkClick }: { isCollapsed: boolea
   const pathname = usePathname();
   const { userRole } = useUserRole();
   const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const lowerCaseRole = userRole.toLowerCase() as keyof typeof navConfig;
   const navItems = navConfig[lowerCaseRole] || navConfig.student;
@@ -60,6 +66,29 @@ export function DashboardNav({ isCollapsed, onLinkClick }: { isCollapsed: boolea
         : "",
       isCollapsed ? "justify-center" : ""
     );
+
+  const renderThemeSwitcher = () => {
+    if (!mounted) {
+        return <div className="p-2.5 rounded-lg bg-muted-foreground/5 h-[52px]" />; // Placeholder to prevent layout shift
+    }
+    return (
+        <div className="p-2.5 rounded-lg bg-muted-foreground/5">
+            <div className="flex items-center gap-4">
+            <div className={cn("p-1.5 rounded-lg bg-background shadow-sm", isCollapsed && 'mx-auto')}>
+              {theme === 'dark' ? <Moon className="h-5 w-5 text-muted-foreground" /> : <Sun className="h-5 w-5 text-muted-foreground" />}
+            </div>
+            <div className={cn("flex-1", isCollapsed ? "hidden" : "block")}>
+              <p className="text-sm font-semibold">{theme === 'dark' ? 'Dark Mode' : 'Light Mode'}</p>
+            </div>
+            <Switch
+              checked={theme === 'dark'}
+              onCheckedChange={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              className={cn(isCollapsed ? "hidden" : "block")}
+            />
+          </div>
+        </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full">
@@ -100,21 +129,7 @@ export function DashboardNav({ isCollapsed, onLinkClick }: { isCollapsed: boolea
             <span className={cn("truncate", isCollapsed ? "hidden" : "block")}>Sair</span>
           </div>
         </Link>
-        <div className="p-2.5 rounded-lg bg-muted-foreground/5">
-          <div className="flex items-center gap-4">
-            <div className={cn("p-1.5 rounded-lg bg-background shadow-sm", isCollapsed && 'mx-auto')}>
-              {theme === 'dark' ? <Moon className="h-5 w-5 text-muted-foreground" /> : <Sun className="h-5 w-5 text-muted-foreground" />}
-            </div>
-            <div className={cn("flex-1", isCollapsed ? "hidden" : "block")}>
-              <p className="text-sm font-semibold">{theme === 'dark' ? 'Dark Mode' : 'Light Mode'}</p>
-            </div>
-            <Switch
-              checked={theme === 'dark'}
-              onCheckedChange={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              className={cn(isCollapsed ? "hidden" : "block")}
-            />
-          </div>
-        </div>
+        {renderThemeSwitcher()}
       </div>
     </div>
   );
