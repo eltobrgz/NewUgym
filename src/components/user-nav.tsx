@@ -19,6 +19,7 @@ import {
   DropdownMenuSubContent,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
+  DropdownMenuSubTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useUserRole, UserRole } from "@/contexts/user-role-context";
 import { User, LogOut, Settings, SwatchBook } from "lucide-react";
