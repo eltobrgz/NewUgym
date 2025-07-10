@@ -127,7 +127,7 @@ export function GenerateWorkoutForm({ onPlanGenerated }: GenerateWorkoutFormProp
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione seu nível" />
-                      </Trigger>
+                      </SelectTrigger>
                     </FormControl>
                     <SelectContent>
                       <SelectItem value="Beginner">Iniciante</SelectItem>
