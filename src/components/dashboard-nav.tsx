@@ -3,23 +3,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useTheme } from "next-themes";
-import { LayoutDashboard, LineChart, Calendar, Settings, Users, DollarSign, LogOut, ClipboardList, CheckSquare, Award, UserSquare, Moon, Sun, Dumbbell } from "lucide-react";
+import { LayoutDashboard, LineChart, Calendar, Settings, Users, DollarSign, ClipboardList, CheckSquare, Award, UserSquare, Dumbbell } from "lucide-react";
 import { useUserRole } from "@/contexts/user-role-context";
-import {
-  SidebarContent,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarFooter,
-  useSidebar,
-  SidebarTrigger,
-} from "@/components/ui/sidebar";
-import { UserNav } from "@/components/user-nav";
-import { Separator } from "./ui/separator";
 import { cn } from "@/lib/utils";
-import { Button } from "./ui/button";
 
 export const navConfig = {
   student: [
@@ -49,104 +35,60 @@ export const commonNav = [
   { name: "Configurações", href: "/dashboard/settings", icon: Settings },
 ];
 
-const ThemeToggleButton = () => {
-    const { theme, setTheme } = useTheme();
-    const { state } = useSidebar();
 
-    const toggleTheme = () => {
-        setTheme(theme === 'light' ? 'dark' : 'light');
-    };
-
-    if (state === 'collapsed') {
-         return (
-            <Button variant="ghost" size="icon" onClick={toggleTheme} className="h-9 w-9 rounded-lg">
-                <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-                <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-                <span className="sr-only">Toggle theme</span>
-            </Button>
-        );
-    }
-
-    return (
-        <Button variant="ghost" onClick={toggleTheme} className="w-full justify-start gap-3 p-2 text-base font-medium text-muted-foreground">
-            <div className="flex items-center gap-3">
-                <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-                <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-                <span className="min-w-0">Alterar Tema</span>
-            </div>
-        </Button>
-    );
-};
-
-
-export function DashboardNav() {
+export function DashboardNav({ className, inSheet = false }: { className?: string; inSheet?: boolean }) {
   const pathname = usePathname();
   const { userRole } = useUserRole();
-  const { state } = useSidebar();
   const lowerCaseRole = userRole.toLowerCase() as keyof typeof navConfig;
   const navItems = navConfig[lowerCaseRole] || navConfig.student;
 
+  const linkClass = (href: string, baseClass: string) =>
+    cn(
+      baseClass,
+      (pathname === href || (href !== "/dashboard" && pathname.startsWith(href)))
+        ? "text-foreground"
+        : "text-muted-foreground",
+    );
+
+  if (inSheet) {
+    return (
+      <nav className="grid gap-2 text-lg font-medium">
+        <Link href="/dashboard" className="flex items-center gap-2 text-lg font-semibold mb-4">
+          <Dumbbell className="h-6 w-6 text-primary" />
+          <span className="sr-only">Ugym</span>
+        </Link>
+        {[...navItems, ...commonNav].map((item) => (
+          <Link
+            key={item.name}
+            href={item.href}
+            className={linkClass(item.href, "flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary")}
+          >
+            <item.icon className="h-5 w-5" />
+            {item.name}
+          </Link>
+        ))}
+      </nav>
+    );
+  }
+
   return (
-    <>
-      <SidebarHeader>
-        <div className="flex items-center justify-between">
-            <div className={cn("flex items-center gap-2", state === "collapsed" && "justify-center")}>
-              <Dumbbell className="size-7 shrink-0 text-primary" />
-              <div className={cn("duration-200", state === "collapsed" ? "opacity-0 w-0" : "opacity-100 w-auto")}>
-                <span className="text-xl font-bold whitespace-nowrap" data-testid="sidebar-title">
-                    Ugym
-                </span>
-              </div>
-            </div>
-             <SidebarTrigger className="hidden sm:flex" />
-        </div>
-      </SidebarHeader>
-      <SidebarContent className="flex flex-col justify-between">
-        <SidebarMenu>
-          {navItems.map((item) => (
-            <SidebarMenuItem key={item.name}>
-              <SidebarMenuButton
-                asChild
-                isActive={pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href))}
-                tooltip={{children: item.name, side:"right"}}
-              >
-                <Link href={item.href}>
-                  <item.icon className="size-5" />
-                  <span className="min-w-0">{item.name}</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
-        </SidebarMenu>
-        
-        <div>
-          <SidebarMenu>
-            {commonNav.map((item) => (
-              <SidebarMenuItem key={item.name}>
-                  <SidebarMenuButton
-                      asChild
-                      isActive={pathname === item.href}
-                      tooltip={{children: item.name, side:"right"}}
-                  >
-                      <Link href={item.href}>
-                          <item.icon className="h-5 w-5" />
-                          <span className="min-w-0">{item.name}</span>
-                      </Link>
-                  </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
-             <SidebarMenuItem>
-                <ThemeToggleButton />
-             </SidebarMenuItem>
-          </SidebarMenu>
-
-          <Separator className="my-2"/>
-
-          <SidebarFooter className="p-2 mt-2">
-            <UserNav />
-          </SidebarFooter>
-        </div>
-      </SidebarContent>
-    </>
+    <nav className={cn("hidden md:flex md:flex-row md:items-center md:gap-5 lg:gap-6 text-sm font-medium", className)}>
+      <Link
+        href="/dashboard"
+        className="flex items-center gap-2 text-lg font-semibold md:text-base"
+      >
+        <Dumbbell className="h-6 w-6 text-primary" />
+        <span className="sr-only">Ugym</span>
+      </Link>
+      {navItems.map((item) => (
+        <Link
+          key={item.name}
+          href={item.href}
+          className={linkClass(item.href, "transition-colors hover:text-foreground")}
+        >
+          {item.name}
+        </Link>
+      ))}
+    </nav>
   );
 }

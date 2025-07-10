@@ -1,5 +1,8 @@
 
+"use client";
+
 import Link from "next/link";
+import { useTheme } from "next-themes";
 import {
   Avatar,
   AvatarFallback,
@@ -21,14 +24,12 @@ import {
   DropdownMenuSubTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useUserRole, UserRole } from "@/contexts/user-role-context";
-import { User, LogOut, Settings, SwatchBook } from "lucide-react";
-import { useSidebar } from "./ui/sidebar";
-import { cn } from "@/lib/utils";
-
+import { User, LogOut, Settings, SwatchBook, Moon, Sun } from "lucide-react";
+import { Button } from "./ui/button";
 
 export function UserNav() {
   const { user, userRole, setUserRole } = useUserRole();
-  const { state } = useSidebar();
+  const { setTheme, theme } = useTheme();
 
   const getInitials = (name: string) => {
     const names = name.split(" ");
@@ -42,27 +43,15 @@ export function UserNav() {
     setUserRole(role as UserRole);
   };
   
-  const triggerContent = (
-    <div className="flex w-full items-center gap-3 rounded-md p-2 text-left transition-colors hover:bg-accent">
-        <Avatar className="h-9 w-9">
-          <AvatarImage src={`https://placehold.co/100x100.png`} alt={`@${user.name}`} data-ai-hint="person portrait"/>
-          <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
-        </Avatar>
-        <div className={cn("flex-1 truncate duration-200", state === "collapsed" ? "opacity-0 w-0" : "opacity-100 w-auto")}>
-            <p className="text-base font-medium leading-none text-card-foreground">{user.name}</p>
-            <p className="text-sm leading-none text-muted-foreground truncate">
-            {user.email}
-          </p>
-        </div>
-    </div>
-  );
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-          <button className="w-full">
-            {triggerContent}
-          </button>
+        <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+          <Avatar className="h-9 w-9">
+            <AvatarImage src={`https://placehold.co/100x100.png`} alt={`@${user.name}`} data-ai-hint="person portrait"/>
+            <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
+          </Avatar>
+        </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
@@ -96,6 +85,10 @@ export function UserNav() {
               </DropdownMenuSubContent>
             </DropdownMenuPortal>
           </DropdownMenuSub>
+            <DropdownMenuItem onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
+                {theme === 'dark' ? <Sun className="mr-2 h-4 w-4" /> : <Moon className="mr-2 h-4 w-4" />}
+                <span>Alterar Tema</span>
+            </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>

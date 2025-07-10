@@ -2,29 +2,15 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { DashboardNav } from "@/components/dashboard-nav";
-import { UserNav } from "@/components/user-nav";
-import { Sidebar, SidebarInset, SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
-import { MobileBottomNav } from "./mobile-bottom-nav";
+import { Header } from "@/components/header";
 
 export function DashboardView({ children }: { children: ReactNode }) {
-  const { isMobile } = useSidebar();
   return (
-      <>
-        <Sidebar>
-            <DashboardNav />
-        </Sidebar>
-        <SidebarInset>
-            <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
-            <SidebarTrigger className="sm:hidden" />
-            <div className="relative ml-auto flex-1 md:grow-0" />
-            <div className="hidden sm:block">
-                <UserNav />
-            </div>
-            </header>
-            <main className="flex-1 overflow-auto p-4 sm:px-6 sm:py-0">{children}</main>
-            {isMobile && <MobileBottomNav />}
-        </SidebarInset>
-      </>
+    <div className="flex min-h-screen w-full flex-col">
+      <Header />
+      <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
+        {children}
+      </main>
+    </div>
   );
 }
