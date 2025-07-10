@@ -1,7 +1,8 @@
 
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useSearchParams, useRouter } from 'next/navigation';
 import {
   Table,
   TableBody,
@@ -38,42 +39,58 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 
-type TransactionStatus = "Paid" | "Pending" | "Overdue";
+type TransactionStatus = "Pago" | "Pendente" | "Atrasado";
+type TransactionType = "Primeiro Pagamento" | "Renovação";
 type Transaction = {
   id: string;
   member: string;
   amount: number;
   status: TransactionStatus;
+  type: TransactionType;
   date: string;
   plan: string;
 };
 
 const initialTransactions: Transaction[] = [
-  { id: "TRN-001", member: "Olivia Martin", amount: 99.99, status: "Paid", date: "2024-07-28", plan: "Pro Anual" },
-  { id: "TRN-002", member: "Jackson Lee", amount: 29.99, status: "Pending", date: "2024-08-01", plan: "Pro Mensal" },
-  { id: "TRN-003", member: "Isabella Nguyen", amount: 15.00, status: "Overdue", date: "2024-07-10", plan: "Básico Mensal" },
-  { id: "TRN-004", member: "William Kim", amount: 99.99, status: "Paid", date: "2024-07-25", plan: "Pro Anual" },
-  { id: "TRN-005", member: "Sofia Davis", amount: 29.99, status: "Paid", date: "2024-07-18", plan: "Pro Mensal" },
-  { id: "TRN-006", member: "David Chen", amount: 29.99, status: "Pending", date: "2024-08-02", plan: "Pro Mensal" },
+  { id: "TRN-001", member: "Olivia Martin", amount: 99.99, status: "Pago", type: "Renovação", date: "2024-07-28", plan: "Pro Anual" },
+  { id: "TRN-002", member: "Jackson Lee", amount: 29.99, status: "Pendente", type: "Renovação", date: "2024-08-01", plan: "Pro Mensal" },
+  { id: "TRN-003", member: "Isabella Nguyen", amount: 15.00, status: "Atrasado", type: "Primeiro Pagamento", date: "2024-07-10", plan: "Básico Mensal" },
+  { id: "TRN-004", member: "William Kim", amount: 99.99, status: "Pago", type: "Primeiro Pagamento", date: "2024-07-25", plan: "Pro Anual" },
+  { id: "TRN-005", member: "Sofia Davis", amount: 29.99, status: "Pago", type: "Renovação", date: "2024-07-18", plan: "Pro Mensal" },
+  { id: "TRN-006", member: "David Chen", amount: 29.99, status: "Pendente", type: "Renovação", date: "2024-08-02", plan: "Pro Mensal" },
 ];
 
 const statusStyles: { [key in TransactionStatus]: { variant: "default" | "secondary" | "destructive" | "outline", className?: string, text: string }} = {
-  "Paid": { variant: "secondary", className: "bg-green-500/10 text-green-400 border-green-500/20", text: "Pago" },
-  "Pending": { variant: "secondary", className: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20", text: "Pendente" },
-  "Overdue": { variant: "destructive", text: "Atrasado" },
+  "Pago": { variant: "secondary", className: "bg-green-500/10 text-green-400 border-green-500/20", text: "Pago" },
+  "Pendente": { variant: "secondary", className: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20", text: "Pendente" },
+  "Atrasado": { variant: "destructive", text: "Atrasado" },
 };
 
 export default function FinancePage() {
   const [transactions, setTransactions] = useState<Transaction[]>(initialTransactions);
   const [filter, setFilter] = useState("all");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [prefilledMember, setPrefilledMember] = useState('');
   const { toast } = useToast();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+
+  useEffect(() => {
+    const newMemberName = searchParams.get('new_member');
+    if (newMemberName) {
+      setPrefilledMember(decodeURIComponent(newMemberName));
+      setIsAddDialogOpen(true);
+      // Clean up the URL query param
+      router.replace('/dashboard/finance');
+    }
+  }, [searchParams, router]);
 
   const summary = useMemo(() => {
     return transactions.reduce((acc, t) => {
-        if (t.status === 'Paid') acc.paid += t.amount;
-        if (t.status === 'Pending') acc.pending += t.amount;
-        if (t.status === 'Overdue') acc.overdue += t.amount;
+        if (t.status === 'Pago') acc.paid += t.amount;
+        if (t.status === 'Pendente') acc.pending += t.amount;
+        if (t.status === 'Atrasado') acc.overdue += t.amount;
         return acc;
     }, { paid: 0, pending: 0, overdue: 0 });
   }, [transactions]);
@@ -108,6 +125,7 @@ export default function FinancePage() {
         member: formData.get("member") as string,
         amount: parseFloat(formData.get("amount") as string),
         status: formData.get("status") as TransactionStatus,
+        type: formData.get("type") as TransactionType,
         date: formData.get("date") as string,
         plan: formData.get("plan") as string,
     }
@@ -115,6 +133,7 @@ export default function FinancePage() {
     setTransactions(prev => [newTransaction, ...prev]);
     toast({ title: "Transação Adicionada", description: `Nova transação para ${newTransaction.member} foi criada.` });
     setIsAddDialogOpen(false);
+    setPrefilledMember('');
   };
 
   const filteredTransactions = transactions.filter(t => {
@@ -133,7 +152,7 @@ export default function FinancePage() {
             </Button>
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
                 <DialogTrigger asChild>
-                    <Button className="w-full">
+                    <Button className="w-full" onClick={() => setPrefilledMember('')}>
                         <PlusCircle className="mr-2 h-4 w-4" />
                         Adicionar Transação
                     </Button>
@@ -147,7 +166,7 @@ export default function FinancePage() {
                          <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="member">Membro</Label>
-                                <Input id="member" name="member" required />
+                                <Input id="member" name="member" defaultValue={prefilledMember} required />
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="plan">Plano</Label>
@@ -164,19 +183,33 @@ export default function FinancePage() {
                                 <Input id="date" name="date" type="date" defaultValue={new Date().toISOString().split("T")[0]} required />
                             </div>
                         </div>
-                         <div className="space-y-2">
-                            <Label htmlFor="status">Status</Label>
-                            <Select name="status" required defaultValue="Paid">
-                                <SelectTrigger id="status">
-                                    <SelectValue placeholder="Selecione o status" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="Paid">Pago</SelectItem>
-                                    <SelectItem value="Pending">Pendente</SelectItem>
-                                    <SelectItem value="Overdue">Atrasado</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
+                         <div className="grid grid-cols-2 gap-4">
+                             <div className="space-y-2">
+                                <Label htmlFor="status">Status</Label>
+                                <Select name="status" required defaultValue="Pago">
+                                    <SelectTrigger id="status">
+                                        <SelectValue placeholder="Selecione o status" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="Pago">Pago</SelectItem>
+                                        <SelectItem value="Pendente">Pendente</SelectItem>
+                                        <SelectItem value="Atrasado">Atrasado</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="type">Tipo</Label>
+                                <Select name="type" required defaultValue={prefilledMember ? "Primeiro Pagamento" : "Renovação"}>
+                                    <SelectTrigger id="type">
+                                        <SelectValue placeholder="Selecione o tipo" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="Primeiro Pagamento">Primeiro Pagamento</SelectItem>
+                                        <SelectItem value="Renovação">Renovação</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                         </div>
                         <DialogFooter>
                             <Button type="submit">Adicionar Transação</Button>
                         </DialogFooter>
@@ -241,7 +274,7 @@ export default function FinancePage() {
               <TableRow>
                 <TableHead>Membro</TableHead>
                 <TableHead className="hidden sm:table-cell">Plano</TableHead>
-                <TableHead className="hidden md:table-cell">Data</TableHead>
+                <TableHead>Tipo</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Valor</TableHead>
                 <TableHead>
@@ -254,7 +287,11 @@ export default function FinancePage() {
                 <TableRow key={transaction.id}>
                   <TableCell className="font-medium">{transaction.member}</TableCell>
                   <TableCell className="hidden sm:table-cell">{transaction.plan}</TableCell>
-                  <TableCell className="hidden md:table-cell">{transaction.date}</TableCell>
+                   <TableCell>
+                      <Badge variant={transaction.type === 'Primeiro Pagamento' ? 'default' : 'secondary'} className={cn(transaction.type === 'Primeiro Pagamento' && 'bg-blue-500/10 text-blue-400 border-blue-500/20')}>
+                        {transaction.type}
+                      </Badge>
+                  </TableCell>
                   <TableCell>
                     <Badge variant={statusStyles[transaction.status]?.variant || "default"} className={cn(statusStyles[transaction.status]?.className)}>
                       {statusStyles[transaction.status]?.text}
@@ -273,10 +310,10 @@ export default function FinancePage() {
                         <DropdownMenuLabel>Ações</DropdownMenuLabel>
                         <DropdownMenuItem><Eye className="mr-2 h-4 w-4"/>Ver Detalhes</DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem onSelect={() => handleStatusChange(transaction.id, 'Paid')} disabled={transaction.status === 'Paid'}>
+                        <DropdownMenuItem onSelect={() => handleStatusChange(transaction.id, 'Pago')} disabled={transaction.status === 'Pago'}>
                             <CheckCircle className="mr-2 h-4 w-4 text-green-500" /> Marcar como Pago
                         </DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => handleStatusChange(transaction.id, 'Pending')} disabled={transaction.status === 'Pending'}>
+                        <DropdownMenuItem onSelect={() => handleStatusChange(transaction.id, 'Pendente')} disabled={transaction.status === 'Pendente'}>
                             <AlertTriangle className="mr-2 h-4 w-4 text-yellow-500" />Marcar como Pendente
                         </DropdownMenuItem>
                          <DropdownMenuSeparator />
@@ -309,3 +346,5 @@ export default function FinancePage() {
     </div>
   );
 }
+
+    

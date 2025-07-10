@@ -10,22 +10,22 @@
     --card-foreground: 240 10% 3.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 240 10% 3.9%;
-    --primary: 180 100% 25.1%; /* Teal */
+    --primary: 221 89% 64%; /* Firebase Blue */
     --primary-foreground: 0 0% 98%;
     --secondary: 204 14% 29%;
     --secondary-foreground: 0 0% 98%;
     --muted: 0 0% 96.1%;
     --muted-foreground: 240 3.8% 46.1%;
-    --accent: 21 100% 60.2%; /* Coral */
+    --accent: 45 100% 58%; /* Firebase Amber */
     --accent-foreground: 240 5.9% 10%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
     --border: 0 0% 89.8%;
     --input: 0 0% 89.8%;
-    --ring: 180 100% 25.1%; /* Ring to match new primary */
+    --ring: 221 89% 64%; /* Ring to match new primary */
     --radius: 0.5rem;
-    --chart-1: 180 100% 25.1%; /* Chart to match new primary */
-    --chart-2: 21 100% 60.2%;   /* Chart to match new accent */
+    --chart-1: 221 89% 64%; /* Chart to match new primary */
+    --chart-2: 45 100% 58%;   /* Chart to match new accent */
   }
 
   .dark {
@@ -35,19 +35,19 @@
     --card-foreground: 0 0% 98%;
     --popover: 240 10% 3.9%;
     --popover-foreground: 0 0% 98%;
-    --primary: 180 81% 45%; /* Lighter Teal for dark mode */
+    --primary: 221 81% 55%; /* Lighter Blue for dark mode */
     --primary-foreground: 0 0% 98%;
     --secondary: 204 14% 62%;
     --secondary-foreground: 240 10% 3.9%;
     --muted: 240 5% 11%;
     --muted-foreground: 0 0% 74.1%;
-    --accent: 21 90% 55%; /* Lighter Coral for dark mode */
+    --accent: 45 90% 55%; /* Lighter Amber for dark mode */
     --accent-foreground: 240 5.9% 10%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
     --border: 0 0% 20%;
     --input: 0 0% 20%;
-    --ring: 180 81% 45%;
+    --ring: 221 81% 55%;
   }
 }
 
@@ -59,3 +59,5 @@
     @apply bg-background text-foreground;
   }
 }
+
+    

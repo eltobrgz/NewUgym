@@ -2,6 +2,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from 'next/navigation';
 import {
   Table,
   TableBody,
@@ -58,7 +59,10 @@ export default function MembersPage() {
   const [members, setMembers] = useState<Member[]>(initialMembers);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingMember, setEditingMember] = useState<Member | null>(null);
+  const [newlyAddedMember, setNewlyAddedMember] = useState<Member | null>(null);
   const { toast } = useToast();
+  const router = useRouter();
+
 
   const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>, memberId?: string) => {
     e.preventDefault();
@@ -87,12 +91,20 @@ export default function MembersPage() {
       setMembers([newMember, ...members]);
       toast({ title: "Membro Adicionado!", description: `${name} foi adicionado.` });
       setIsAddDialogOpen(false);
+      setNewlyAddedMember(newMember); // Trigger the payment dialog
     }
   };
 
   const handleDeactivate = (memberId: string) => {
     setMembers(members.map(m => m.id === memberId ? { ...m, status: 'Inativo' } : m));
     toast({ title: "Membro Desativado", variant: "destructive" });
+  };
+  
+  const handleConfirmPaymentRedirect = () => {
+    if (newlyAddedMember) {
+      router.push(`/dashboard/finance?new_member=${encodeURIComponent(newlyAddedMember.name)}`);
+    }
+    setNewlyAddedMember(null);
   };
 
   return (
@@ -128,6 +140,21 @@ export default function MembersPage() {
           </form>
         </DialogContent>
       </Dialog>
+      
+      <AlertDialog open={!!newlyAddedMember} onOpenChange={(isOpen) => !isOpen && setNewlyAddedMember(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Membro Adicionado com Sucesso!</AlertDialogTitle>
+            <AlertDialogDescription>
+              Deseja registrar o primeiro pagamento para {newlyAddedMember?.name} agora?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setNewlyAddedMember(null)}>Não, depois</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmPaymentRedirect}>Sim, registrar pagamento</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <div className="flex flex-col gap-6">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -225,3 +252,5 @@ export default function MembersPage() {
     </>
   );
 }
+
+    
