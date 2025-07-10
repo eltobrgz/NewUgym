@@ -4,7 +4,7 @@
 import { useState, useId, useEffect, useContext } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { CheckCircle2, Circle, Dumbbell, PlusCircle, Sparkles, Trash2, MoreVertical, GripVertical, Save, X, UserPlus } from "lucide-react";
+import { CheckCircle2, Circle, Dumbbell, PlusCircle, Sparkles, Trash2, MoreVertical, GripVertical, Save, X, UserPlus, Edit, NotebookText } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from '@/lib/utils';
 import { useUserRole } from '@/contexts/user-role-context';
@@ -40,7 +40,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { WorkoutsContext, WorkoutPlan, DailyWorkout, Exercise } from '@/contexts/workouts-context';
+import { WorkoutsContext, WorkoutPlan, DailyWorkout, Exercise, SetLog } from '@/contexts/workouts-context';
 
 
 type GeneratedWorkoutPlan = { planName: string; weeklySchedule: { day: string; focus: string; exercises?: { name: string; sets?: number; reps?: string; duration?: string; rest?: string }[] }[] };
@@ -98,7 +98,7 @@ const WorkoutBuilder = ({ open, onOpenChange, onSave, plan: initialPlan }: { ope
         setSchedule(schedule.map(d => d.id === dayId ? { ...d, exercises: d.exercises.filter(ex => ex.id !== exerciseId) } : d));
     };
 
-    const updateExercise = (dayId: string, exerciseId: string, field: keyof Omit<Exercise, 'id' | 'isCompleted'>, value: string) => {
+    const updateExercise = (dayId: string, exerciseId: string, field: keyof Omit<Exercise, 'id'|'isCompleted'|'notes'|'setLogs'>, value: string) => {
         setSchedule(schedule.map(d => d.id === dayId ? {
             ...d,
             exercises: d.exercises.map(ex => ex.id === exerciseId ? { ...ex, [field]: value } : ex)
@@ -414,11 +414,15 @@ const TrainerView = () => {
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent>
-                                        <DropdownMenuItem onSelect={() => handleEditPlan(plan)}>Editar</DropdownMenuItem>
+                                        <DropdownMenuItem onSelect={() => handleEditPlan(plan)}>
+                                            <Edit className="mr-2 h-4 w-4" /> Editar
+                                        </DropdownMenuItem>
                                         <DropdownMenuItem onSelect={() => handleOpenAssignModal(plan)}>
                                             <UserPlus className="mr-2 h-4 w-4" /> Atribuir a Alunos
                                         </DropdownMenuItem>
-                                        <DropdownMenuItem onSelect={() => handleDeletePlan(plan.id)} className="text-destructive">Excluir</DropdownMenuItem>
+                                        <DropdownMenuItem onSelect={() => handleDeletePlan(plan.id)} className="text-destructive">
+                                            <Trash2 className="mr-2 h-4 w-4" />Excluir
+                                        </DropdownMenuItem>
                                     </DropdownMenuContent>
                                 </DropdownMenu>
                               </TableCell>
@@ -460,9 +464,101 @@ const TrainerView = () => {
     )
 }
 
+const ExerciseTrackerModal = ({ open, onOpenChange, planId, dayId, exercise, onUpdate }: { open: boolean, onOpenChange: (open: boolean) => void, planId: string, dayId: string, exercise: Exercise, onUpdate: (planId: string, dayId: string, exercise: Exercise) => void }) => {
+    const [localExercise, setLocalExercise] = useState<Exercise | null>(null);
+
+    useEffect(() => {
+        if (open && exercise) {
+            // Initialize set logs if they don't exist
+            const numSets = parseInt(exercise.sets, 10) || 0;
+            const currentLogs = exercise.setLogs || [];
+            const newLogs: SetLog[] = Array.from({ length: numSets }, (_, i) => ({
+                id: currentLogs[i]?.id || `set-${i}`,
+                weight: currentLogs[i]?.weight || 0,
+                reps: currentLogs[i]?.reps || 0,
+                isCompleted: currentLogs[i]?.isCompleted || false,
+            }));
+            setLocalExercise({ ...exercise, setLogs: newLogs });
+        }
+    }, [open, exercise]);
+
+    if (!localExercise) return null;
+
+    const handleSetUpdate = (setIndex: number, field: keyof Omit<SetLog, 'id'>, value: string | number | boolean) => {
+        setLocalExercise(prev => {
+            if (!prev) return null;
+            const newSetLogs = [...(prev.setLogs || [])];
+            newSetLogs[setIndex] = { ...newSetLogs[setIndex], [field]: value };
+            return { ...prev, setLogs: newSetLogs };
+        });
+    };
+
+    const handleNotesUpdate = (notes: string) => {
+        setLocalExercise(prev => prev ? { ...prev, notes } : null);
+    };
+    
+    const handleSave = () => {
+        if (localExercise) {
+            const allSetsCompleted = localExercise.setLogs?.every(s => s.isCompleted);
+            const updatedExercise = { ...localExercise, isCompleted: allSetsCompleted };
+            onUpdate(planId, dayId, updatedExercise);
+        }
+        onOpenChange(false);
+    }
+
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                    <DialogTitle>Rastrear Exercício: {exercise.name}</DialogTitle>
+                    <DialogDescription>
+                        Registre seu desempenho para cada série deste exercício.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="py-4 space-y-4">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead className="w-[80px]">Série</TableHead>
+                                <TableHead>Peso (kg)</TableHead>
+                                <TableHead>Reps</TableHead>
+                                <TableHead className="w-[100px] text-right">Feito</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {localExercise.setLogs?.map((set, index) => (
+                                <TableRow key={set.id}>
+                                    <TableCell className="font-medium">{index + 1}</TableCell>
+                                    <TableCell>
+                                        <Input type="number" value={set.weight} onChange={e => handleSetUpdate(index, 'weight', parseFloat(e.target.value))} className="h-8"/>
+                                    </TableCell>
+                                     <TableCell>
+                                        <Input type="number" value={set.reps} onChange={e => handleSetUpdate(index, 'reps', parseInt(e.target.value, 10))} className="h-8" />
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        <Checkbox checked={set.isCompleted} onCheckedChange={checked => handleSetUpdate(index, 'isCompleted', !!checked)} />
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                     <div className="space-y-2">
+                        <Label htmlFor="notes">Observações</Label>
+                        <Textarea id="notes" placeholder="Ex: Senti uma fisgada, aumentei a carga, etc." value={localExercise.notes || ''} onChange={e => handleNotesUpdate(e.target.value)}/>
+                    </div>
+                </div>
+                <DialogFooter>
+                    <Button onClick={handleSave}>Salvar Progresso</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+};
+
+
 const StudentView = () => {
     const { toast } = useToast();
-    const { user } = useUserRole(); // Let's assume the user object has an ID
+    const { user } = useUserRole();
     const { 
         plans,
         addPlan,
@@ -470,7 +566,7 @@ const StudentView = () => {
         deletePlan,
         activeStudentPlans,
         setActiveStudentPlan,
-        toggleExerciseCompletion
+        updateExerciseDetails,
     } = useContext(WorkoutsContext);
 
     const studentId = user.id;
@@ -480,11 +576,15 @@ const StudentView = () => {
 
     const [isAiModalOpen, setIsAiModalOpen] = useState(false);
     const [isBuilderOpen, setIsBuilderOpen] = useState(false);
+    const [isTrackerOpen, setIsTrackerOpen] = useState(false);
     const [selectedPlan, setSelectedPlan] = useState<WorkoutPlan | null>(null);
+    const [selectedExerciseInfo, setSelectedExerciseInfo] = useState<{planId: string, dayId: string, exercise: Exercise} | null>(null);
+
     const [activeTab, setActiveTab] = useState('weekly-plan');
     
-    const handleToggleExercise = (planId: string, dayId: string, exerciseId: string) => {
-        toggleExerciseCompletion(planId, dayId, exerciseId);
+    const handleOpenTracker = (planId: string, dayId: string, exercise: Exercise) => {
+        setSelectedExerciseInfo({ planId, dayId, exercise });
+        setIsTrackerOpen(true);
     };
 
     const handleAiGeneratedPlan = (planData: GeneratedWorkoutPlan | null) => {
@@ -532,10 +632,27 @@ const StudentView = () => {
             setActiveTab('weekly-plan');
         }
     };
+    
+    const handleUpdateExercise = (planId: string, dayId: string, exercise: Exercise) => {
+        updateExerciseDetails(planId, dayId, exercise);
+        toast({ title: "Exercício Atualizado!", description: `Seu progresso em ${exercise.name} foi salvo.` });
+    };
 
     return (
         <div className="flex flex-col gap-6">
             <WorkoutBuilder open={isBuilderOpen} onOpenChange={setIsBuilderOpen} onSave={handleSavePlan} plan={selectedPlan} />
+            
+            {selectedExerciseInfo && (
+              <ExerciseTrackerModal 
+                open={isTrackerOpen}
+                onOpenChange={setIsTrackerOpen}
+                planId={selectedExerciseInfo.planId}
+                dayId={selectedExerciseInfo.dayId}
+                exercise={selectedExerciseInfo.exercise}
+                onUpdate={handleUpdateExercise}
+              />
+            )}
+
             <Dialog open={isAiModalOpen} onOpenChange={setIsAiModalOpen}>
                 <DialogTrigger asChild>
                     <Button className="sr-only">Criar com IA</Button>
@@ -566,7 +683,7 @@ const StudentView = () => {
                     <Card>
                         <CardHeader>
                             <CardTitle>Plano Ativo: {weeklyPlan?.name || "Nenhum"}</CardTitle>
-                            <CardDescription>Seu plano de treino para esta semana. Marque os exercícios conforme os completa.</CardDescription>
+                            <CardDescription>Seu plano de treino para esta semana. Clique em um exercício para registrar seu progresso.</CardDescription>
                         </CardHeader>
                         <CardContent>
                              {weeklyPlan && weeklyPlan.schedule.length > 0 ? (
@@ -590,15 +707,16 @@ const StudentView = () => {
                                                     {isRestDay ? (
                                                         <p className="text-muted-foreground pl-10">Aproveite para descansar e se recuperar para o próximo treino!</p>
                                                     ) : (
-                                                        <div className="pl-6 space-y-4">
+                                                        <div className="pl-6 space-y-2">
                                                             {day.exercises.map(exercise => (
-                                                                <div key={exercise.id} className="flex items-center">
-                                                                    <Checkbox id={`${day.id}-${exercise.id}`} checked={exercise.isCompleted} onCheckedChange={() => handleToggleExercise(weeklyPlan.id, day.id, exercise.id)} className="h-5 w-5" />
-                                                                    <label htmlFor={`${day.id}-${exercise.id}`} className="ml-3 flex-1">
+                                                                <button key={exercise.id} onClick={() => handleOpenTracker(weeklyPlan.id, day.id, exercise)} className="flex items-center w-full text-left p-2 rounded-md hover:bg-accent transition-colors">
+                                                                    {exercise.isCompleted ? <CheckCircle2 className="h-5 w-5 text-primary mr-3" /> : <Circle className="h-5 w-5 text-muted-foreground mr-3" />}
+                                                                    <div className="flex-1">
                                                                         <span className={cn("font-medium", exercise.isCompleted && "line-through text-muted-foreground")}>{exercise.name}</span>
-                                                                        <span className="text-muted-foreground ml-2">{exercise.sets} séries x {exercise.reps} reps</span>
-                                                                    </label>
-                                                                </div>
+                                                                        <span className="text-muted-foreground ml-2 text-sm">{exercise.sets} séries x {exercise.reps} reps</span>
+                                                                    </div>
+                                                                    <NotebookText className="h-5 w-5 text-muted-foreground ml-2" />
+                                                                </button>
                                                             ))}
                                                         </div>
                                                     )}
@@ -640,9 +758,14 @@ const StudentView = () => {
                                                 <DropdownMenu>
                                                     <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger>
                                                     <DropdownMenuContent>
-                                                        {plan.owner === studentId && <DropdownMenuItem onSelect={() => handleEditPlan(plan)}>Editar</DropdownMenuItem>}
-                                                        {plan.owner === studentId && <DropdownMenuItem onSelect={() => handleDeletePlan(plan.id)} className="text-destructive">Excluir</DropdownMenuItem>}
-                                                        {plan.owner !== studentId && <DropdownMenuItem disabled>Não pode editar um plano recebido</DropdownMenuItem>}
+                                                        <DropdownMenuItem onSelect={() => handleEditPlan(plan)}>
+                                                          <Edit className="mr-2 h-4 w-4"/> Editar
+                                                        </DropdownMenuItem>
+                                                        {plan.owner === studentId && (
+                                                            <DropdownMenuItem onSelect={() => handleDeletePlan(plan.id)} className="text-destructive">
+                                                                <Trash2 className="mr-2 h-4 w-4"/> Excluir
+                                                            </DropdownMenuItem>
+                                                        )}
                                                     </DropdownMenuContent>
                                                 </DropdownMenu>
                                             </TableCell>

@@ -4,7 +4,23 @@
 import { createContext, useState, ReactNode } from 'react';
 import { allUsers } from '@/lib/user-directory';
 
-export type Exercise = { id: string; name: string; sets: string; reps: string; isCompleted?: boolean };
+export type SetLog = {
+    id: string;
+    weight: number;
+    reps: number;
+    isCompleted: boolean;
+};
+
+export type Exercise = { 
+    id: string; 
+    name: string; 
+    sets: string; 
+    reps: string; 
+    isCompleted?: boolean;
+    notes?: string;
+    setLogs?: SetLog[];
+};
+
 export type DailyWorkout = { id:string; day: string; focus: string; exercises: Exercise[]; };
 export type WorkoutPlan = { 
     id: string; 
@@ -53,7 +69,7 @@ interface WorkoutsContextType {
     assignPlanToStudents: (planId: string, studentIds: string[]) => void;
     getAssignments: () => { studentId: string; studentName: string; planName: string; planId: string; }[];
     setActiveStudentPlan: (studentId: string, planId: string) => void;
-    toggleExerciseCompletion: (planId: string, dayId: string, exerciseId: string) => void;
+    updateExerciseDetails: (planId: string, dayId: string, updatedExercise: Exercise) => void;
     getStudentPlan: (studentId: string) => WorkoutPlan | null;
     getStudentWorkoutProgress: (studentId: string) => number;
 }
@@ -113,17 +129,14 @@ export const WorkoutsProvider = ({ children }: { children: ReactNode }) => {
         setActiveStudentPlans(prev => ({...prev, [studentId]: planId}));
     };
     
-    const toggleExerciseCompletion = (planId: string, dayId: string, exerciseId: string) => {
+    const updateExerciseDetails = (planId: string, dayId: string, updatedExercise: Exercise) => {
         setPlans(prevPlans => prevPlans.map(plan => {
             if (plan.id === planId) {
                 const newSchedule = plan.schedule.map(day => {
                     if (day.id === dayId) {
-                        const newExercises = day.exercises.map(ex => {
-                            if (ex.id === exerciseId) {
-                                return { ...ex, isCompleted: !ex.isCompleted };
-                            }
-                            return ex;
-                        });
+                        const newExercises = day.exercises.map(ex => 
+                            ex.id === updatedExercise.id ? updatedExercise : ex
+                        );
                         return { ...day, exercises: newExercises };
                     }
                     return day;
@@ -133,6 +146,7 @@ export const WorkoutsProvider = ({ children }: { children: ReactNode }) => {
             return plan;
         }));
     };
+
 
     const getStudentPlan = (studentId: string) => {
         const activePlanId = activeStudentPlans[studentId];
@@ -171,7 +185,7 @@ export const WorkoutsProvider = ({ children }: { children: ReactNode }) => {
             assignPlanToStudents,
             getAssignments,
             setActiveStudentPlan,
-            toggleExerciseCompletion,
+            updateExerciseDetails,
             getStudentPlan,
             getStudentWorkoutProgress,
         }}>
