@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, use } from 'react';
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -80,7 +80,8 @@ const ChartComponent = ({ type, data, metric } : { type: keyof typeof chartCompo
 };
 
 
-export default function StudentProgressPage({ params }: { params: { studentId: string } }) {
+export default function StudentProgressPage({ params: paramsPromise }: { params: Promise<{ studentId: string }> }) {
+  const params = use(paramsPromise);
   const [chartType, setChartType] = useState<keyof typeof chartComponents>('line');
   const [selectedMetric, setSelectedMetric] = useState('weight');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -281,4 +282,3 @@ export default function StudentProgressPage({ params }: { params: { studentId: s
     </div>
   );
 }
-
