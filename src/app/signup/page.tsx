@@ -1,21 +1,16 @@
-import Image from 'next/image';
+
 import { SignupForm } from '@/components/auth/signup-form';
 
 export default function SignupPage() {
   return (
-    <div className="w-full lg:grid lg:min-h-screen lg:grid-cols-2">
-      <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-background">
+     <div
+      className="w-full min-h-screen flex items-center justify-center p-4 bg-cover bg-center"
+      style={{ backgroundImage: "url('https://placehold.co/1920x1080.png')" }}
+      data-ai-hint="gym training"
+    >
+      <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" />
+       <div className="relative z-10 w-full max-w-md">
         <SignupForm />
-      </div>
-      <div className="hidden bg-muted lg:block">
-        <Image
-          src="https://placehold.co/1920x1080.png"
-          alt="Person stretching in a gym"
-          width="1920"
-          height="1080"
-          className="h-full w-full object-cover"
-          data-ai-hint="gym training"
-        />
       </div>
     </div>
   );
