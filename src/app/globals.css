@@ -16,8 +16,8 @@
     --secondary-foreground: 220 9% 10%;
     --muted: 220 14% 95%;
     --muted-foreground: 220 9% 45%;
-    --accent: 310 80% 60%; /* Vibrant Magenta */
-    --accent-foreground: 20 0% 100%;
+    --accent: 0 84% 60%; /* Vibrant Red */
+    --accent-foreground: 0 0% 100%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
     --border: 220 13% 89%;
@@ -25,7 +25,7 @@
     --ring: 25 95% 53%; /* Ring to match new primary */
     --radius: 0.5rem;
     --chart-1: 25 95% 53%;
-    --chart-2: 310 80% 60%;
+    --chart-2: 0 84% 60%;
   }
 
   .dark {
@@ -41,8 +41,8 @@
     --secondary-foreground: 220 20% 98%;
     --muted: 220 15% 15%;
     --muted-foreground: 220 10% 65%;
-    --accent: 310 75% 65%; /* Vibrant Magenta */
-    --accent-foreground: 20 0% 100%;
+    --accent: 0 74% 65%; /* Vibrant Red */
+    --accent-foreground: 0 0% 100%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
     --border: 220 15% 18%;
