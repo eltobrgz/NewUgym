@@ -1,10 +1,10 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useId, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { CheckCircle2, Circle, Dumbbell, PlusCircle, Sparkles, Trash2, MoreVertical } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { CheckCircle2, Circle, Dumbbell, PlusCircle, Sparkles, Trash2, MoreVertical, GripVertical, Save, X, ArrowLeft } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from '@/lib/utils';
 import { useUserRole } from '@/contexts/user-role-context';
@@ -30,7 +30,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import { GenerateWorkoutForm } from '@/components/generate-workout-form';
 import { Input } from '@/components/ui/input';
@@ -40,6 +39,23 @@ import { useToast } from '@/hooks/use-toast';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
+type Exercise = { id: string; name: string; sets: string; reps: string; };
+type DailyWorkout = { id: string; day: string; focus: string; exercises: Exercise[]; };
+type WorkoutTemplate = { id: string; name: string; description: string; difficulty: string; schedule: DailyWorkout[]; };
+
+type WorkoutPlan = { planName: string; weeklySchedule: { day: string; focus: string; exercises?: { name: string; sets?: number; reps?: string; duration?: string; rest?: string }[] }[] };
+
+const initialWorkoutTemplates: WorkoutTemplate[] = [
+    { id: "TPL-001", name: "Iniciante Força 3x", difficulty: "Iniciante", description: "Um plano de 3 dias para iniciantes focado em ganho de força.", schedule: [] },
+    { id: "TPL-002", name: "Hipertrofia Full Body", difficulty: "Intermediário", description: "Treino de corpo inteiro para hipertrofia.", schedule: [] },
+    { id: "TPL-003", name: "Cardio Intenso 30min", difficulty: "Avançado", description: "Sessão de cardio de alta intensidade.", schedule: [] },
+];
+
+const initialAssignments = [
+    { studentName: "Alex Johnson", templateName: "Hipertrofia Full Body", assignedDate: "2024-08-15" },
+    { studentName: "Maria Garcia", templateName: "Iniciante Força 3x", assignedDate: "2024-08-14" },
+];
+
 const studentsForAssignment = [
   { id: "alex-johnson", name: "Alex Johnson" },
   { id: "maria-garcia", name: "Maria Garcia" },
@@ -48,227 +64,133 @@ const studentsForAssignment = [
 ];
 
 
-const initialWorkouts = {
-  Monday: [
-    { name: "Bench Press", sets: 3, reps: "10", done: true },
-    { name: "Squats", sets: 4, reps: "8", done: false },
-    { name: "Overhead Press", sets: 3, reps: "12", done: true },
-  ],
-  Tuesday: [{ name: "Rest Day" }],
-  Wednesday: [
-    { name: "Deadlift", sets: 3, reps: "5", done: false },
-    { name: "Pull-ups", sets: 5, reps: "5", done: false },
-    { name: "Bicep Curls", sets: 3, reps: "15", done: false },
-  ],
-  Thursday: [
-    { name: "Running", duration: "30 mins", done: true },
-    { name: "Stretching", duration: "15 mins", done: false },
-  ],
-  Friday: [
-    { name: "Leg Press", sets: 4, reps: "12", done: false },
-    { name: "Calf Raises", sets: 3, reps: "20", done: false },
-    { name: "Plank", duration: "3x 60s", done: false },
-  ],
-  Saturday: [{ name: "Rest Day" }],
-  Sunday: [{ name: "Rest Day" }],
-};
+const WorkoutBuilder = ({ open, onOpenChange, onSave, template }: { open: boolean, onOpenChange: (open: boolean) => void, onSave: (template: WorkoutTemplate) => void, template: WorkoutTemplate | null }) => {
+    const formId = useId();
+    const [name, setName] = useState('');
+    const [description, setDescription] = useState('');
+    const [difficulty, setDifficulty] = useState('');
+    const [schedule, setSchedule] = useState<DailyWorkout[]>([]);
 
-const initialWorkoutTemplates = [
-    { id: "TPL-001", name: "Iniciante Força 3x", difficulty: "Iniciante", focus: "Força", assignments: 5 },
-    { id: "TPL-002", name: "Hipertrofia Full Body", difficulty: "Intermediário", focus: "Hipertrofia", assignments: 12 },
-    { id: "TPL-003", name: "Cardio Intenso 30min", difficulty: "Avançado", focus: "Cardio", assignments: 8 },
-    { id: "TPL-004", name: "Upper/Lower Split 4x", difficulty: "Intermediário", focus: "Força", assignments: 10 },
-];
+    useEffect(() => {
+        if (template) {
+            setName(template.name);
+            setDescription(template.description);
+            setDifficulty(template.difficulty);
+            setSchedule(template.schedule || []);
+        } else {
+             setName('');
+             setDescription('');
+             setDifficulty('');
+             setSchedule([
+                { id: `day-${Date.now()}`, day: 'Segunda-feira', focus: 'Peito e Tríceps', exercises: [] }
+             ]);
+        }
+    }, [template, open]);
 
-type Exercise = { name: string; sets?: number; reps?: string; duration?: string; rest?: string };
-type DailyWorkout = { day: string; focus: string; exercises?: Exercise[] };
-type WorkoutPlan = { planName: string; weeklySchedule: DailyWorkout[] };
-type WorkoutState = { name: string; sets?: number; reps?: string; duration?: string; done?: boolean };
-type WorkoutsByDay = { [key: string]: WorkoutState[] };
-
-const StudentView = () => {
-  const [dailyWorkouts, setDailyWorkouts] = useState<WorkoutsByDay>(initialWorkouts);
-  const today = new Date().toLocaleString('en-us', { weekday: 'long' });
-  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
-  const [isBuilderOpen, setIsBuilderOpen] = useState(false);
-  const { toast } = useToast();
-
-  const toggleDone = (day: string, workoutName: string) => {
-    setDailyWorkouts(prev => ({
-      ...prev,
-      [day]: prev[day].map(w => w.name === workoutName ? { ...w, done: !w.done } : w)
-    }));
-  };
-  
-  const handleAiGeneratedPlan = (plan: WorkoutPlan | null) => {
-    if (plan && plan.weeklySchedule) {
-        const newWorkouts: WorkoutsByDay = {};
-        plan.weeklySchedule.forEach(day => {
-            newWorkouts[day.day] = day.exercises ? day.exercises.map(ex => ({...ex, done: false})) : [{ name: 'Rest Day' }];
-        });
-        setDailyWorkouts(newWorkouts);
-         toast({
-            title: "Plano de Treino Criado!",
-            description: `Seu novo plano "${plan.planName}" foi salvo e está pronto para uso.`,
-        });
-    }
-    setIsAiModalOpen(false);
-  };
-
-
-  return (
-    <>
-    <WorkoutBuilder 
-        open={isBuilderOpen}
-        onOpenChange={setIsBuilderOpen}
-        onSave={() => setIsBuilderOpen(false)}
-        template={null}
-      />
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-        <h1 className="text-3xl font-bold tracking-tight">Meus Treinos</h1>
-        <div className="flex gap-2 w-full sm:w-auto">
-            <Button variant="outline" className="flex-1" onClick={() => setIsBuilderOpen(true)}>
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Criar meu treino
-            </Button>
-            <Dialog open={isAiModalOpen} onOpenChange={setIsAiModalOpen}>
-                <DialogTrigger asChild>
-                    <Button className="flex-1">
-                      <Sparkles className="mr-2 h-4 w-4" />
-                      Criar com IA
-                    </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[625px]">
-                    <DialogHeader>
-                        <DialogTitle>Gerador de Treino com IA</DialogTitle>
-                        <DialogDescription>
-                            Descreva seus objetivos e deixe a IA criar um plano de treino personalizado para você.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <GenerateWorkoutForm onPlanGenerated={handleAiGeneratedPlan} />
-                </DialogContent>
-            </Dialog>
-        </div>
-      </div>
-    <Tabs defaultValue={today} className="w-full">
-      <TabsList className="grid w-full grid-cols-3 sm:grid-cols-4 md:grid-cols-7">
-        {Object.keys(dailyWorkouts).map(day => (
-          <TabsTrigger key={day} value={day}>{day.substring(0, 3)}</TabsTrigger>
-        ))}
-      </TabsList>
-
-      {Object.entries(dailyWorkouts).map(([day, workoutList]) => (
-        <TabsContent key={day} value={day}>
-          <Card>
-            <CardHeader>
-              <CardTitle>Plano de {day}</CardTitle>
-              <CardDescription>Marque os exercícios conforme os completa.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {workoutList[0].name === "Rest Day" ? (
-                <div className="flex items-center text-lg text-muted-foreground p-8 justify-center">
-                  <CheckCircle2 className="mr-2 h-6 w-6 text-green-500" />
-                  <span>Dia de Descanso</span>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {workoutList.map((workout) => (
-                    <div key={workout.name} className={cn("flex items-center justify-between p-3 rounded-lg", workout.done ? "bg-primary/10 border border-primary/20" : "bg-secondary")}>
-                      <div className="flex items-center">
-                        <Dumbbell className="h-5 w-5 mr-3 text-primary" />
-                        <div>
-                          <p className="font-semibold">{workout.name}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {workout.sets && workout.reps ? `${workout.sets} sets de ${workout.reps} reps` : workout.duration}
-                          </p>
-                        </div>
-                      </div>
-                      <button onClick={() => toggleDone(day, workout.name)} aria-label={`Mark ${workout.name} as ${workout.done ? 'not done' : 'done'}`}>
-                        {workout.done ? (
-                          <CheckCircle2 className="h-6 w-6 text-primary" />
-                        ) : (
-                          <Circle className="h-6 w-6 text-muted-foreground" />
-                        )}
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      ))}
-    </Tabs>
-    </>
-  );
-};
-
-const WorkoutBuilder = ({ open, onOpenChange, onSave, template }: { open: boolean, onOpenChange: (open: boolean) => void, onSave: () => void, template?: typeof initialWorkoutTemplates[0] | null }) => {
-    const { toast } = useToast();
-    
-    const handleSave = (e: React.FormEvent<HTMLFormElement>) => {
+    const handleSave = (e: React.FormEvent) => {
         e.preventDefault();
-        toast({
-            title: `Template ${template ? 'Atualizado' : 'Criado'}!`,
-            description: `O template de treino foi salvo com sucesso.`,
-        });
-        onSave();
-    }
+        onSave({ id: template?.id || `TPL-${Date.now()}`, name, description, difficulty, schedule });
+        onOpenChange(false);
+    };
+
+    const addDay = () => setSchedule([...schedule, { id: `day-${Date.now()}`, day: `Dia ${schedule.length + 1}`, focus: '', exercises: [] }]);
+    const removeDay = (dayId: string) => setSchedule(schedule.filter(d => d.id !== dayId));
+    
+    const updateDay = (dayId: string, field: keyof DailyWorkout, value: string) => {
+        setSchedule(schedule.map(d => d.id === dayId ? { ...d, [field]: value } : d));
+    };
+    
+    const addExercise = (dayId: string) => {
+        const newExercise: Exercise = { id: `ex-${Date.now()}`, name: '', sets: '3', reps: '10' };
+        setSchedule(schedule.map(d => d.id === dayId ? { ...d, exercises: [...d.exercises, newExercise] } : d));
+    };
+
+    const removeExercise = (dayId: string, exerciseId: string) => {
+        setSchedule(schedule.map(d => d.id === dayId ? { ...d, exercises: d.exercises.filter(ex => ex.id !== exerciseId) } : d));
+    };
+
+    const updateExercise = (dayId: string, exerciseId: string, field: keyof Exercise, value: string) => {
+        setSchedule(schedule.map(d => d.id === dayId ? {
+            ...d,
+            exercises: d.exercises.map(ex => ex.id === exerciseId ? { ...ex, [field]: value } : ex)
+        } : d));
+    };
+
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
-                <DialogHeader>
-                    <DialogTitle>{template ? 'Editar' : 'Criar'} Template de Treino</DialogTitle>
-                    <DialogDescription>Construa um plano de treino semanal reutilizável.</DialogDescription>
+            <DialogContent className="max-w-6xl w-full h-[95vh] flex flex-col p-0">
+                <DialogHeader className="p-6 pb-0">
+                    <div className="flex items-center justify-between">
+                         <DialogTitle className="text-2xl">{template ? 'Editar Template de Treino' : 'Criar Novo Template'}</DialogTitle>
+                         <div className="flex gap-2">
+                             <Button variant="ghost" onClick={() => onOpenChange(false)}><X className="mr-2" /> Cancelar</Button>
+                             <Button type="submit" form={formId}><Save className="mr-2"/> Salvar Template</Button>
+                         </div>
+                    </div>
+                    <DialogDescription>
+                        Construa um plano de treino semanal detalhado que pode ser reutilizado e atribuído aos seus alunos.
+                    </DialogDescription>
                 </DialogHeader>
-                <form id="workout-builder-form" onSubmit={handleSave} className="flex-1 overflow-y-auto space-y-6 pr-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="space-y-2 md:col-span-2">
-                            <Label htmlFor="template-name">Nome do Template</Label>
-                            <Input id="template-name" defaultValue={template?.name} placeholder="Ex: Hipertrofia Intensa 5x" />
-                        </div>
-                         <div className="space-y-2">
-                            <Label htmlFor="template-difficulty">Dificuldade</Label>
-                            <Input id="template-difficulty" defaultValue={template?.difficulty} placeholder="Ex: Intermediário" />
-                        </div>
-                    </div>
-                     <div className="space-y-2">
-                        <Label htmlFor="template-description">Descrição</Label>
-                        <Textarea id="template-description" placeholder="Descreva o foco e objetivo deste template..." />
-                    </div>
+                <form id={formId} onSubmit={handleSave} className="flex-1 overflow-y-auto px-6 space-y-6">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Informações do Template</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="template-name">Nome do Template</Label>
+                                    <Input id="template-name" value={name} onChange={e => setName(e.target.value)} placeholder="Ex: Hipertrofia Intensa 5x" required />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="template-difficulty">Dificuldade</Label>
+                                    <Input id="template-difficulty" value={difficulty} onChange={e => setDifficulty(e.target.value)} placeholder="Ex: Intermediário" required/>
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="template-description">Descrição</Label>
+                                <Textarea id="template-description" value={description} onChange={e => setDescription(e.target.value)} placeholder="Descreva o foco e objetivo deste template..." />
+                            </div>
+                        </CardContent>
+                    </Card>
 
-                    {['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'].map(day => (
-                       <Card key={day}>
-                           <CardHeader>
-                               <CardTitle>{day}</CardTitle>
-                           </CardHeader>
-                           <CardContent className="space-y-4">
-                               <div className="space-y-2">
-                                   <Label>Foco do Dia</Label>
-                                   <Input placeholder="Ex: Peito e Tríceps" />
-                               </div>
-                               <div className="border rounded-md p-4 space-y-4">
-                                   <div className="flex items-center gap-2">
-                                       <Input placeholder="Nome do exercício" className="flex-1" />
-                                       <Input placeholder="Sets" type="number" className="w-20" />
-                                       <Input placeholder="Reps" className="w-20" />
-                                       <Button variant="ghost" size="icon"><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                                   </div>
-                                    <div className="flex items-center gap-2">
-                                       <Input placeholder="Nome do exercício" className="flex-1" />
-                                       <Input placeholder="Duração" className="w-32" />
-                                       <Button variant="ghost" size="icon"><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                                   </div>
-                                    <Button variant="outline" size="sm"><PlusCircle className="mr-2 h-4 w-4" />Adicionar Exercício</Button>
-                               </div>
-                           </CardContent>
-                       </Card>
-                    ))}
+                    <div className="space-y-2">
+                        <Label className="text-lg font-semibold">Estrutura Semanal</Label>
+                        <div className="space-y-4">
+                            {schedule.map((day, dayIndex) => (
+                               <Card key={day.id}>
+                                   <CardHeader className="flex flex-row items-center justify-between py-3">
+                                        <div className="flex items-center gap-2">
+                                            <GripVertical className="h-5 w-5 text-muted-foreground cursor-grab" />
+                                            <Input value={day.day} onChange={(e) => updateDay(day.id, 'day', e.target.value)} className="text-lg font-bold border-none shadow-none p-1 h-auto focus-visible:ring-0" />
+                                        </div>
+                                       <Button variant="ghost" size="icon" onClick={() => removeDay(day.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                                   </CardHeader>
+                                   <CardContent className="space-y-4 pt-0">
+                                       <div className="space-y-2">
+                                           <Label>Foco do Dia</Label>
+                                           <Input value={day.focus} onChange={(e) => updateDay(day.id, 'focus', e.target.value)} placeholder="Ex: Peito e Tríceps, Descanso" />
+                                       </div>
+                                       <div className="border rounded-md p-4 space-y-3">
+                                            {day.exercises.map((exercise, exIndex) => (
+                                                <div key={exercise.id} className="flex items-center gap-2">
+                                                    <GripVertical className="h-4 w-4 text-muted-foreground cursor-grab" />
+                                                   <Input value={exercise.name} onChange={e => updateExercise(day.id, exercise.id, 'name', e.target.value)} placeholder="Nome do exercício" className="flex-1" />
+                                                   <Input value={exercise.sets} onChange={e => updateExercise(day.id, exercise.id, 'sets', e.target.value)} placeholder="Séries" type="text" className="w-20" />
+                                                   <Input value={exercise.reps} onChange={e => updateExercise(day.id, exercise.id, 'reps', e.target.value)} placeholder="Reps" className="w-20" />
+                                                   <Button variant="ghost" size="icon" onClick={() => removeExercise(day.id, exercise.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                                               </div>
+                                            ))}
+                                            <Button variant="outline" size="sm" onClick={() => addExercise(day.id)}><PlusCircle className="mr-2 h-4 w-4" />Adicionar Exercício</Button>
+                                       </div>
+                                   </CardContent>
+                               </Card>
+                            ))}
+                        </div>
+                    </div>
+                     <Button variant="secondary" onClick={addDay} className="w-full"><PlusCircle className="mr-2 h-4 w-4" />Adicionar Dia</Button>
                 </form>
-                <DialogFooter>
-                    <Button type="submit" form="workout-builder-form">Salvar Template</Button>
-                </DialogFooter>
             </DialogContent>
         </Dialog>
     )
@@ -345,17 +267,34 @@ const AssignWorkoutModal = ({ open, onOpenChange, templateName }: { open: boolea
     )
 }
 
-
 const TrainerView = () => {
     const { toast } = useToast();
     const [isAiModalOpen, setIsAiModalOpen] = useState(false);
     const [isBuilderOpen, setIsBuilderOpen] = useState(false);
     const [isAssignModalOpen, setAssignModalOpen] = useState(false);
-    const [selectedTemplate, setSelectedTemplate] = useState<typeof initialWorkoutTemplates[0] | null>(null);
+    const [templates, setTemplates] = useState(initialWorkoutTemplates);
+    const [selectedTemplate, setSelectedTemplate] = useState<WorkoutTemplate | null>(null);
 
     const handleAiGeneratedPlan = (plan: WorkoutPlan | null) => {
         if (plan) {
-            // In a real app, you would save this new template to the database
+            const newTemplate: WorkoutTemplate = {
+                id: `TPL-AI-${Date.now()}`,
+                name: plan.planName,
+                description: `Plano gerado por IA com foco em ${plan.weeklySchedule[0]?.focus || 'geral'}.`,
+                difficulty: 'IA Gerado', // Could be an input in the form
+                schedule: plan.weeklySchedule.map((day, index) => ({
+                    id: `day-ai-${index}`,
+                    day: day.day,
+                    focus: day.focus,
+                    exercises: (day.exercises || []).map((ex, exIndex) => ({
+                        id: `ex-ai-${index}-${exIndex}`,
+                        name: ex.name,
+                        sets: String(ex.sets || ''),
+                        reps: String(ex.reps || ex.duration || ''),
+                    }))
+                })),
+            };
+            setTemplates(prev => [newTemplate, ...prev]);
              toast({
                 title: "Template de IA Criado!",
                 description: `O novo template "${plan.planName}" foi adicionado à sua biblioteca.`,
@@ -363,8 +302,21 @@ const TrainerView = () => {
         }
         setIsAiModalOpen(false);
     };
+    
+    const handleSaveTemplate = (template: WorkoutTemplate) => {
+         const isEditing = templates.some(t => t.id === template.id);
+         if (isEditing) {
+             setTemplates(templates.map(t => t.id === template.id ? template : t));
+         } else {
+             setTemplates([template, ...templates]);
+         }
+         toast({
+            title: `Template ${isEditing ? 'Atualizado' : 'Criado'}!`,
+            description: `O template de treino "${template.name}" foi salvo com sucesso.`,
+        });
+    }
 
-    const handleEditTemplate = (template: typeof initialWorkoutTemplates[0]) => {
+    const handleEditTemplate = (template: WorkoutTemplate) => {
         setSelectedTemplate(template);
         setIsBuilderOpen(true);
     }
@@ -374,9 +326,18 @@ const TrainerView = () => {
         setIsBuilderOpen(true);
     }
     
-    const handleOpenAssignModal = (template: typeof initialWorkoutTemplates[0]) => {
+    const handleOpenAssignModal = (template: WorkoutTemplate) => {
         setSelectedTemplate(template);
         setAssignModalOpen(true);
+    }
+
+    const handleDeleteTemplate = (templateId: string) => {
+        setTemplates(templates.filter(t => t.id !== templateId));
+        toast({
+            title: 'Template Excluído',
+            description: 'O template de treino foi removido da sua biblioteca.',
+            variant: 'destructive'
+        })
     }
 
     return (
@@ -384,7 +345,7 @@ const TrainerView = () => {
       <WorkoutBuilder 
         open={isBuilderOpen}
         onOpenChange={setIsBuilderOpen}
-        onSave={() => setIsBuilderOpen(false)}
+        onSave={handleSaveTemplate}
         template={selectedTemplate}
       />
       {selectedTemplate && (
@@ -397,7 +358,7 @@ const TrainerView = () => {
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
         <h1 className="text-3xl font-bold tracking-tight">Gerenciar Treinos</h1>
         <div className="flex gap-2 w-full sm:w-auto">
-            <Button variant="outline" onClick={handleAddNewTemplate} className="flex-1"><PlusCircle className="mr-2 h-4 w-4" />Adicionar Template</Button>
+            <Button variant="outline" onClick={handleAddNewTemplate} className="flex-1"><PlusCircle className="mr-2 h-4 w-4" />Criar Template</Button>
             <Dialog open={isAiModalOpen} onOpenChange={setIsAiModalOpen}>
                 <DialogTrigger asChild>
                     <Button className="flex-1">
@@ -417,55 +378,98 @@ const TrainerView = () => {
             </Dialog>
         </div>
       </div>
-      <Card>
-        <CardHeader>
-            <CardTitle>Templates de Treino</CardTitle>
-            <CardDescription>Crie e gerencie templates reutilizáveis para seus alunos.</CardDescription>
-        </CardHeader>
-        <CardContent>
-             <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nome do Template</TableHead>
-                    <TableHead className="hidden sm:table-cell">Foco</TableHead>
-                    <TableHead className="hidden md:table-cell">Dificuldade</TableHead>
-                    <TableHead>Nº de Alunos</TableHead>
-                    <TableHead><span className="sr-only">Ações</span></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {initialWorkoutTemplates.map((template) => (
-                    <TableRow key={template.id}>
-                      <TableCell className="font-medium">{template.name}</TableCell>
-                      <TableCell className="hidden sm:table-cell">
-                          <Badge variant="secondary">{template.focus}</Badge>
-                      </TableCell>
-                       <TableCell className="hidden md:table-cell">
-                          <Badge variant="outline">{template.difficulty}</Badge>
-                       </TableCell>
-                      <TableCell>{template.assignments}</TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon">
-                                    <MoreVertical className="h-4 w-4" />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent>
-                                <DropdownMenuItem onSelect={() => handleEditTemplate(template)}>Editar</DropdownMenuItem>
-                                <DropdownMenuItem onSelect={() => handleOpenAssignModal(template)}>Atribuir a Alunos</DropdownMenuItem>
-                                <DropdownMenuItem>Duplicar</DropdownMenuItem>
-                                <DropdownMenuItem className="text-destructive">Excluir</DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-            </Table>
-        </CardContent>
-    </Card>
+      
+      <Tabs defaultValue="templates">
+        <TabsList>
+            <TabsTrigger value="templates">Templates</TabsTrigger>
+            <TabsTrigger value="assignments">Alunos Atribuídos</TabsTrigger>
+        </TabsList>
+        <TabsContent value="templates">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Templates de Treino</CardTitle>
+                    <CardDescription>Crie e gerencie templates reutilizáveis para seus alunos.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                     <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Nome do Template</TableHead>
+                            <TableHead className="hidden md:table-cell">Dificuldade</TableHead>
+                            <TableHead className="hidden sm:table-cell">Nº de Dias</TableHead>
+                            <TableHead><span className="sr-only">Ações</span></TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {templates.map((template) => (
+                            <TableRow key={template.id}>
+                              <TableCell className="font-medium">{template.name}</TableCell>
+                               <TableCell className="hidden md:table-cell">
+                                  <Badge variant="outline">{template.difficulty}</Badge>
+                               </TableCell>
+                              <TableCell className="hidden sm:table-cell">{template.schedule.length}</TableCell>
+                              <TableCell className="text-right">
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button variant="ghost" size="icon">
+                                            <MoreVertical className="h-4 w-4" />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent>
+                                        <DropdownMenuItem onSelect={() => handleEditTemplate(template)}>Editar</DropdownMenuItem>
+                                        <DropdownMenuItem onSelect={() => handleOpenAssignModal(template)}>Atribuir a Alunos</DropdownMenuItem>
+                                        <DropdownMenuItem onSelect={() => handleDeleteTemplate(template.id)} className="text-destructive">Excluir</DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                    </Table>
+                </CardContent>
+            </Card>
+        </TabsContent>
+        <TabsContent value="assignments">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Atribuições de Treinos</CardTitle>
+                    <CardDescription>Visualize quais alunos estão seguindo cada template de treino.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                     <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Aluno</TableHead>
+                            <TableHead>Template Atribuído</TableHead>
+                            <TableHead className="text-right">Data</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {initialAssignments.map((ass, i) => (
+                               <TableRow key={i}>
+                                   <TableCell className="font-medium">{ass.studentName}</TableCell>
+                                   <TableCell>{ass.templateName}</TableCell>
+                                   <TableCell className="text-right">{ass.assignedDate}</TableCell>
+                               </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </CardContent>
+            </Card>
+        </TabsContent>
+      </Tabs>
     </>
+    )
+}
+
+const StudentView = () => {
+    // This view can be implemented later with the student-specific logic
+    return (
+        <div className="flex flex-col gap-4 items-center justify-center h-full text-center">
+             <Dumbbell className="w-16 h-16 text-muted-foreground" />
+             <h1 className="text-2xl font-bold">Página de Treinos do Aluno</h1>
+             <p className="text-muted-foreground">Esta área está em construção. Em breve você poderá ver seus treinos aqui!</p>
+        </div>
     )
 }
 
@@ -473,8 +477,10 @@ export default function WorkoutsPage() {
   const { userRole } = useUserRole();
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 h-full">
       {userRole === "Student" ? <StudentView /> : <TrainerView />}
     </div>
   );
 }
+
+    
