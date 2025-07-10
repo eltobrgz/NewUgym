@@ -4,7 +4,7 @@
 import { useState } from "react";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { UserNav } from "@/components/user-nav";
 import { SidebarContent } from "./sidebar-content";
 
@@ -25,6 +25,9 @@ export function Header({ onToggleSidebar }: { onToggleSidebar: () => void; }) {
           </Button>
         </SheetTrigger>
         <SheetContent side="left" className="p-0 flex flex-col w-64">
+           <SheetHeader className="p-4 border-b">
+              <SheetTitle className="sr-only">Menu de Navegação</SheetTitle>
+           </SheetHeader>
            <SidebarContent 
             isCollapsed={false} 
             onToggle={() => {}} 
