@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -19,7 +19,7 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { MoreHorizontal, Download, FileText, CheckCircle, AlertTriangle, XCircle, Eye } from "lucide-react";
+import { MoreHorizontal, Download, FileText, CheckCircle, AlertTriangle, XCircle, Eye, PlusCircle } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,6 +32,10 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 
 type TransactionStatus = "Paid" | "Pending" | "Overdue";
@@ -62,7 +66,21 @@ const statusStyles: { [key in TransactionStatus]: { variant: "default" | "second
 export default function FinancePage() {
   const [transactions, setTransactions] = useState<Transaction[]>(initialTransactions);
   const [filter, setFilter] = useState("all");
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const { toast } = useToast();
+
+  const summary = useMemo(() => {
+    return transactions.reduce((acc, t) => {
+        if (t.status === 'Paid') acc.paid += t.amount;
+        if (t.status === 'Pending') acc.pending += t.amount;
+        if (t.status === 'Overdue') acc.overdue += t.amount;
+        return acc;
+    }, { paid: 0, pending: 0, overdue: 0 });
+  }, [transactions]);
+  
+  const formatCurrency = (amount: number) => {
+      return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(amount);
+  }
 
   const handleStatusChange = (id: string, newStatus: TransactionStatus) => {
     setTransactions(prev => prev.map(t => t.id === id ? { ...t, status: newStatus } : t));
@@ -81,6 +99,24 @@ export default function FinancePage() {
       })
   }
 
+  const handleAddTransaction = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    
+    const newTransaction: Transaction = {
+        id: `TRN-${Date.now()}`,
+        member: formData.get("member") as string,
+        amount: parseFloat(formData.get("amount") as string),
+        status: formData.get("status") as TransactionStatus,
+        date: formData.get("date") as string,
+        plan: formData.get("plan") as string,
+    }
+
+    setTransactions(prev => [newTransaction, ...prev]);
+    toast({ title: "Transaction Added", description: `New transaction for ${newTransaction.member} has been created.` });
+    setIsAddDialogOpen(false);
+  };
+
   const filteredTransactions = transactions.filter(t => {
     if (filter === "all") return true;
     return t.status.toLowerCase() === filter;
@@ -95,30 +131,78 @@ export default function FinancePage() {
               <Download className="mr-2 h-4 w-4" />
               Exportar CSV
             </Button>
-             <Button className="w-full" onClick={() => handleExport('Report')}>
-              <FileText className="mr-2 h-4 w-4" />
-              Gerar Relatório
-            </Button>
+            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                <DialogTrigger asChild>
+                    <Button className="w-full">
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Adicionar Transação
+                    </Button>
+                </DialogTrigger>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Add New Transaction</DialogTitle>
+                        <DialogDescription>Fill in the details to create a new transaction record.</DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={handleAddTransaction} className="space-y-4">
+                         <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="member">Member</Label>
+                                <Input id="member" name="member" required />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="plan">Plan</Label>
+                                <Input id="plan" name="plan" required />
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                           <div className="space-y-2">
+                                <Label htmlFor="amount">Amount (R$)</Label>
+                                <Input id="amount" name="amount" type="number" step="0.01" required />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="date">Date</Label>
+                                <Input id="date" name="date" type="date" defaultValue={new Date().toISOString().split("T")[0]} required />
+                            </div>
+                        </div>
+                         <div className="space-y-2">
+                            <Label htmlFor="status">Status</Label>
+                            <Select name="status" required defaultValue="Paid">
+                                <SelectTrigger id="status">
+                                    <SelectValue placeholder="Select status" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="Paid">Paid</SelectItem>
+                                    <SelectItem value="Pending">Pending</SelectItem>
+                                    <SelectItem value="Overdue">Overdue</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <DialogFooter>
+                            <Button type="submit">Add Transaction</Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
         </div>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardHeader>
-            <CardTitle>Faturamento Total (Mês)</CardTitle>
-            <CardDescription>Soma de todas as transações pagas em Agosto.</CardDescription>
+            <CardTitle>Faturamento Total</CardTitle>
+            <CardDescription>Soma de todas as transações pagas.</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold">R$ 2.548,75</p>
+            <p className="text-3xl font-bold">{formatCurrency(summary.paid)}</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
             <CardTitle>Pagamentos Pendentes</CardTitle>
-            <CardDescription>Valor total de mensalidades aguardando pagamento.</CardDescription>
+            <CardDescription>Valor total aguardando pagamento.</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold">R$ 598,50</p>
+            <p className="text-3xl font-bold">{formatCurrency(summary.pending)}</p>
           </CardContent>
         </Card>
         <Card>
@@ -127,7 +211,7 @@ export default function FinancePage() {
             <CardDescription>Valor total de mensalidades atrasadas.</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold text-destructive">R$ 125,90</p>
+            <p className="text-3xl font-bold text-destructive">{formatCurrency(summary.overdue)}</p>
           </CardContent>
         </Card>
       </div>
@@ -176,7 +260,7 @@ export default function FinancePage() {
                       {transaction.status}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-right">R$ {transaction.amount.toFixed(2)}</TableCell>
+                  <TableCell className="text-right">{formatCurrency(transaction.amount)}</TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
