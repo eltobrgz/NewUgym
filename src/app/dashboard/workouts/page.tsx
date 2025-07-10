@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useId, useEffect } from 'react';
+import { useState, useId, useEffect, useContext } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { CheckCircle2, Circle, Dumbbell, PlusCircle, Sparkles, Trash2, MoreVertical, GripVertical, Save, X, UserPlus, ChevronDown } from "lucide-react";
@@ -40,42 +40,17 @@ import { useToast } from '@/hooks/use-toast';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { WorkoutsContext, WorkoutPlan, DailyWorkout, Exercise } from '@/contexts/workouts-context';
 
-type Exercise = { id: string; name: string; sets: string; reps: string; isCompleted?: boolean };
-type DailyWorkout = { id: string; day: string; focus: string; exercises: Exercise[]; };
-type WorkoutPlan = { id: string; name: string; description: string; difficulty: string; schedule: DailyWorkout[]; assignedTo?: string[]; };
 
 type GeneratedWorkoutPlan = { planName: string; weeklySchedule: { day: string; focus: string; exercises?: { name: string; sets?: number; reps?: string; duration?: string; rest?: string }[] }[] };
 
-const initialWorkoutTemplates: WorkoutPlan[] = [
-    { id: "TPL-001", name: "Iniciante Força 3x", difficulty: "Iniciante", description: "Um plano de 3 dias para iniciantes focado em ganho de força.", schedule: [], assignedTo: ['alex-johnson'] },
-    { id: "TPL-002", name: "Hipertrofia Full Body", difficulty: "Intermediário", description: "Treino de corpo inteiro para hipertrofia.", schedule: [], assignedTo: ['maria-garcia'] },
-    { id: "TPL-003", name: "Cardio Intenso 30min", difficulty: "Avançado", description: "Sessão de cardio de alta intensidade.", schedule: [] },
-];
 
 const studentsForAssignment = [
   { id: "alex-johnson", name: "Alex Johnson" },
   { id: "maria-garcia", name: "Maria Garcia" },
   { id: "david-chen", name: "David Chen" },
   { id: "emily-white", name: "Emily White" },
-];
-
-const mockStudentPlan: DailyWorkout[] = [
-    {
-        id: 'day1', day: 'Segunda-feira', focus: 'Peito, Ombros e Tríceps', exercises: [
-            { id: 'ex11', name: 'Supino Reto', sets: '4', reps: '8-12', isCompleted: true },
-            { id: 'ex12', name: 'Desenvolvimento com Halteres', sets: '3', reps: '10', isCompleted: false },
-            { id: 'ex13', name: 'Tríceps na Polia', sets: '3', reps: '12-15', isCompleted: false },
-        ]
-    },
-    {
-        id: 'day2', day: 'Terça-feira', focus: 'Costas e Bíceps', exercises: [
-            { id: 'ex21', name: 'Barra Fixa', sets: '3', reps: 'Até a falha', isCompleted: false },
-            { id: 'ex22', name: 'Remada Curvada', sets: '4', reps: '8-10', isCompleted: false },
-            { id: 'ex23', name: 'Rosca Direta', sets: '3', reps: '12', isCompleted: false },
-        ]
-    },
-    { id: 'day3', day: 'Quarta-feira', focus: 'Descanso Ativo', exercises: [] },
 ];
 
 const WorkoutBuilder = ({ open, onOpenChange, onSave, plan: initialPlan }: { open: boolean, onOpenChange: (open: boolean) => void, onSave: (plan: WorkoutPlan) => void, plan: WorkoutPlan | null }) => {
@@ -103,7 +78,7 @@ const WorkoutBuilder = ({ open, onOpenChange, onSave, plan: initialPlan }: { ope
 
     const handleSave = (e: React.FormEvent) => {
         e.preventDefault();
-        onSave({ id: initialPlan?.id || `TPL-${Date.now()}`, name, description, difficulty, schedule });
+        onSave({ id: initialPlan?.id || `TPL-${Date.now()}`, name, description, difficulty, schedule, assignedTo: initialPlan?.assignedTo || [] });
         onOpenChange(false);
     };
 
@@ -280,16 +255,15 @@ const AssignWorkoutModal = ({ open, onOpenChange, onAssign, planName }: { open: 
 
 const TrainerView = () => {
     const { toast } = useToast();
+    const { plans, addPlan, updatePlan, deletePlan, assignPlanToStudents, getAssignments } = useContext(WorkoutsContext);
     const [isAiModalOpen, setIsAiModalOpen] = useState(false);
     const [isBuilderOpen, setIsBuilderOpen] = useState(false);
     const [isAssignModalOpen, setAssignModalOpen] = useState(false);
-    const [plans, setPlans] = useState<WorkoutPlan[]>(initialWorkoutTemplates);
     const [selectedPlan, setSelectedPlan] = useState<WorkoutPlan | null>(null);
 
     const handleAiGeneratedPlan = (plan: GeneratedWorkoutPlan | null) => {
         if (plan) {
-            const newPlan: WorkoutPlan = {
-                id: `TPL-AI-${Date.now()}`,
+            const newPlan: Omit<WorkoutPlan, 'id'| 'assignedTo'> = {
                 name: plan.planName,
                 description: `Plano gerado por IA com foco em ${plan.weeklySchedule[0]?.focus || 'geral'}.`,
                 difficulty: 'IA Gerado',
@@ -305,7 +279,7 @@ const TrainerView = () => {
                     }))
                 })),
             };
-            setPlans(prev => [newPlan, ...prev]);
+            addPlan(newPlan);
              toast({
                 title: "Plano de IA Criado!",
                 description: `O novo plano "${plan.planName}" foi adicionado à sua biblioteca.`,
@@ -317,9 +291,9 @@ const TrainerView = () => {
     const handleSavePlan = (plan: WorkoutPlan) => {
          const isEditing = plans.some(p => p.id === plan.id);
          if (isEditing) {
-             setPlans(plans.map(p => p.id === plan.id ? plan : p));
+             updatePlan(plan.id, plan);
          } else {
-             setPlans([plan, ...plans]);
+             addPlan(plan);
          }
          toast({
             title: `Plano ${isEditing ? 'Atualizado' : 'Criado'}!`,
@@ -343,7 +317,7 @@ const TrainerView = () => {
     }
 
     const handleDeletePlan = (planId: string) => {
-        setPlans(plans.filter(p => p.id !== planId));
+        deletePlan(planId);
         toast({
             title: 'Plano Excluído',
             description: 'O plano de treino foi removido da sua biblioteca.',
@@ -353,32 +327,14 @@ const TrainerView = () => {
 
     const handleAssignStudents = (studentIds: string[]) => {
         if (!selectedPlan) return;
-        setPlans(plans.map(p => {
-            if (p.id === selectedPlan.id) {
-                const currentAssigned = new Set(p.assignedTo || []);
-                studentIds.forEach(id => currentAssigned.add(id));
-                return { ...p, assignedTo: Array.from(currentAssigned) };
-            }
-            return p;
-        }));
+        assignPlanToStudents(selectedPlan.id, studentIds);
         toast({
             title: 'Plano Atribuído!',
             description: `O plano "${selectedPlan.name}" foi atribuído com sucesso.`,
         });
     }
 
-    const getAssignments = () => {
-        const assignments: { studentName: string; planName: string; planId: string; }[] = [];
-        plans.forEach(plan => {
-            (plan.assignedTo || []).forEach(studentId => {
-                const student = studentsForAssignment.find(s => s.id === studentId);
-                if (student) {
-                    assignments.push({ studentName: student.name, planName: plan.name, planId: plan.id });
-                }
-            });
-        });
-        return assignments;
-    }
+    const assignments = getAssignments(studentsForAssignment);
 
 
     return (
@@ -489,7 +445,7 @@ const TrainerView = () => {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {getAssignments().map((ass, i) => (
+                            {assignments.map((ass, i) => (
                                <TableRow key={`${ass.planId}-${i}`}>
                                    <TableCell className="font-medium">{ass.studentName}</TableCell>
                                    <TableCell>{ass.planName}</TableCell>
@@ -510,49 +466,57 @@ const TrainerView = () => {
 
 const StudentView = () => {
     const { toast } = useToast();
-    const [weeklyPlan, setWeeklyPlan] = useState<DailyWorkout[]>(mockStudentPlan);
-    const [myPlans, setMyPlans] = useState<WorkoutPlan[]>([]);
+    const { user } = useUserRole(); // Let's assume the user object has an ID
+    const { 
+        plans,
+        addPlan,
+        updatePlan,
+        deletePlan,
+        activeStudentPlans,
+        setActiveStudentPlan,
+        toggleExerciseCompletion
+    } = useContext(WorkoutsContext);
+
+    const studentId = user.name; // Using name as a mock ID
+    
+    const myPlans = plans.filter(p => p.owner === studentId);
+    const weeklyPlan = activeStudentPlans[studentId] ? plans.find(p => p.id === activeStudentPlans[studentId]) : null;
+
     const [isAiModalOpen, setIsAiModalOpen] = useState(false);
     const [isBuilderOpen, setIsBuilderOpen] = useState(false);
     const [selectedPlan, setSelectedPlan] = useState<WorkoutPlan | null>(null);
     
-    const handleToggleExercise = (dayId: string, exerciseId: string) => {
-        setWeeklyPlan(plan => 
-            plan.map(day => {
-                if (day.id === dayId) {
-                    return { ...day, exercises: day.exercises.map(ex => ex.id === exerciseId ? { ...ex, isCompleted: !ex.isCompleted } : ex) };
-                }
-                return day;
-            })
-        );
+    const handleToggleExercise = (planId: string, dayId: string, exerciseId: string) => {
+        toggleExerciseCompletion(planId, dayId, exerciseId);
     };
 
-    const handleAiGeneratedPlan = (plan: GeneratedWorkoutPlan | null) => {
-        if (plan) {
-            const newPlan: WorkoutPlan = {
-                id: `PLN-AI-${Date.now()}`,
-                name: plan.planName,
-                description: `Plano gerado por IA com foco em ${plan.weeklySchedule[0]?.focus || 'geral'}.`,
+    const handleAiGeneratedPlan = (planData: GeneratedWorkoutPlan | null) => {
+        if (planData) {
+            const newPlan: Omit<WorkoutPlan, 'id' | 'assignedTo'> = {
+                name: planData.planName,
+                description: `Plano gerado por IA.`,
                 difficulty: 'IA Gerado',
-                schedule: plan.weeklySchedule.map((day, index) => ({
+                owner: studentId,
+                schedule: planData.weeklySchedule.map((day, index) => ({
                     id: `day-ai-${index}`, day: day.day, focus: day.focus,
                     exercises: (day.exercises || []).map((ex, exIndex) => ({
                         id: `ex-ai-${index}-${exIndex}`, name: ex.name, sets: String(ex.sets || ''), reps: String(ex.reps || ex.duration || ''),
                     }))
                 })),
             };
-            setMyPlans(prev => [newPlan, ...prev]);
-             toast({ title: "Plano de IA Criado!", description: `O novo plano "${plan.planName}" foi adicionado aos seus planos.` });
+            addPlan(newPlan);
+             toast({ title: "Plano de IA Criado!", description: `O novo plano "${planData.planName}" foi adicionado aos seus planos.` });
         }
         setIsAiModalOpen(false);
     };
 
     const handleSavePlan = (plan: WorkoutPlan) => {
          const isEditing = myPlans.some(p => p.id === plan.id);
+         const planWithOwner = { ...plan, owner: studentId };
          if (isEditing) {
-             setMyPlans(myPlans.map(p => p.id === plan.id ? plan : p));
+             updatePlan(plan.id, planWithOwner);
          } else {
-             setMyPlans([plan, ...myPlans]);
+             addPlan(planWithOwner);
          }
          toast({ title: `Plano ${isEditing ? 'Atualizado' : 'Criado'}!`, description: `Seu plano "${plan.name}" foi salvo com sucesso.` });
     };
@@ -560,12 +524,15 @@ const StudentView = () => {
     const handleAddNewPlan = () => { setSelectedPlan(null); setIsBuilderOpen(true); };
     const handleEditPlan = (plan: WorkoutPlan) => { setSelectedPlan(plan); setIsBuilderOpen(true); };
     const handleDeletePlan = (planId: string) => {
-        setMyPlans(myPlans.filter(p => p.id !== planId));
+        deletePlan(planId);
         toast({ title: 'Plano Excluído', variant: 'destructive' });
     };
-    const handleActivatePlan = (plan: WorkoutPlan) => {
-        setWeeklyPlan(plan.schedule);
-        toast({ title: 'Plano Ativado!', description: `Você começou o plano "${plan.name}".`});
+    const handleActivatePlan = (planId: string) => {
+        const plan = plans.find(p => p.id === planId);
+        if (plan) {
+            setActiveStudentPlan(studentId, planId);
+            toast({ title: 'Plano Ativado!', description: `Você começou o plano "${plan.name}".`});
+        }
     };
 
     return (
@@ -600,13 +567,13 @@ const StudentView = () => {
                 <TabsContent value="weekly-plan">
                     <Card>
                         <CardHeader>
-                            <CardTitle>Plano Ativo</CardTitle>
+                            <CardTitle>Plano Ativo: {weeklyPlan?.name || "Nenhum"}</CardTitle>
                             <CardDescription>Seu plano de treino para esta semana. Marque os exercícios conforme os completa.</CardDescription>
                         </CardHeader>
                         <CardContent>
-                             {weeklyPlan.length > 0 ? (
+                             {weeklyPlan && weeklyPlan.schedule.length > 0 ? (
                                 <Accordion type="single" collapsible className="w-full" defaultValue={`item-${new Date().getDay()}`}>
-                                    {weeklyPlan.map((day, index) => {
+                                    {weeklyPlan.schedule.map((day, index) => {
                                         const isRestDay = day.exercises.length === 0;
                                         const allCompleted = !isRestDay && day.exercises.every(ex => ex.isCompleted);
                                         
@@ -628,7 +595,7 @@ const StudentView = () => {
                                                         <div className="pl-6 space-y-4">
                                                             {day.exercises.map(exercise => (
                                                                 <div key={exercise.id} className="flex items-center">
-                                                                    <Checkbox id={`${day.id}-${exercise.id}`} checked={exercise.isCompleted} onCheckedChange={() => handleToggleExercise(day.id, exercise.id)} className="h-5 w-5" />
+                                                                    <Checkbox id={`${day.id}-${exercise.id}`} checked={exercise.isCompleted} onCheckedChange={() => handleToggleExercise(weeklyPlan.id, day.id, exercise.id)} className="h-5 w-5" />
                                                                     <label htmlFor={`${day.id}-${exercise.id}`} className="ml-3 flex-1">
                                                                         <span className={cn("font-medium", exercise.isCompleted && "line-through text-muted-foreground")}>{exercise.name}</span>
                                                                         <span className="text-muted-foreground ml-2">{exercise.sets} séries x {exercise.reps} reps</span>
@@ -645,7 +612,7 @@ const StudentView = () => {
                              ) : (
                                  <div className="text-center py-10">
                                      <p className="text-muted-foreground">Você ainda não tem um plano de treino ativo.</p>
-                                     <p className="text-muted-foreground">Crie um novo plano ou ative um da sua biblioteca!</p>
+                                     <p className="text-muted-foreground">Vá para 'Meus Planos Salvos' para ativar um plano.</p>
                                  </div>
                              )}
                         </CardContent>
@@ -666,7 +633,9 @@ const StudentView = () => {
                                             <TableCell className="font-medium">{plan.name}</TableCell>
                                             <TableCell><Badge variant="outline">{plan.difficulty}</Badge></TableCell>
                                             <TableCell className="text-right">
-                                                <Button variant="ghost" size="sm" onClick={() => handleActivatePlan(plan)}>Ativar</Button>
+                                                <Button variant="ghost" size="sm" onClick={() => handleActivatePlan(plan.id)} disabled={activeStudentPlans[studentId] === plan.id}>
+                                                    {activeStudentPlans[studentId] === plan.id ? 'Ativo' : 'Ativar'}
+                                                </Button>
                                                 <DropdownMenu>
                                                     <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger>
                                                     <DropdownMenuContent>
@@ -696,7 +665,3 @@ export default function WorkoutsPage() {
     </div>
   );
 }
-
-    
-
-    

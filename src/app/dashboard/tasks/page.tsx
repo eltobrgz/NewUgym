@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useContext } from "react";
 import {
   Table,
   TableBody,
@@ -28,24 +28,9 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { useUserRole } from "@/contexts/user-role-context";
+import { TasksContext, Task, TaskStatus } from "@/contexts/tasks-context";
 
-type TaskStatus = "To Do" | "In Progress" | "Done" | "Canceled";
-type Task = {
-  id: string;
-  title: string;
-  status: TaskStatus;
-  assignee: string;
-  dueDate: string;
-};
-
-const initialTasks: Task[] = [
-  { id: "TASK-8782", title: "Plan next month's workout cycle", status: "In Progress", assignee: "You", dueDate: "2024-08-10" },
-  { id: "TASK-7878", title: "Follow up with new student", status: "To Do", assignee: "You", dueDate: "2024-08-05" },
-  { id: "TASK-4582", title: "Renew gym membership", status: "Done", assignee: "Alex", dueDate: "2024-07-30" },
-  { id: "TASK-1245", title: "Update client progress charts", status: "Canceled", assignee: "You", dueDate: "2024-08-02" },
-  { id: "TASK-9874", title: "Prepare for yoga seminar", status: "To Do", assignee: "Jane", dueDate: "2024-08-14" },
-  { id: "TASK-3456", title: "Clean and check squat rack", status: "Done", assignee: "Gym Staff", dueDate: "2024-08-01" },
-];
 
 const statusVariant: { [key in TaskStatus]: "default" | "secondary" | "destructive" | "outline" } = {
   "In Progress": "secondary",
@@ -55,7 +40,8 @@ const statusVariant: { [key in TaskStatus]: "default" | "secondary" | "destructi
 };
 
 export default function TasksPage() {
-  const [tasks, setTasks] = useState<Task[]>(initialTasks);
+  const { user, userRole } = useUserRole();
+  const { tasks, addTask, updateTask, deleteTask, toggleTaskStatus } = useContext(TasksContext);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const { toast } = useToast();
@@ -69,19 +55,12 @@ export default function TasksPage() {
 
     if (editingTask) {
       // Edit task
-      setTasks(tasks.map(t => t.id === editingTask.id ? { ...t, title, assignee, dueDate } : t));
+      updateTask(editingTask.id, { title, assignee, dueDate });
       toast({ title: "Task Updated" });
       setEditingTask(null);
     } else {
       // Add new task
-      const newTask: Task = {
-        id: `TASK-${Date.now()}`,
-        title,
-        assignee,
-        dueDate,
-        status: "To Do",
-      };
-      setTasks([newTask, ...tasks]);
+      addTask({ title, assignee, dueDate, status: "To Do" });
       toast({ title: "Task Added" });
     }
     setIsDialogOpen(false);
@@ -91,15 +70,20 @@ export default function TasksPage() {
     setEditingTask(task);
     setIsDialogOpen(true);
   };
-  
-  const handleToggleStatus = (taskId: string, isChecked: boolean) => {
-      setTasks(tasks.map(t => t.id === taskId ? {...t, status: isChecked ? 'Done' : 'To Do'} : t))
-  }
 
   const handleDelete = (taskId: string) => {
-    setTasks(tasks.filter(t => t.id !== taskId));
+    deleteTask(taskId);
     toast({ title: "Task Deleted", variant: "destructive" });
   };
+
+  const filteredTasks = tasks.filter(task => {
+    if (userRole === 'Student') {
+        // Students see tasks assigned to them (by name or "You")
+        return task.assignee === user.name || task.assignee === 'You';
+    }
+    // Trainers and Gyms see all tasks
+    return true;
+  });
 
   return (
     <>
@@ -161,13 +145,13 @@ export default function TasksPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {tasks.map(task => (
+                {filteredTasks.map(task => (
                   <TableRow key={task.id} className={task.status === 'Done' ? 'text-muted-foreground line-through' : ''}>
                     <TableCell>
                       <Checkbox 
                         aria-label={`Select task ${task.id}`} 
                         checked={task.status === 'Done'}
-                        onCheckedChange={(checked) => handleToggleStatus(task.id, Boolean(checked))}
+                        onCheckedChange={(checked) => toggleTaskStatus(task.id, Boolean(checked))}
                       />
                     </TableCell>
                     <TableCell className="font-medium">{task.title}</TableCell>

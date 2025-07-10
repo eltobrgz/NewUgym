@@ -1,19 +1,22 @@
 
 'use client';
 
-import { useState, use } from 'react';
+import { useState, use, useContext } from 'react';
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { TrendingDown, TrendingUp, ArrowRight, Weight, Ruler, HeartPulse, PlusCircle } from 'lucide-react';
+import { TrendingDown, TrendingUp, ArrowRight, Weight, Ruler, HeartPulse, PlusCircle, CheckCircle, Circle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
+import { WorkoutsContext } from '@/contexts/workouts-context';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { cn } from '@/lib/utils';
 
 // Mock data for a specific student, you would fetch this based on params.studentId in a real app
 const studentData: { [key: string]: any } = {
@@ -26,7 +29,6 @@ const studentData: { [key: string]: any } = {
       { date: '2024-07-01', weight: 86, bodyFat: 22, arm: 40, leg: 61.5, waist: 90 },
       { date: '2024-08-01', weight: 85, bodyFat: 21, arm: 40.5, leg: 62, waist: 88 },
     ],
-    workoutProgress: 75,
   },
   'maria-garcia': {
     name: 'Maria Garcia',
@@ -37,7 +39,6 @@ const studentData: { [key: string]: any } = {
       { date: '2024-07-01', weight: 62, bodyFat: 25, arm: 33, leg: 56, waist: 71 },
       { date: '2024-08-01', weight: 62, bodyFat: 24.5, arm: 33, leg: 56, waist: 70 },
     ],
-    workoutProgress: 90,
   }
 };
 
@@ -82,6 +83,8 @@ const ChartComponent = ({ type, data, metric } : { type: keyof typeof chartCompo
 
 export default function StudentProgressPage({ params: paramsPromise }: { params: Promise<{ studentId: string }> }) {
   const params = use(paramsPromise);
+  const { getStudentPlan, getStudentWorkoutProgress } = useContext(WorkoutsContext);
+  
   const [chartType, setChartType] = useState<keyof typeof chartComponents>('line');
   const [selectedMetric, setSelectedMetric] = useState('weight');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -89,8 +92,11 @@ export default function StudentProgressPage({ params: paramsPromise }: { params:
   
   // Use a fallback if studentId is not in mock data
   const data = studentData[params.studentId] || studentData['alex-johnson'];
-  const { name, heightInCm, progressData, workoutProgress } = data;
+  const { name, heightInCm, progressData } = data;
   
+  const studentWorkoutPlan = getStudentPlan(params.studentId);
+  const workoutProgress = getStudentWorkoutProgress(params.studentId);
+
   const currentWeight = progressData[progressData.length - 1].weight;
   const previousWeight = progressData[progressData.length - 2].weight;
   const weightTrend = currentWeight > previousWeight ? 'increase' : currentWeight < previousWeight ? 'decrease' : 'stable';
@@ -206,6 +212,45 @@ export default function StudentProgressPage({ params: paramsPromise }: { params:
             </CardContent>
         </Card>
       </div>
+
+       <Card>
+        <CardHeader>
+          <CardTitle>Plano de Treino do Aluno</CardTitle>
+          <CardDescription>Veja o progresso de conclusão dos treinos.</CardDescription>
+        </CardHeader>
+        <CardContent>
+            {studentWorkoutPlan && studentWorkoutPlan.schedule.length > 0 ? (
+                <Accordion type="single" collapsible className="w-full">
+                    {studentWorkoutPlan.schedule.map((day, index) => {
+                        const allCompleted = day.exercises.length > 0 && day.exercises.every(ex => ex.isCompleted);
+                        return (
+                             <AccordionItem value={`item-${index}`} key={day.id}>
+                                <AccordionTrigger>
+                                     <div className="flex items-center gap-3">
+                                        {allCompleted ? <CheckCircle className="h-5 w-5 text-green-500" /> : <Circle className="h-5 w-5 text-muted-foreground" />}
+                                        <span className="font-semibold">{day.day}</span> - <span className="text-muted-foreground">{day.focus}</span>
+                                     </div>
+                                </AccordionTrigger>
+                                <AccordionContent>
+                                    <div className="pl-6 space-y-3">
+                                        {day.exercises.map(exercise => (
+                                            <div key={exercise.id} className="flex items-center">
+                                                {exercise.isCompleted ? <CheckCircle className="h-4 w-4 text-primary mr-2" /> : <Circle className="h-4 w-4 text-muted-foreground mr-2" />}
+                                                <span className={cn(exercise.isCompleted && "text-muted-foreground")}>{exercise.name}</span>
+                                                <span className="text-muted-foreground ml-auto">{exercise.sets} x {exercise.reps}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </AccordionContent>
+                            </AccordionItem>
+                        )
+                    })}
+                </Accordion>
+            ) : (
+                <p className="text-muted-foreground text-center py-4">Este aluno ainda não possui um plano de treino ativo.</p>
+            )}
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

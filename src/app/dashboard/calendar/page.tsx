@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
@@ -14,33 +14,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { useUserRole } from "@/contexts/user-role-context";
 import { format, parse } from 'date-fns';
-
-type EventType = 'class' | 'event' | 'seminar';
-
-type Event = {
-  id: string;
-  title: string;
-  time: string;
-  description: string;
-  type: EventType;
-};
-
-const initialEventsData: Record<string, Event[]> = {
-  "2024-08-01": [{ id: "evt1", title: "Yoga Class", time: "18:00", description: "Relaxing yoga session for all levels.", type: "class" }],
-  "2024-08-05": [{ id: "evt2", title: "Team Workout", time: "10:00", description: "High-intensity group workout.", type: "event" }],
-  "2024-08-15": [{ id: "evt3", title: "Nutrition Seminar", time: "14:00", description: "Learn about sports nutrition.", type: "seminar" }],
-  "2024-08-22": [{ id: "evt4", title: "Yoga Class", time: "18:00", description: "Advanced Vinyasa flow.", type: "class" }],
-};
+import { EventsContext, EventType, Event } from "@/contexts/events-context";
 
 const getEventDateKey = (d: Date): string => format(d, 'yyyy-MM-dd');
 
 export default function CalendarPage() {
-  const { userRole } = useUserRole();
+  const { userRole, user } = useUserRole();
+  const { events, addEvent, registerForEvent, isRegistered } = useContext(EventsContext);
   const [date, setDate] = useState<Date | undefined>(undefined);
   const [isAddModalOpen, setAddModalOpen] = useState(false);
-  const [events, setEvents] = useState(initialEventsData);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-  const [registeredEvents, setRegisteredEvents] = useState<Set<string>>(new Set());
   const { toast } = useToast();
 
   useEffect(() => {
@@ -57,19 +40,7 @@ export default function CalendarPage() {
     const type = formData.get('event-type') as EventType;
     const description = formData.get('event-description') as string;
     
-    const eventDate = parse(dateStr, 'yyyy-MM-dd', new Date());
-    const dateKey = getEventDateKey(eventDate);
-
-    const newEvent: Event = { id: `evt-${Date.now()}`, title, time, type, description };
-
-    setEvents(prev => {
-        const newEvents = {...prev};
-        if (!newEvents[dateKey]) {
-            newEvents[dateKey] = [];
-        }
-        newEvents[dateKey].push(newEvent);
-        return newEvents;
-    });
+    addEvent({ title, date: dateStr, time, type, description });
 
     toast({
         title: "Event Added!",
@@ -80,7 +51,7 @@ export default function CalendarPage() {
   }
 
   const handleRegister = (eventId: string) => {
-    setRegisteredEvents(prev => new Set(prev).add(eventId));
+    registerForEvent(eventId, user.name); // Using user name as ID for mock
     toast({
       title: "Inscrição Confirmada!",
       description: "Você se inscreveu no evento com sucesso.",
@@ -159,7 +130,7 @@ export default function CalendarPage() {
           </div>
           {userRole === "Student" && (
             <DialogFooter>
-              {registeredEvents.has(selectedEvent?.id || '') ? (
+              {isRegistered(selectedEvent?.id || '', user.name) ? (
                 <Button disabled>
                   <Ticket className="mr-2 h-4 w-4" />
                   Inscrito
