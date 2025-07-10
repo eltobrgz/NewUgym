@@ -7,16 +7,16 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Activity, Dumbbell, Users, Calendar, ListChecks, ArrowUp, ArrowDown, User, FileText, Megaphone, AlertTriangle, LineChart as LineChartIcon, BarChart3, UserCheck, UserX } from "lucide-react";
+import { Activity, Dumbbell, Users, Calendar, ListChecks, ArrowUp, User, FileText, Megaphone, AlertTriangle, LineChart as LineChartIcon, BarChart3, UserCheck } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, XAxis, Tooltip, ResponsiveContainer, Legend, Line, LineChart } from 'recharts'
 import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart'
 import { Badge } from "@/components/ui/badge";
 import { useUserRole } from "@/contexts/user-role-context";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Progress } from "@/components/ui/progress";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 // --- Data for Student Dashboard ---
 const studentMetrics = [
@@ -280,11 +280,33 @@ const renderDashboardByRole = (role: string) => {
   }
 }
 
+const WelcomeAlert = () => {
+  const { user, isProfileComplete } = useUserRole();
+
+  if (isProfileComplete) {
+    return null;
+  }
+
+  return (
+    <Alert>
+      <AlertTriangle className="h-4 w-4" />
+      <AlertTitle>Bem-vindo(a) ao Ugym, {user.name.split(' ')[0]}!</AlertTitle>
+      <AlertDescription>
+        Parece que seu perfil está incompleto. Por favor, tire um momento para preencher suas informações. 
+        <Button variant="link" asChild className="p-0 h-auto ml-1">
+            <Link href="/dashboard/settings">Completar Perfil</Link>
+        </Button>
+      </AlertDescription>
+    </Alert>
+  )
+}
+
 export default function DashboardPage() {
   const { userRole } = useUserRole();
   
   return (
     <div className="flex flex-col gap-6">
+      <WelcomeAlert />
       <h1 className="text-3xl font-bold tracking-tight">
         {userRole} Dashboard
       </h1>

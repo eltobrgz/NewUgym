@@ -12,10 +12,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Upload } from "lucide-react";
 
 const getInitials = (name: string) => {
+    if (!name) return "";
     const names = name.split(" ");
-    if (names.length === 0) return "";
-    const firstInitial = names[0][0];
-    const lastInitial = names.length > 1 ? names[names.length - 1][0] : "";
+    const firstInitial = names[0]?.[0] || "";
+    const lastInitial = names.length > 1 ? names[names.length - 1]?.[0] || "" : "";
     return `${firstInitial}${lastInitial}`.toUpperCase();
 };
 
@@ -34,15 +34,15 @@ const StudentProfileForm = ({ user }: { user: User }) => (
         <div className="grid sm:grid-cols-3 gap-4">
             <div className="space-y-2">
                 <Label htmlFor="height">Altura (cm)</Label>
-                <Input id="height" type="number" defaultValue="175" />
+                <Input id="height" type="number" placeholder="Ex: 175" defaultValue={user.height} />
             </div>
             <div className="space-y-2">
                 <Label htmlFor="weight">Peso (kg)</Label>
-                <Input id="weight" type="number" defaultValue="80" />
+                <Input id="weight" type="number" placeholder="Ex: 80" defaultValue={user.weight} />
             </div>
              <div className="space-y-2">
                 <Label htmlFor="birthdate">Data de Nascimento</Label>
-                <Input id="birthdate" type="date" defaultValue="1998-05-20" />
+                <Input id="birthdate" type="date" defaultValue={user.birthdate} />
             </div>
         </div>
     </div>
@@ -63,16 +63,16 @@ const TrainerProfileForm = ({ user }: { user: User }) => (
         <div className="grid sm:grid-cols-2 gap-4">
             <div className="space-y-2">
                 <Label htmlFor="cref">CREF</Label>
-                <Input id="cref" defaultValue="123456-G/SP" />
+                <Input id="cref" placeholder="Ex: 123456-G/SP" defaultValue={user.cref} />
             </div>
             <div className="space-y-2">
                 <Label htmlFor="specializations">Especializações</Label>
-                <Input id="specializations" defaultValue="Treinamento Funcional, Nutrição Esportiva" />
+                <Input id="specializations" placeholder="Ex: Treinamento Funcional" defaultValue={user.specializations} />
             </div>
         </div>
          <div className="space-y-2">
             <Label htmlFor="bio">Biografia</Label>
-            <Textarea id="bio" placeholder="Fale um pouco sobre sua carreira e filosofia de treino..." defaultValue="Personal trainer com mais de 10 anos de experiência, focada em ajudar clientes a atingirem seus objetivos de saúde e performance." />
+            <Textarea id="bio" placeholder="Fale um pouco sobre sua carreira e filosofia de treino..." defaultValue={user.bio} />
         </div>
     </div>
 );
@@ -90,12 +90,12 @@ const GymProfileForm = ({ user }: { user: User }) => (
             </div>
              <div className="space-y-2">
                 <Label htmlFor="phone">Telefone</Label>
-                <Input id="phone" type="tel" defaultValue="(11) 98765-4321" />
+                <Input id="phone" type="tel" placeholder="(11) 98765-4321" defaultValue={user.phone}/>
             </div>
         </div>
         <div className="space-y-2">
             <Label htmlFor="address">Endereço</Label>
-            <Input id="address" defaultValue="Rua dos Atletas, 123, Bairro Fitness, São Paulo - SP" />
+            <Input id="address" placeholder="Rua dos Atletas, 123" defaultValue={user.address} />
         </div>
     </div>
 );
@@ -127,12 +127,12 @@ export function UserProfileSettings({ user, role }: { user: User, role: UserRole
 
     return (
         <Card className="overflow-hidden">
-             <div className="relative h-32 md:h-48 w-full">
+             <div className="relative h-32 md:h-48 w-full bg-muted">
                 <Image
                     src="https://placehold.co/1200x400.png"
                     alt="Banner do perfil"
-                    layout="fill"
-                    objectFit="cover"
+                    fill
+                    style={{objectFit: "cover"}}
                     data-ai-hint="gym pattern"
                 />
             </div>
