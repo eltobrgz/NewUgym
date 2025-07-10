@@ -24,7 +24,7 @@ import {
   DropdownMenuSubTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useUserRole, UserRole } from "@/contexts/user-role-context";
-import { User, LogOut, Settings, SwatchBook, Moon, Sun } from "lucide-react";
+import { User, LogOut, SwatchBook, Moon, Sun } from "lucide-react";
 import { Button } from "./ui/button";
 
 export function UserNav() {

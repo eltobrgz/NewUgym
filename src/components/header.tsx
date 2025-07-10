@@ -1,6 +1,7 @@
 
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { Menu } from "lucide-react";
 
@@ -11,20 +12,15 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { UserNav } from "@/components/user-nav";
-import { DashboardNav } from "@/components/dashboard-nav";
-import { useUserRole } from "@/contexts/user-role-context";
-import { commonNav } from "./dashboard-nav";
-import { useTheme } from "next-themes";
-import { Moon, Sun } from "lucide-react";
+import { Sidebar } from "./sidebar";
+import { UserProfile } from "./user-profile";
 
-export function Header() {
-  const { userRole } = useUserRole();
-  const { setTheme, theme } = useTheme();
+export function Header({ onToggleSidebar }: { onToggleSidebar: () => void; }) {
+  const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6 z-40">
-      <DashboardNav />
-      <Sheet>
+    <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
+      <Sheet open={isMobileSheetOpen} onOpenChange={setIsMobileSheetOpen}>
         <SheetTrigger asChild>
           <Button
             variant="outline"
@@ -35,11 +31,12 @@ export function Header() {
             <span className="sr-only">Toggle navigation menu</span>
           </Button>
         </SheetTrigger>
-        <SheetContent side="left">
-          <DashboardNav inSheet={true} />
+        <SheetContent side="left" className="p-0 flex flex-col w-64">
+           <UserProfile isCollapsed={false} onToggle={() => {}}/>
+           <Sidebar isCollapsed={false} onMobileLinkClick={() => setIsMobileSheetOpen(false)} />
         </SheetContent>
       </Sheet>
-      <div className="flex w-full items-center justify-end gap-4 md:ml-auto md:gap-2 lg:gap-4">
+      <div className="flex w-full items-center justify-end gap-4">
         <UserNav />
       </div>
     </header>
