@@ -4,7 +4,7 @@
 import { useState, useId, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { CheckCircle2, Circle, Dumbbell, PlusCircle, Sparkles, Trash2, MoreVertical, GripVertical, Save, X, ArrowLeft } from "lucide-react";
+import { CheckCircle2, Circle, Dumbbell, PlusCircle, Sparkles, Trash2, MoreVertical, GripVertical, Save, X } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from '@/lib/utils';
 import { useUserRole } from '@/contexts/user-role-context';
@@ -38,8 +38,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
-type Exercise = { id: string; name: string; sets: string; reps: string; };
+type Exercise = { id: string; name: string; sets: string; reps: string; isCompleted?: boolean };
 type DailyWorkout = { id: string; day: string; focus: string; exercises: Exercise[]; };
 type WorkoutTemplate = { id: string; name: string; description: string; difficulty: string; schedule: DailyWorkout[]; };
 
@@ -96,7 +97,7 @@ const WorkoutBuilder = ({ open, onOpenChange, onSave, template }: { open: boolea
     const addDay = () => setSchedule([...schedule, { id: `day-${Date.now()}`, day: `Dia ${schedule.length + 1}`, focus: '', exercises: [] }]);
     const removeDay = (dayId: string) => setSchedule(schedule.filter(d => d.id !== dayId));
     
-    const updateDay = (dayId: string, field: keyof DailyWorkout, value: string) => {
+    const updateDay = (dayId: string, field: keyof Omit<DailyWorkout, 'exercises' | 'id'>, value: string) => {
         setSchedule(schedule.map(d => d.id === dayId ? { ...d, [field]: value } : d));
     };
     
@@ -109,7 +110,7 @@ const WorkoutBuilder = ({ open, onOpenChange, onSave, template }: { open: boolea
         setSchedule(schedule.map(d => d.id === dayId ? { ...d, exercises: d.exercises.filter(ex => ex.id !== exerciseId) } : d));
     };
 
-    const updateExercise = (dayId: string, exerciseId: string, field: keyof Exercise, value: string) => {
+    const updateExercise = (dayId: string, exerciseId: string, field: keyof Omit<Exercise, 'id' | 'isCompleted'>, value: string) => {
         setSchedule(schedule.map(d => d.id === dayId ? {
             ...d,
             exercises: d.exercises.map(ex => ex.id === exerciseId ? { ...ex, [field]: value } : ex)
@@ -158,7 +159,7 @@ const WorkoutBuilder = ({ open, onOpenChange, onSave, template }: { open: boolea
                     <div className="space-y-2">
                         <Label className="text-lg font-semibold">Estrutura Semanal</Label>
                         <div className="space-y-4">
-                            {schedule.map((day, dayIndex) => (
+                            {schedule.map((day) => (
                                <Card key={day.id}>
                                    <CardHeader className="flex flex-row items-center justify-between py-3">
                                         <div className="flex items-center gap-2">
@@ -173,7 +174,7 @@ const WorkoutBuilder = ({ open, onOpenChange, onSave, template }: { open: boolea
                                            <Input value={day.focus} onChange={(e) => updateDay(day.id, 'focus', e.target.value)} placeholder="Ex: Peito e Tríceps, Descanso" />
                                        </div>
                                        <div className="border rounded-md p-4 space-y-3">
-                                            {day.exercises.map((exercise, exIndex) => (
+                                            {day.exercises.map((exercise) => (
                                                 <div key={exercise.id} className="flex items-center gap-2">
                                                     <GripVertical className="h-4 w-4 text-muted-foreground cursor-grab" />
                                                    <Input value={exercise.name} onChange={e => updateExercise(day.id, exercise.id, 'name', e.target.value)} placeholder="Nome do exercício" className="flex-1" />
@@ -462,13 +463,112 @@ const TrainerView = () => {
     )
 }
 
+const mockStudentPlan: DailyWorkout[] = [
+    {
+        id: 'day1', day: 'Segunda-feira', focus: 'Peito, Ombros e Tríceps', exercises: [
+            { id: 'ex11', name: 'Supino Reto', sets: '4', reps: '8-12', isCompleted: true },
+            { id: 'ex12', name: 'Desenvolvimento com Halteres', sets: '3', reps: '10', isCompleted: false },
+            { id: 'ex13', name: 'Tríceps na Polia', sets: '3', reps: '12-15', isCompleted: false },
+        ]
+    },
+    {
+        id: 'day2', day: 'Terça-feira', focus: 'Costas e Bíceps', exercises: [
+            { id: 'ex21', name: 'Barra Fixa', sets: '3', reps: 'Até a falha', isCompleted: false },
+            { id: 'ex22', name: 'Remada Curvada', sets: '4', reps: '8-10', isCompleted: false },
+            { id: 'ex23', name: 'Rosca Direta', sets: '3', reps: '12', isCompleted: false },
+        ]
+    },
+    { id: 'day3', day: 'Quarta-feira', focus: 'Descanso Ativo', exercises: [] },
+    {
+        id: 'day4', day: 'Quinta-feira', focus: 'Pernas', exercises: [
+            { id: 'ex41', name: 'Agachamento Livre', sets: '4', reps: '8-10', isCompleted: false },
+            { id: 'ex42', name: 'Leg Press', sets: '3', reps: '12-15', isCompleted: false },
+            { id: 'ex43', name: 'Cadeira Extensora', sets: '3', reps: '15', isCompleted: false },
+        ]
+    },
+    { id: 'day5', day: 'Sexta-feira', focus: 'Cardio e Abdômen', exercises: [] },
+    { id: 'day6', day: 'Sábado', focus: 'Descanso', exercises: [] },
+    { id: 'day7', day: 'Domingo', focus: 'Descanso', exercises: [] },
+];
+
 const StudentView = () => {
-    // This view can be implemented later with the student-specific logic
+    const [weeklyPlan, setWeeklyPlan] = useState(mockStudentPlan);
+    
+    const handleToggleExercise = (dayId: string, exerciseId: string) => {
+        setWeeklyPlan(plan => 
+            plan.map(day => {
+                if (day.id === dayId) {
+                    return {
+                        ...day,
+                        exercises: day.exercises.map(ex => {
+                            if (ex.id === exerciseId) {
+                                return { ...ex, isCompleted: !ex.isCompleted };
+                            }
+                            return ex;
+                        })
+                    };
+                }
+                return day;
+            })
+        );
+    };
+
     return (
-        <div className="flex flex-col gap-4 items-center justify-center h-full text-center">
-             <Dumbbell className="w-16 h-16 text-muted-foreground" />
-             <h1 className="text-2xl font-bold">Página de Treinos do Aluno</h1>
-             <p className="text-muted-foreground">Esta área está em construção. Em breve você poderá ver seus treinos aqui!</p>
+        <div className="flex flex-col gap-6">
+            <h1 className="text-3xl font-bold tracking-tight">Meu Plano de Treino</h1>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>Plano Semanal</CardTitle>
+                    <CardDescription>Seu plano de treino para esta semana. Marque os exercícios conforme os completa.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Accordion type="single" collapsible className="w-full" defaultValue={`item-${new Date().getDay()}`}>
+                        {weeklyPlan.map((day, index) => {
+                            const isRestDay = day.exercises.length === 0;
+                             const allCompleted = !isRestDay && day.exercises.every(ex => ex.isCompleted);
+                            
+                            return (
+                                <AccordionItem value={`item-${index+1}`} key={day.id}>
+                                    <AccordionTrigger>
+                                        <div className="flex justify-between items-center w-full pr-4">
+                                            <div className="flex items-center gap-3">
+                                                 {allCompleted ? <CheckCircle2 className="h-5 w-5 text-green-500" /> : <Dumbbell className="h-5 w-5 text-muted-foreground" />}
+                                                <span className="font-semibold">{day.day}</span> - <span className="text-muted-foreground">{day.focus}</span>
+                                            </div>
+                                             {isRestDay && <Badge variant="outline">Descanso</Badge>}
+                                        </div>
+                                    </AccordionTrigger>
+                                    <AccordionContent>
+                                        {isRestDay ? (
+                                            <p className="text-muted-foreground pl-10">Aproveite para descansar e se recuperar para o próximo treino!</p>
+                                        ) : (
+                                            <div className="pl-6 space-y-4">
+                                                {day.exercises.map(exercise => (
+                                                    <div key={exercise.id} className="flex items-center">
+                                                        <Checkbox 
+                                                            id={`${day.id}-${exercise.id}`}
+                                                            checked={exercise.isCompleted}
+                                                            onCheckedChange={() => handleToggleExercise(day.id, exercise.id)}
+                                                            className="h-5 w-5"
+                                                        />
+                                                        <label htmlFor={`${day.id}-${exercise.id}`} className="ml-3 flex-1">
+                                                            <span className={cn("font-medium", exercise.isCompleted && "line-through text-muted-foreground")}>{exercise.name}</span>
+                                                            <span className="text-muted-foreground ml-2">
+                                                                {exercise.sets} séries x {exercise.reps} reps
+                                                            </span>
+                                                        </label>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </AccordionContent>
+                                </AccordionItem>
+                            )
+                        })}
+                    </Accordion>
+                </CardContent>
+            </Card>
         </div>
     )
 }
