@@ -69,11 +69,11 @@ User Profile:
 
 Instructions:
 1.  Create a fitting name for the plan (e.g., "Beginner's Strength Foundation", "Intermediate Hypertrophy Split").
-2.  Structure the output for a full 7-day week (Monday to Sunday).
+2.  **You MUST structure the output for a full 7-day week (e.g., Monday to Sunday). The 'weeklySchedule' array MUST contain exactly 7 items.**
 3.  Distribute the {{{daysPerWeek}}} training sessions logically across the week. The remaining days must be "Rest Day".
 4.  For each training day, provide a list of exercises with appropriate sets, reps, and rest times. For cardio exercises, specify duration.
 5.  Ensure the plan is appropriate for the user's experience level.
-6.  The "focus" for rest days should simply be "Rest Day", and the "exercises" array should be empty.
+6.  For any "Rest Day", the "focus" property should be "Rest Day", and the "exercises" array MUST be empty.
 7.  Provide a clear and concise response in the requested JSON format.
 `,
 });
