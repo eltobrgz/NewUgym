@@ -23,12 +23,20 @@ export type MembershipPlan = {
   recurrence: "Mensal" | "Anual";
 };
 
+export type StudentSubscriptionStatus = 'Ativo' | 'Pendente' | 'Atrasado' | 'Cancelado' | 'Inativo';
+
 export type StudentSubscription = {
     studentId: string;
     planName: string;
-    status: 'Ativo' | 'Pendente' | 'Atrasado' | 'Cancelado';
+    status: StudentSubscriptionStatus;
     joinDate: Date;
     nextDueDate: Date;
+}
+
+export type MemberStatusInfo = {
+    status: 'Ativo' | 'Inativo' | 'Pendente' | 'Atrasado';
+    plan: string;
+    joinDate: Date | null;
 }
 
 const initialMembers = allUsers.filter(u => u.role === 'Student');
@@ -155,7 +163,8 @@ export const getStudentSubscription = (studentId: string): StudentSubscription |
         if (lastTransaction.status === 'Pendente') status = 'Pendente';
         if (lastTransaction.status === 'Atrasado') status = 'Atrasado';
     } else {
-        return null; // No transactions, no active subscription
+        // No transactions, but subscription object exists. Could be a new user.
+        status = 'Inativo';
     }
 
     const recurrenceMonths = plan.recurrence === 'Anual' ? 12 : 1;
@@ -170,3 +179,40 @@ export const getStudentSubscription = (studentId: string): StudentSubscription |
         nextDueDate,
     };
 }
+
+// For gym/trainer member lists
+export const getMemberStatus = (studentId: string): MemberStatusInfo => {
+    const subscription = getStudentSubscription(studentId);
+
+    if (!subscription) {
+        return {
+            status: 'Inativo',
+            plan: 'Nenhum',
+            joinDate: null,
+        };
+    }
+    
+    let status: MemberStatusInfo['status'];
+    switch (subscription.status) {
+        case 'Ativo':
+            status = 'Ativo';
+            break;
+        case 'Pendente':
+            status = 'Pendente';
+            break;
+        case 'Atrasado':
+            status = 'Atrasado';
+            break;
+        case 'Cancelado':
+        case 'Inativo':
+        default:
+            status = 'Inativo';
+            break;
+    }
+
+    return {
+        status: status,
+        plan: subscription.planName,
+        joinDate: subscription.joinDate,
+    };
+};

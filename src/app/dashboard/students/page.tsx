@@ -54,7 +54,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { allUsers, type DirectoryUser } from "@/lib/user-directory";
-import { getStudentSubscription, StudentSubscription } from '@/lib/finance-manager';
+import { getMemberStatus } from "@/lib/finance-manager";
 import { format, subDays } from 'date-fns';
 
 type Student = {
@@ -162,14 +162,7 @@ export default function StudentsPage() {
     // Unify student list from the main user directory and enrich with status
     const studentUsers = allUsers.filter(u => u.role === 'Student');
     const studentData = studentUsers.map((user, index) => {
-        const subscription = getStudentSubscription(user.id);
-        const statusMap: Record<StudentSubscription['status'], Student['status']> = {
-            Ativo: 'Ativo',
-            Pendente: 'Pendente',
-            Atrasado: 'Atrasado',
-            Cancelado: 'Inativo'
-        };
-
+        const memberStatus = getMemberStatus(user.id);
         const lastActiveDays = [2, 0, 7, 15, 1, 3];
 
         return {
@@ -180,7 +173,7 @@ export default function StudentsPage() {
             initials: user.name.split(" ").map(n => n[0]).join("").toUpperCase(),
             lastActive: format(subDays(new Date(), lastActiveDays[index % lastActiveDays.length]), 'dd/MM/yyyy'),
             progress: Math.floor(Math.random() * 80) + 20, // Random progress for visuals
-            status: subscription ? statusMap[subscription.status] : 'Inativo',
+            status: memberStatus.status,
         };
     });
     setStudents(studentData);

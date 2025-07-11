@@ -36,7 +36,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { allUsers, type DirectoryUser } from "@/lib/user-directory";
-import { getStudentSubscription, StudentSubscription } from "@/lib/finance-manager";
+import { getMemberStatus, MemberStatusInfo } from "@/lib/finance-manager";
 import { format } from "date-fns";
 
 type Member = {
@@ -154,22 +154,16 @@ export default function MembersPage() {
     // Logic to fetch members and their subscription status
     const studentUsers = allUsers.filter(u => u.role === 'Student');
     const memberData = studentUsers.map(user => {
-        const subscription = getStudentSubscription(user.id);
-        const statusMap: Record<StudentSubscription['status'], Member['status']> = {
-            Ativo: 'Ativo',
-            Pendente: 'Pendente',
-            Atrasado: 'Atrasado',
-            Cancelado: 'Inativo'
-        };
+        const memberStatus: MemberStatusInfo = getMemberStatus(user.id);
         return {
             id: user.id,
             name: user.name,
             email: user.email,
             avatar: `https://placehold.co/100x100.png`,
             initials: user.name.split(" ").map(n => n[0]).join("").toUpperCase(),
-            status: subscription ? statusMap[subscription.status] : 'Inativo',
-            plan: subscription ? subscription.planName : "Nenhum",
-            joinDate: subscription ? format(subscription.joinDate, 'dd/MM/yyyy') : 'N/A'
+            status: memberStatus.status,
+            plan: memberStatus.plan,
+            joinDate: memberStatus.joinDate ? format(memberStatus.joinDate, 'dd/MM/yyyy') : 'N/A'
         };
     });
     setMembers(memberData);
