@@ -1,10 +1,10 @@
 
 "use client";
 
-import { useState, useId, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { CheckCircle2, Circle, Dumbbell, PlusCircle, Sparkles, Trash2, MoreVertical, GripVertical, Save, X, UserPlus, Edit, NotebookText } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { CheckCircle2, Circle, Dumbbell, PlusCircle, Sparkles, Trash2, MoreVertical, GripVertical, Save, X, UserPlus, Edit, NotebookText, ArrowLeft } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from '@/lib/utils';
 import { useUserRole } from '@/contexts/user-role-context';
@@ -41,9 +41,45 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { WorkoutsContext, WorkoutPlan, DailyWorkout, Exercise, SetLog } from '@/contexts/workouts-context';
+import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 
 
 type GeneratedWorkoutPlan = { planName: string; weeklySchedule: { day: string; focus: string; exercises?: { name: string; sets?: number; reps?: string; duration?: string; rest?: string }[] }[] };
+
+const MOCK_BUILDER_PLAN: WorkoutPlan = {
+  id: 'TPL-MOCK-BUILDER',
+  name: 'Hipertrofia Intensa 5x',
+  description: 'Um plano de 5 dias focado em hipertrofia máxima, dividindo os grupos musculares para permitir descanso e recuperação adequados.',
+  difficulty: 'Avançado',
+  schedule: [
+    { id: 'mock-day-1', day: 'Segunda-feira', focus: 'Peito e Tríceps', exercises: [
+      { id: 'mock-ex-11', name: 'Supino Reto com Barra', sets: '4', reps: '6-8' },
+      { id: 'mock-ex-12', name: 'Supino Inclinado com Halteres', sets: '3', reps: '8-10' },
+      { id: 'mock-ex-13', name: 'Crucifixo na Polia', sets: '3', reps: '12-15' },
+      { id: 'mock-ex-14', name: 'Tríceps Testa', sets: '3', reps: '8-10' },
+    ]},
+    { id: 'mock-day-2', day: 'Terça-feira', focus: 'Costas e Bíceps', exercises: [
+      { id: 'mock-ex-21', name: 'Barra Fixa', sets: '4', reps: 'Até a falha' },
+      { id: 'mock-ex-22', name: 'Remada Curvada', sets: '4', reps: '6-8' },
+      { id: 'mock-ex-23', name: 'Puxada Alta', sets: '3', reps: '10-12' },
+      { id: 'mock-ex-24', name: 'Rosca Direta com Barra', sets: '3', reps: '8-10' },
+    ]},
+    { id: 'mock-day-3', day: 'Quarta-feira', focus: 'Descanso', exercises: [] },
+    { id: 'mock-day-4', day: 'Quinta-feira', focus: 'Pernas (Ênfase em Quadríceps)', exercises: [
+       { id: 'mock-ex-41', name: 'Agachamento Livre', sets: '5', reps: '5' },
+       { id: 'mock-ex-42', name: 'Leg Press', sets: '4', reps: '10-12' },
+       { id: 'mock-ex-43', name: 'Cadeira Extensora', sets: '3', reps: '15' },
+    ]},
+    { id: 'mock-day-5', day: 'Sexta-feira', focus: 'Ombros e Panturrilha', exercises: [
+      { id: 'mock-ex-51', name: 'Desenvolvimento Militar', sets: '4', reps: '6-8' },
+      { id: 'mock-ex-52', name: 'Elevação Lateral', sets: '3', reps: '12-15' },
+      { id: 'mock-ex-53', name: 'Elevação Frontal', sets: '3', reps: '12-15' },
+      { id: 'mock-ex-54', name: 'Panturrilha em Pé', sets: '5', reps: '15-20' },
+    ]},
+    { id: 'mock-day-6', day: 'Sábado', focus: 'Descanso', exercises: [] },
+    { id: 'mock-day-7', day: 'Domingo', focus: 'Descanso', exercises: [] },
+  ]
+};
 
 
 const studentsForAssignment = [
@@ -53,137 +89,201 @@ const studentsForAssignment = [
   { id: "emily-white", name: "Emily White" },
 ];
 
-const WorkoutBuilder = ({ open, onOpenChange, onSave, plan: initialPlan }: { open: boolean, onOpenChange: (open: boolean) => void, onSave: (plan: WorkoutPlan) => void, plan: WorkoutPlan | null }) => {
-    const formId = useId();
-    const [name, setName] = useState('');
-    const [description, setDescription] = useState('');
-    const [difficulty, setDifficulty] = useState('');
-    const [schedule, setSchedule] = useState<DailyWorkout[]>([]);
+const WorkoutBuilder = ({ onSave, onBack, plan: initialPlan }: { onSave: (plan: WorkoutPlan) => void, onBack: () => void, plan: WorkoutPlan | null }) => {
+    const [plan, setPlan] = useState<WorkoutPlan>(MOCK_BUILDER_PLAN);
+    const [activeDayId, setActiveDayId] = useState<string | null>(null);
 
     useEffect(() => {
-        if (open) {
-            if (initialPlan) {
-                setName(initialPlan.name);
-                setDescription(initialPlan.description);
-                setDifficulty(initialPlan.difficulty);
-                setSchedule(initialPlan.schedule.length > 0 ? JSON.parse(JSON.stringify(initialPlan.schedule)) : [{ id: `day-${Date.now()}`, day: 'Segunda-feira', focus: 'Peito e Tríceps', exercises: [] }]);
-            } else {
-                 setName('');
-                 setDescription('');
-                 setDifficulty('');
-                 setSchedule([{ id: `day-${Date.now()}`, day: 'Segunda-feira', focus: 'Peito e Tríceps', exercises: [] }]);
-            }
+      const p = initialPlan || MOCK_BUILDER_PLAN;
+      setPlan(JSON.parse(JSON.stringify(p))); // Deep copy
+      if (p.schedule.length > 0) {
+        setActiveDayId(p.schedule[0].id);
+      }
+    }, [initialPlan]);
+
+    const activeDay = plan.schedule.find(d => d.id === activeDayId);
+
+    const handleOnDragEnd = (result: DropResult) => {
+        if (!result.destination) return;
+
+        const { source, destination, type } = result;
+
+        if (type === 'day') {
+          const newSchedule = Array.from(plan.schedule);
+          const [reorderedItem] = newSchedule.splice(source.index, 1);
+          newSchedule.splice(destination.index, 0, reorderedItem);
+          setPlan({ ...plan, schedule: newSchedule });
+        } else if (type === 'exercise' && activeDay) {
+          const newExercises = Array.from(activeDay.exercises);
+          const [reorderedItem] = newExercises.splice(source.index, 1);
+          newExercises.splice(destination.index, 0, reorderedItem);
+          const newSchedule = plan.schedule.map(day => day.id === activeDayId ? { ...day, exercises: newExercises } : day);
+          setPlan({ ...plan, schedule: newSchedule });
         }
-    }, [initialPlan, open]);
-
-    const handleSave = (e: React.FormEvent) => {
-        e.preventDefault();
-        onSave({ ...initialPlan, id: initialPlan?.id || `TPL-${Date.now()}`, name, description, difficulty, schedule, assignedTo: initialPlan?.assignedTo || [] });
-        onOpenChange(false);
     };
 
-    const addDay = () => setSchedule([...schedule, { id: `day-${Date.now()}`, day: `Dia ${schedule.length + 1}`, focus: '', exercises: [] }]);
-    const removeDay = (dayId: string) => setSchedule(schedule.filter(d => d.id !== dayId));
-    
+    const updatePlanDetails = (field: keyof Omit<WorkoutPlan, 'schedule'|'id'>, value: string) => {
+        setPlan({ ...plan, [field]: value });
+    };
+
+    const addDay = () => {
+        const newDay: DailyWorkout = { id: `day-${Date.now()}`, day: `Novo Dia`, focus: '', exercises: [] };
+        setPlan({ ...plan, schedule: [...plan.schedule, newDay] });
+        setActiveDayId(newDay.id);
+    };
+
     const updateDay = (dayId: string, field: keyof Omit<DailyWorkout, 'exercises' | 'id'>, value: string) => {
-        setSchedule(schedule.map(d => d.id === dayId ? { ...d, [field]: value } : d));
+        const newSchedule = plan.schedule.map(d => d.id === dayId ? { ...d, [field]: value } : d);
+        setPlan({ ...plan, schedule: newSchedule });
     };
     
-    const addExercise = (dayId: string) => {
+    const removeDay = (dayId: string) => {
+      const newSchedule = plan.schedule.filter(d => d.id !== dayId);
+      setPlan({...plan, schedule: newSchedule});
+      if(activeDayId === dayId) {
+        setActiveDayId(newSchedule.length > 0 ? newSchedule[0].id : null);
+      }
+    }
+
+    const addExercise = () => {
+        if (!activeDayId) return;
         const newExercise: Exercise = { id: `ex-${Date.now()}`, name: '', sets: '3', reps: '10' };
-        setSchedule(schedule.map(d => d.id === dayId ? { ...d, exercises: [...d.exercises, newExercise] } : d));
+        const newSchedule = plan.schedule.map(day => day.id === activeDayId ? { ...day, exercises: [...day.exercises, newExercise] } : day);
+        setPlan({ ...plan, schedule: newSchedule });
     };
 
-    const removeExercise = (dayId: string, exerciseId: string) => {
-        setSchedule(schedule.map(d => d.id === dayId ? { ...d, exercises: d.exercises.filter(ex => ex.id !== exerciseId) } : d));
+    const removeExercise = (exerciseId: string) => {
+        if (!activeDayId) return;
+        const newSchedule = plan.schedule.map(day => day.id === activeDayId ? { ...day, exercises: day.exercises.filter(ex => ex.id !== exerciseId) } : day);
+        setPlan({ ...plan, schedule: newSchedule });
     };
 
-    const updateExercise = (dayId: string, exerciseId: string, field: keyof Omit<Exercise, 'id'|'isCompleted'|'notes'|'setLogs'>, value: string) => {
-        setSchedule(schedule.map(d => d.id === dayId ? {
-            ...d,
-            exercises: d.exercises.map(ex => ex.id === exerciseId ? { ...ex, [field]: value } : ex)
-        } : d));
+    const updateExercise = (exerciseId: string, field: keyof Omit<Exercise, 'id'|'isCompleted'|'notes'|'setLogs'>, value: string) => {
+        if (!activeDayId) return;
+        const newSchedule = plan.schedule.map(day => day.id === activeDayId ? {
+            ...day, exercises: day.exercises.map(ex => ex.id === exerciseId ? { ...ex, [field]: value } : ex)
+        } : day);
+        setPlan({ ...plan, schedule: newSchedule });
     };
-
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-6xl w-full h-[95vh] flex flex-col p-0">
-                <DialogHeader className="p-6 pb-0">
-                    <div className="flex items-center justify-between">
-                         <DialogTitle className="text-2xl">{initialPlan ? 'Editar Plano de Treino' : 'Criar Novo Plano'}</DialogTitle>
-                         <div className="flex gap-2">
-                             <Button variant="ghost" onClick={() => onOpenChange(false)}><X className="mr-2" /> Cancelar</Button>
-                             <Button type="submit" form={formId}><Save className="mr-2"/> Salvar Plano</Button>
-                         </div>
-                    </div>
-                    <DialogDescription>
-                        Construa um plano de treino semanal detalhado, com exercícios, séries e repetições.
-                    </DialogDescription>
-                </DialogHeader>
-                <form id={formId} onSubmit={handleSave} className="flex-1 overflow-y-auto px-6 space-y-6">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Informações do Plano</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="plan-name">Nome do Plano</Label>
-                                    <Input id="plan-name" value={name} onChange={e => setName(e.target.value)} placeholder="Ex: Hipertrofia Intensa 5x" required />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="plan-difficulty">Dificuldade</Label>
-                                    <Input id="plan-difficulty" value={difficulty} onChange={e => setDifficulty(e.target.value)} placeholder="Ex: Intermediário" required/>
-                                </div>
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="plan-description">Descrição</Label>
-                                <Textarea id="plan-description" value={description} onChange={e => setDescription(e.target.value)} placeholder="Descreva o foco e objetivo deste plano..." />
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <div className="space-y-2">
-                        <Label className="text-lg font-semibold">Estrutura Semanal</Label>
-                        <div className="space-y-4">
-                            {schedule.map((day) => (
-                               <Card key={day.id}>
-                                   <CardHeader className="flex flex-row items-center justify-between py-3">
-                                        <div className="flex items-center gap-2">
-                                            <GripVertical className="h-5 w-5 text-muted-foreground cursor-grab" />
-                                            <Input value={day.day} onChange={(e) => updateDay(day.id, 'day', e.target.value)} className="text-lg font-bold border-none shadow-none p-1 h-auto focus-visible:ring-0" />
-                                        </div>
-                                       <Button variant="ghost" size="icon" onClick={() => removeDay(day.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                                   </CardHeader>
-                                   <CardContent className="space-y-4 pt-0">
-                                       <div className="space-y-2">
-                                           <Label>Foco do Dia</Label>
-                                           <Input value={day.focus} onChange={(e) => updateDay(day.id, 'focus', e.target.value)} placeholder="Ex: Peito e Tríceps, Descanso" />
-                                       </div>
-                                       <div className="border rounded-md p-4 space-y-3">
-                                            {day.exercises.map((exercise) => (
-                                                <div key={exercise.id} className="flex items-center gap-2">
-                                                    <GripVertical className="h-4 w-4 text-muted-foreground cursor-grab" />
-                                                   <Input value={exercise.name} onChange={e => updateExercise(day.id, exercise.id, 'name', e.target.value)} placeholder="Nome do exercício" className="flex-1" />
-                                                   <Input value={exercise.sets} onChange={e => updateExercise(day.id, exercise.id, 'sets', e.target.value)} placeholder="Séries" type="text" className="w-20" />
-                                                   <Input value={exercise.reps} onChange={e => updateExercise(day.id, exercise.id, 'reps', e.target.value)} placeholder="Reps" className="w-20" />
-                                                   <Button variant="ghost" size="icon" onClick={() => removeExercise(day.id, exercise.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                                               </div>
-                                            ))}
-                                            <Button variant="outline" size="sm" onClick={() => addExercise(day.id)}><PlusCircle className="mr-2 h-4 w-4" />Adicionar Exercício</Button>
-                                       </div>
-                                   </CardContent>
-                               </Card>
-                            ))}
+      <DragDropContext onDragEnd={handleOnDragEnd}>
+        <div className="flex flex-col h-full">
+            <header className="flex items-center justify-between p-4 border-b">
+                <Button variant="ghost" onClick={onBack}><ArrowLeft className="mr-2" /> Voltar para Planos</Button>
+                <h1 className="text-xl font-bold">{plan.name || "Novo Plano"}</h1>
+                <Button onClick={() => onSave(plan)}><Save className="mr-2"/> Salvar Plano</Button>
+            </header>
+            <div className="flex-1 grid grid-cols-1 md:grid-cols-[320px_1fr] overflow-hidden">
+                {/* Left Sidebar */}
+                <aside className="border-r flex flex-col overflow-y-auto">
+                    <div className="p-4 space-y-4">
+                        <div className="space-y-1">
+                            <Label htmlFor="plan-name">Nome do Plano</Label>
+                            <Input id="plan-name" value={plan.name} onChange={e => updatePlanDetails('name', e.target.value)} placeholder="Ex: Hipertrofia Intensa 5x" required />
+                        </div>
+                         <div className="space-y-1">
+                            <Label htmlFor="plan-difficulty">Dificuldade</Label>
+                            <Input id="plan-difficulty" value={plan.difficulty} onChange={e => updatePlanDetails('difficulty', e.target.value)} placeholder="Ex: Intermediário" required/>
+                        </div>
+                        <div className="space-y-1">
+                            <Label htmlFor="plan-description">Descrição</Label>
+                            <Textarea id="plan-description" value={plan.description} onChange={e => updatePlanDetails('description', e.target.value)} placeholder="Descreva o foco e objetivo deste plano..." />
                         </div>
                     </div>
-                     <Button variant="secondary" onClick={addDay} className="w-full"><PlusCircle className="mr-2 h-4 w-4" />Adicionar Dia</Button>
-                </form>
-            </DialogContent>
-        </Dialog>
-    )
-}
+                    <div className="p-4 border-t">
+                      <h3 className="font-semibold mb-2">Dias de Treino</h3>
+                      <Droppable droppableId="days-list" type="day">
+                        {(provided) => (
+                          <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-2">
+                            {plan.schedule.map((day, index) => (
+                              <Draggable key={day.id} draggableId={day.id} index={index}>
+                                {(provided, snapshot) => (
+                                  <div
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
+                                    {...provided.dragHandleProps}
+                                    onClick={() => setActiveDayId(day.id)}
+                                    className={cn(
+                                      "flex items-center justify-between p-2 rounded-md border cursor-pointer transition-colors",
+                                      activeDayId === day.id ? "bg-primary text-primary-foreground border-primary" : "hover:bg-muted",
+                                      snapshot.isDragging && "shadow-lg"
+                                    )}
+                                  >
+                                    <div className="flex items-center gap-2">
+                                       <GripVertical className="h-4 w-4 text-muted-foreground" />
+                                       <span>{day.day}</span>
+                                    </div>
+                                    <span className="text-xs opacity-70 truncate max-w-[100px]">{day.focus}</span>
+                                  </div>
+                                )}
+                              </Draggable>
+                            ))}
+                            {provided.placeholder}
+                          </div>
+                        )}
+                      </Droppable>
+                       <Button variant="outline" size="sm" onClick={addDay} className="w-full mt-4"><PlusCircle className="mr-2 h-4 w-4" />Adicionar Dia</Button>
+                    </div>
+                </aside>
+                
+                {/* Main Content */}
+                <main className="overflow-y-auto p-6">
+                    {activeDay ? (
+                        <div className="space-y-6">
+                            <div className="flex justify-between items-center">
+                              <div className="space-y-1 flex-1 mr-4">
+                                  <Label htmlFor="day-focus">Foco do Dia</Label>
+                                  <Input id="day-focus" value={activeDay.focus} onChange={(e) => updateDay(activeDayId!, 'focus', e.target.value)} placeholder="Ex: Peito e Tríceps, Descanso" />
+                              </div>
+                              <Button variant="outline" size="icon" onClick={() => removeDay(activeDay.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                            </div>
+
+                            <Card>
+                              <CardHeader>
+                                <CardTitle>Exercícios</CardTitle>
+                              </CardHeader>
+                              <CardContent>
+                                <Droppable droppableId={activeDay.id} type="exercise">
+                                  {(provided) => (
+                                    <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-3">
+                                      {activeDay.exercises.map((exercise, index) => (
+                                        <Draggable key={exercise.id} draggableId={exercise.id} index={index}>
+                                          {(provided) => (
+                                            <div ref={provided.innerRef} {...provided.draggableProps} className="flex items-center gap-2 p-2 border rounded-md bg-muted/50">
+                                              <div {...provided.dragHandleProps} className="p-1 cursor-grab">
+                                                  <GripVertical className="h-4 w-4 text-muted-foreground" />
+                                              </div>
+                                              <Input value={exercise.name} onChange={e => updateExercise(exercise.id, 'name', e.target.value)} placeholder="Nome do exercício" className="flex-1" />
+                                              <Input value={exercise.sets} onChange={e => updateExercise(exercise.id, 'sets', e.target.value)} placeholder="Séries" type="text" className="w-24" />
+                                              <Input value={exercise.reps} onChange={e => updateExercise(exercise.id, 'reps', e.target.value)} placeholder="Reps" className="w-24" />
+                                              <Button variant="ghost" size="icon" onClick={() => removeExercise(exercise.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                                            </div>
+                                          )}
+                                        </Draggable>
+                                      ))}
+                                      {provided.placeholder}
+                                    </div>
+                                  )}
+                                </Droppable>
+                              </CardContent>
+                              <CardFooter>
+                                <Button variant="outline" onClick={addExercise}><PlusCircle className="mr-2 h-4 w-4" />Adicionar Exercício</Button>
+                              </CardFooter>
+                            </Card>
+                        </div>
+                    ) : (
+                      <div className="flex items-center justify-center h-full text-center text-muted-foreground">
+                        <p>Selecione um dia à esquerda para ver os detalhes, <br />ou adicione um novo dia ao seu plano.</p>
+                      </div>
+                    )}
+                </main>
+            </div>
+        </div>
+      </DragDropContext>
+    );
+};
+
 
 const AssignWorkoutModal = ({ open, onOpenChange, onAssign, planName }: { open: boolean, onOpenChange: (open: boolean) => void, onAssign: (studentIds: string[]) => void, planName: string }) => {
     const { toast } = useToast();
@@ -257,7 +357,7 @@ const TrainerView = () => {
     const { toast } = useToast();
     const { plans, addPlan, updatePlan, deletePlan, assignPlanToStudents, getAssignments } = useContext(WorkoutsContext);
     const [isAiModalOpen, setIsAiModalOpen] = useState(false);
-    const [isBuilderOpen, setIsBuilderOpen] = useState(false);
+    const [view, setView] = useState<'list' | 'builder'>('list');
     const [isAssignModalOpen, setAssignModalOpen] = useState(false);
     const [selectedPlan, setSelectedPlan] = useState<WorkoutPlan | null>(null);
 
@@ -299,16 +399,18 @@ const TrainerView = () => {
             title: `Plano ${isEditing ? 'Atualizado' : 'Criado'}!`,
             description: `O plano de treino "${plan.name}" foi salvo com sucesso.`,
         });
+        setView('list');
+        setSelectedPlan(null);
     }
 
     const handleEditPlan = (plan: WorkoutPlan) => {
         setSelectedPlan(plan);
-        setIsBuilderOpen(true);
+        setView('builder');
     }
     
     const handleAddNewPlan = () => {
         setSelectedPlan(null);
-        setIsBuilderOpen(true);
+        setView('builder');
     }
     
     const handleOpenAssignModal = (plan: WorkoutPlan) => {
@@ -336,15 +438,13 @@ const TrainerView = () => {
 
     const assignments = getAssignments();
     const planTemplates = plans.filter(p => !p.owner);
+    
+    if (view === 'builder') {
+      return <WorkoutBuilder plan={selectedPlan} onSave={handleSavePlan} onBack={() => setView('list')} />
+    }
 
     return (
     <>
-      <WorkoutBuilder 
-        open={isBuilderOpen}
-        onOpenChange={setIsBuilderOpen}
-        onSave={handleSavePlan}
-        plan={selectedPlan}
-      />
       {selectedPlan && (
           <AssignWorkoutModal 
             open={isAssignModalOpen}
@@ -583,7 +683,7 @@ const StudentView = () => {
     const weeklyPlan = activeStudentPlans[studentId] ? plans.find(p => p.id === activeStudentPlans[studentId]) : null;
 
     const [isAiModalOpen, setIsAiModalOpen] = useState(false);
-    const [isBuilderOpen, setIsBuilderOpen] = useState(false);
+    const [view, setView] = useState<'list' | 'builder'>('list');
     const [isTrackerOpen, setIsTrackerOpen] = useState(false);
     const [selectedPlan, setSelectedPlan] = useState<WorkoutPlan | null>(null);
     const [selectedExerciseInfo, setSelectedExerciseInfo] = useState<{planId: string, dayId: string, exercise: Exercise} | null>(null);
@@ -624,10 +724,11 @@ const StudentView = () => {
              addPlan(planWithOwner);
          }
          toast({ title: `Plano ${isEditing ? 'Atualizado' : 'Criado'}!`, description: `Seu plano "${plan.name}" foi salvo com sucesso.` });
+         setView('list');
     };
 
-    const handleAddNewPlan = () => { setSelectedPlan(null); setIsBuilderOpen(true); };
-    const handleEditPlan = (plan: WorkoutPlan) => { setSelectedPlan(plan); setIsBuilderOpen(true); };
+    const handleAddNewPlan = () => { setSelectedPlan(null); setView('builder'); };
+    const handleEditPlan = (plan: WorkoutPlan) => { setSelectedPlan(plan); setView('builder'); };
     const handleDeletePlan = (planId: string) => {
         deletePlan(planId);
         toast({ title: 'Plano Excluído', variant: 'destructive' });
@@ -646,9 +747,12 @@ const StudentView = () => {
         toast({ title: "Exercício Atualizado!", description: `Seu progresso em ${exercise.name} foi salvo.` });
     };
 
+    if (view === 'builder') {
+      return <WorkoutBuilder plan={selectedPlan} onSave={handleSavePlan} onBack={() => setView('list')} />
+    }
+
     return (
         <div className="flex flex-col gap-6">
-            <WorkoutBuilder open={isBuilderOpen} onOpenChange={setIsBuilderOpen} onSave={handleSavePlan} plan={selectedPlan} />
             
             {selectedExerciseInfo && (
               <ExerciseTrackerModal 
