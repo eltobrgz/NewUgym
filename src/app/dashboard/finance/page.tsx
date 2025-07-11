@@ -77,8 +77,8 @@ const generateMockTransactions = (): Transaction[] => {
     const transactions: Transaction[] = [];
     const today = new Date();
     initialMembers.forEach((member, index) => {
-        for (let i = 0; i < 12; i++) { // Generate more transactions
-            const date = subDays(today, i * 30 + (index % 15)); // Vary dates more
+        for (let i = 0; i < 12; i++) {
+            const date = subDays(today, i * 30 + (index % 15));
             const plan = initialPlans[index % initialPlans.length];
             let status: TransactionStatus = "Pago";
             if (i === 0 && index % 5 === 1) status = "Pendente";
@@ -98,7 +98,6 @@ const generateMockTransactions = (): Transaction[] => {
     });
     return transactions;
 };
-const initialTransactions = generateMockTransactions();
 
 const statusStyles: { [key in TransactionStatus]: { variant: "default" | "secondary" | "destructive" | "outline", className?: string, text: string }} = {
   "Pago": { variant: "secondary", className: "bg-green-500/10 text-green-400 border-green-500/20", text: "Pago" },
@@ -294,7 +293,7 @@ const AddPlanDialog = ({ onAdd }: { onAdd: (plan: MembershipPlan) => void }) => 
 };
 
 export default function FinancePage() {
-  const [transactions, setTransactions] = useState<Transaction[]>(initialTransactions);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [plans, setPlans] = useState<MembershipPlan[]>(initialPlans);
   const [members] = useState(initialMembers);
   const [tableFilter, setTableFilter] = useState("all");
@@ -306,6 +305,32 @@ export default function FinancePage() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
+
+  useEffect(() => {
+    // Generate data on client-side to avoid hydration mismatch
+    setTransactions(generateMockTransactions());
+
+    const churnByMonth: { [key: string]: { new: number, churn: number } } = {};
+    const months = Array.from({length: 6}, (_, i) => format(subMonths(new Date(), i), 'yyyy-MM')).reverse();
+
+    months.forEach(month => {
+        churnByMonth[month] = { new: 0, churn: 0 };
+    });
+    
+    // Mock data for new and churned members
+    Object.keys(churnByMonth).forEach(month => {
+      churnByMonth[month].new = Math.floor(Math.random() * 10) + 5; // 5-14 new members
+      churnByMonth[month].churn = Math.floor(Math.random() * 4) + 1; // 1-4 churned members
+    });
+    
+    const data = Object.entries(churnByMonth).map(([month, data]) => ({
+        month,
+        monthLabel: format(new Date(month + '-02'), "MMM/yy"),
+        ...data
+    }));
+
+    setMemberChurnData(data);
+  }, []);
 
   useEffect(() => {
     const newMemberId = searchParams.get('new_member_id');
@@ -377,29 +402,6 @@ export default function FinancePage() {
         monthLabel: format(new Date(month + '-02'), "MMM/yy") 
     })).sort((a, b) => a.month.localeCompare(b.month));
   }, [filteredTransactions]);
-
-  useEffect(() => {
-    const churnByMonth: { [key: string]: { new: number, churn: number } } = {};
-    const months = Array.from({length: 6}, (_, i) => format(subMonths(new Date(), i), 'yyyy-MM')).reverse();
-
-    months.forEach(month => {
-        churnByMonth[month] = { new: 0, churn: 0 };
-    });
-    
-    // Mock data for new and churned members
-    Object.keys(churnByMonth).forEach(month => {
-      churnByMonth[month].new = Math.floor(Math.random() * 10) + 5; // 5-14 new members
-      churnByMonth[month].churn = Math.floor(Math.random() * 4) + 1; // 1-4 churned members
-    });
-    
-    const data = Object.entries(churnByMonth).map(([month, data]) => ({
-        month,
-        monthLabel: format(new Date(month + '-02'), "MMM/yy"),
-        ...data
-    }));
-
-    setMemberChurnData(data);
-  }, []);
 
   const handleStatusChange = (id: string, newStatus: TransactionStatus) => {
     setTransactions(prev => prev.map(t => t.id === id ? { ...t, status: newStatus } : t));
