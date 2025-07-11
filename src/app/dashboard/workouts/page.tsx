@@ -2,9 +2,10 @@
 "use client";
 
 import { useState, useEffect, useContext } from 'react';
+import Image from 'next/image';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { CheckCircle2, Circle, Dumbbell, PlusCircle, Sparkles, Trash2, MoreVertical, GripVertical, Save, X, UserPlus, Edit, NotebookText, ArrowLeft } from "lucide-react";
+import { CheckCircle2, Circle, Dumbbell, PlusCircle, Sparkles, Trash2, MoreVertical, GripVertical, Save, X, UserPlus, Edit, NotebookText, ArrowLeft, Library, PencilRuler } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from '@/lib/utils';
 import { useUserRole } from '@/contexts/user-role-context';
@@ -42,69 +43,151 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { WorkoutsContext, WorkoutPlan, DailyWorkout, Exercise, SetLog } from '@/contexts/workouts-context';
 import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
-
+import { exerciseLibrary, Exercise as LibraryExercise, exerciseCategories } from '@/lib/exercise-library';
 
 type GeneratedWorkoutPlan = { planName: string; weeklySchedule: { day: string; focus: string; exercises?: { name: string; sets?: number; reps?: string; duration?: string; rest?: string }[] }[] };
 
-const MOCK_BUILDER_PLAN: WorkoutPlan = {
-  id: 'TPL-MOCK-BUILDER',
-  name: 'Hipertrofia Intensa 5x',
-  description: 'Um plano de 5 dias focado em hipertrofia máxima, dividindo os grupos musculares para permitir descanso e recuperação adequados.',
-  difficulty: 'Avançado',
-  schedule: [
-    { id: 'mock-day-1', day: 'Segunda-feira', focus: 'Peito e Tríceps', exercises: [
-      { id: 'mock-ex-11', name: 'Supino Reto com Barra', sets: '4', reps: '6-8' },
-      { id: 'mock-ex-12', name: 'Supino Inclinado com Halteres', sets: '3', reps: '8-10' },
-      { id: 'mock-ex-13', name: 'Crucifixo na Polia', sets: '3', reps: '12-15' },
-      { id: 'mock-ex-14', name: 'Tríceps Testa', sets: '3', reps: '8-10' },
-    ]},
-    { id: 'mock-day-2', day: 'Terça-feira', focus: 'Costas e Bíceps', exercises: [
-      { id: 'mock-ex-21', name: 'Barra Fixa', sets: '4', reps: 'Até a falha' },
-      { id: 'mock-ex-22', name: 'Remada Curvada', sets: '4', reps: '6-8' },
-      { id: 'mock-ex-23', name: 'Puxada Alta', sets: '3', reps: '10-12' },
-      { id: 'mock-ex-24', name: 'Rosca Direta com Barra', sets: '3', reps: '8-10' },
-    ]},
-    { id: 'mock-day-3', day: 'Quarta-feira', focus: 'Descanso', exercises: [] },
-    { id: 'mock-day-4', day: 'Quinta-feira', focus: 'Pernas (Ênfase em Quadríceps)', exercises: [
-       { id: 'mock-ex-41', name: 'Agachamento Livre', sets: '5', reps: '5' },
-       { id: 'mock-ex-42', name: 'Leg Press', sets: '4', reps: '10-12' },
-       { id: 'mock-ex-43', name: 'Cadeira Extensora', sets: '3', reps: '15' },
-    ]},
-    { id: 'mock-day-5', day: 'Sexta-feira', focus: 'Ombros e Panturrilha', exercises: [
-      { id: 'mock-ex-51', name: 'Desenvolvimento Militar', sets: '4', reps: '6-8' },
-      { id: 'mock-ex-52', name: 'Elevação Lateral', sets: '3', reps: '12-15' },
-      { id: 'mock-ex-53', name: 'Elevação Frontal', sets: '3', reps: '12-15' },
-      { id: 'mock-ex-54', name: 'Panturrilha em Pé', sets: '5', reps: '15-20' },
-    ]},
-    { id: 'mock-day-6', day: 'Sábado', focus: 'Descanso', exercises: [] },
-    { id: 'mock-day-7', day: 'Domingo', focus: 'Descanso', exercises: [] },
-  ]
+const AddExerciseModal = ({ open, onOpenChange, onAddExercises }: { open: boolean, onOpenChange: (open: boolean) => void, onAddExercises: (exercises: Exercise[]) => void }) => {
+    const [activeTab, setActiveTab] = useState('library');
+    const [selectedCategory, setSelectedCategory] = useState('Todos');
+    const [selectedExercises, setSelectedExercises] = useState<Set<string>>(new Set());
+
+    const filteredExercises = selectedCategory === 'Todos' ? exerciseLibrary : exerciseLibrary.filter(ex => ex.category === selectedCategory);
+
+    const handleSelectExercise = (exerciseId: string, isSelected: boolean) => {
+        const newSet = new Set(selectedExercises);
+        if (isSelected) {
+            newSet.add(exerciseId);
+        } else {
+            newSet.delete(exerciseId);
+        }
+        setSelectedExercises(newSet);
+    }
+
+    const handleAddFromLibrary = () => {
+        const exercisesToAdd = exerciseLibrary
+            .filter(ex => selectedExercises.has(ex.id))
+            .map(ex => ({
+                id: `ex-${Date.now()}-${ex.id}`,
+                name: ex.name,
+                sets: '3',
+                reps: '10-12',
+                mediaUrl: ex.mediaUrl,
+            }));
+        
+        onAddExercises(exercisesToAdd);
+        setSelectedExercises(new Set());
+        onOpenChange(false);
+    }
+    
+    const handleAddFromScratch = (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        const formData = new FormData(event.currentTarget);
+        const newExercise: Exercise = {
+            id: `ex-${Date.now()}`,
+            name: formData.get('name') as string,
+            sets: formData.get('sets') as string,
+            reps: formData.get('reps') as string,
+            mediaUrl: formData.get('mediaUrl') as string,
+        };
+        onAddExercises([newExercise]);
+        onOpenChange(false);
+    }
+
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="max-w-3xl">
+                <DialogHeader>
+                    <DialogTitle>Adicionar Exercício ao Dia</DialogTitle>
+                </DialogHeader>
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                    <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value="library"><Library className="mr-2" /> Biblioteca de Exercícios</TabsTrigger>
+                        <TabsTrigger value="scratch"><PencilRuler className="mr-2" /> Criar do Zero</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="library">
+                        <div className="flex border-t pt-4">
+                            <aside className="w-1/4 pr-4 border-r">
+                                <h4 className="font-semibold mb-2">Categorias</h4>
+                                <div className="flex flex-col items-start gap-1">
+                                    <Button variant={selectedCategory === 'Todos' ? 'secondary' : 'ghost'} size="sm" onClick={() => setSelectedCategory('Todos')} className="w-full justify-start">Todos</Button>
+                                    {exerciseCategories.map(cat => (
+                                         <Button key={cat} variant={selectedCategory === cat ? 'secondary' : 'ghost'} size="sm" onClick={() => setSelectedCategory(cat)} className="w-full justify-start">{cat}</Button>
+                                    ))}
+                                </div>
+                            </aside>
+                            <main className="w-3/4 pl-4">
+                                <ScrollArea className="h-96">
+                                    <div className="space-y-2 pr-4">
+                                        {filteredExercises.map(ex => (
+                                            <div key={ex.id} className="flex items-center gap-4 p-2 rounded-md border">
+                                                <Checkbox id={ex.id} onCheckedChange={checked => handleSelectExercise(ex.id, !!checked)} checked={selectedExercises.has(ex.id)} />
+                                                <Image src={ex.mediaUrl} alt={ex.name} width={60} height={60} className="rounded-md object-cover" data-ai-hint="exercise fitness" />
+                                                <div className="flex-1">
+                                                    <Label htmlFor={ex.id} className="font-semibold">{ex.name}</Label>
+                                                    <p className="text-xs text-muted-foreground">{ex.description}</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </ScrollArea>
+                            </main>
+                        </div>
+                        <DialogFooter className="mt-4 pt-4 border-t">
+                             <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+                             <Button onClick={handleAddFromLibrary} disabled={selectedExercises.size === 0}>Adicionar {selectedExercises.size} Exercício(s)</Button>
+                        </DialogFooter>
+                    </TabsContent>
+                    <TabsContent value="scratch">
+                        <form onSubmit={handleAddFromScratch} className="space-y-4 pt-4 border-t">
+                            <div className="space-y-2">
+                                <Label htmlFor="name">Nome do Exercício</Label>
+                                <Input id="name" name="name" placeholder="Ex: Remada Unilateral com Halter" required />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="sets">Séries</Label>
+                                    <Input id="sets" name="sets" placeholder="Ex: 4" required />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="reps">Repetições</Label>
+                                    <Input id="reps" name="reps" placeholder="Ex: 8-12" required />
+                                </div>
+                            </div>
+                             <div className="space-y-2">
+                                <Label htmlFor="mediaUrl">URL da Imagem/GIF (Opcional)</Label>
+                                <Input id="mediaUrl" name="mediaUrl" placeholder="https://exemplo.com/imagem.gif" />
+                            </div>
+                            <DialogFooter>
+                                <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+                                <Button type="submit">Adicionar Exercício</Button>
+                            </DialogFooter>
+                        </form>
+                    </TabsContent>
+                </Tabs>
+            </DialogContent>
+        </Dialog>
+    );
 };
 
 
-const studentsForAssignment = [
-  { id: "alex-johnson", name: "Alex Johnson" },
-  { id: "maria-garcia", name: "Maria Garcia" },
-  { id: "david-chen", name: "David Chen" },
-  { id: "emily-white", name: "Emily White" },
-];
-
 const WorkoutBuilder = ({ onSave, onBack, plan: initialPlan }: { onSave: (plan: WorkoutPlan) => void, onBack: () => void, plan: WorkoutPlan | null }) => {
-    const [plan, setPlan] = useState<WorkoutPlan>(MOCK_BUILDER_PLAN);
+    const [plan, setPlan] = useState<WorkoutPlan>(initialPlan || {} as WorkoutPlan);
     const [activeDayId, setActiveDayId] = useState<string | null>(null);
+    const [isAddExoModalOpen, setAddExoModalOpen] = useState(false);
 
     useEffect(() => {
-      const p = initialPlan || MOCK_BUILDER_PLAN;
+      const p = initialPlan || {id: `pln-${Date.now()}`, name: 'Novo Plano', difficulty: 'Iniciante', description: '', schedule: []};
       setPlan(JSON.parse(JSON.stringify(p))); // Deep copy
       if (p.schedule.length > 0) {
         setActiveDayId(p.schedule[0].id);
       }
     }, [initialPlan]);
 
-    const activeDay = plan.schedule.find(d => d.id === activeDayId);
+    const activeDay = plan.schedule?.find(d => d.id === activeDayId);
 
     const handleOnDragEnd = (result: DropResult) => {
-        if (!result.destination) return;
+        if (!result.destination || !plan.schedule) return;
 
         const { source, destination, type } = result;
 
@@ -127,8 +210,8 @@ const WorkoutBuilder = ({ onSave, onBack, plan: initialPlan }: { onSave: (plan: 
     };
 
     const addDay = () => {
-        const newDay: DailyWorkout = { id: `day-${Date.now()}`, day: `Novo Dia`, focus: '', exercises: [] };
-        setPlan({ ...plan, schedule: [...plan.schedule, newDay] });
+        const newDay: DailyWorkout = { id: `day-${Date.now()}`, day: `Dia ${plan.schedule.length + 1}`, focus: 'Novo Foco', exercises: [] };
+        setPlan({ ...plan, schedule: [...(plan.schedule || []), newDay] });
         setActiveDayId(newDay.id);
     };
 
@@ -145,12 +228,15 @@ const WorkoutBuilder = ({ onSave, onBack, plan: initialPlan }: { onSave: (plan: 
       }
     }
 
-    const addExercise = () => {
-        if (!activeDayId) return;
-        const newExercise: Exercise = { id: `ex-${Date.now()}`, name: '', sets: '3', reps: '10' };
-        const newSchedule = plan.schedule.map(day => day.id === activeDayId ? { ...day, exercises: [...day.exercises, newExercise] } : day);
+    const handleAddExercises = (newExercises: Exercise[]) => {
+         if (!activeDayId) return;
+        const newSchedule = plan.schedule.map(day => 
+            day.id === activeDayId 
+                ? { ...day, exercises: [...day.exercises, ...newExercises] } 
+                : day
+        );
         setPlan({ ...plan, schedule: newSchedule });
-    };
+    }
 
     const removeExercise = (exerciseId: string) => {
         if (!activeDayId) return;
@@ -166,121 +252,129 @@ const WorkoutBuilder = ({ onSave, onBack, plan: initialPlan }: { onSave: (plan: 
         setPlan({ ...plan, schedule: newSchedule });
     };
 
-    return (
-      <DragDropContext onDragEnd={handleOnDragEnd}>
-        <div className="flex flex-col h-full">
-            <header className="flex items-center justify-between p-4 border-b">
-                <Button variant="ghost" onClick={onBack}><ArrowLeft className="mr-2" /> Voltar para Planos</Button>
-                <h1 className="text-xl font-bold">{plan.name || "Novo Plano"}</h1>
-                <Button onClick={() => onSave(plan)}><Save className="mr-2"/> Salvar Plano</Button>
-            </header>
-            <div className="flex-1 grid grid-cols-1 md:grid-cols-[320px_1fr] overflow-hidden">
-                {/* Left Sidebar */}
-                <aside className="border-r flex flex-col overflow-y-auto">
-                    <div className="p-4 space-y-4">
-                        <div className="space-y-1">
-                            <Label htmlFor="plan-name">Nome do Plano</Label>
-                            <Input id="plan-name" value={plan.name} onChange={e => updatePlanDetails('name', e.target.value)} placeholder="Ex: Hipertrofia Intensa 5x" required />
-                        </div>
-                         <div className="space-y-1">
-                            <Label htmlFor="plan-difficulty">Dificuldade</Label>
-                            <Input id="plan-difficulty" value={plan.difficulty} onChange={e => updatePlanDetails('difficulty', e.target.value)} placeholder="Ex: Intermediário" required/>
-                        </div>
-                        <div className="space-y-1">
-                            <Label htmlFor="plan-description">Descrição</Label>
-                            <Textarea id="plan-description" value={plan.description} onChange={e => updatePlanDetails('description', e.target.value)} placeholder="Descreva o foco e objetivo deste plano..." />
-                        </div>
-                    </div>
-                    <div className="p-4 border-t">
-                      <h3 className="font-semibold mb-2">Dias de Treino</h3>
-                      <Droppable droppableId="days-list" type="day">
-                        {(provided) => (
-                          <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-2">
-                            {plan.schedule.map((day, index) => (
-                              <Draggable key={day.id} draggableId={day.id} index={index}>
-                                {(provided, snapshot) => (
-                                  <div
-                                    ref={provided.innerRef}
-                                    {...provided.draggableProps}
-                                    {...provided.dragHandleProps}
-                                    onClick={() => setActiveDayId(day.id)}
-                                    className={cn(
-                                      "flex items-center justify-between p-2 rounded-md border cursor-pointer transition-colors",
-                                      activeDayId === day.id ? "bg-primary text-primary-foreground border-primary" : "hover:bg-muted",
-                                      snapshot.isDragging && "shadow-lg"
-                                    )}
-                                  >
-                                    <div className="flex items-center gap-2">
-                                       <GripVertical className="h-4 w-4 text-muted-foreground" />
-                                       <span>{day.day}</span>
-                                    </div>
-                                    <span className="text-xs opacity-70 truncate max-w-[100px]">{day.focus}</span>
-                                  </div>
-                                )}
-                              </Draggable>
-                            ))}
-                            {provided.placeholder}
-                          </div>
-                        )}
-                      </Droppable>
-                       <Button variant="outline" size="sm" onClick={addDay} className="w-full mt-4"><PlusCircle className="mr-2 h-4 w-4" />Adicionar Dia</Button>
-                    </div>
-                </aside>
-                
-                {/* Main Content */}
-                <main className="overflow-y-auto p-6">
-                    {activeDay ? (
-                        <div className="space-y-6">
-                            <div className="flex justify-between items-center">
-                              <div className="space-y-1 flex-1 mr-4">
-                                  <Label htmlFor="day-focus">Foco do Dia</Label>
-                                  <Input id="day-focus" value={activeDay.focus} onChange={(e) => updateDay(activeDayId!, 'focus', e.target.value)} placeholder="Ex: Peito e Tríceps, Descanso" />
-                              </div>
-                              <Button variant="outline" size="icon" onClick={() => removeDay(activeDay.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                            </div>
+    if (!plan.id) return null;
 
-                            <Card>
-                              <CardHeader>
-                                <CardTitle>Exercícios</CardTitle>
-                              </CardHeader>
-                              <CardContent>
-                                <Droppable droppableId={activeDay.id} type="exercise">
-                                  {(provided) => (
-                                    <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-3">
-                                      {activeDay.exercises.map((exercise, index) => (
-                                        <Draggable key={exercise.id} draggableId={exercise.id} index={index}>
-                                          {(provided) => (
-                                            <div ref={provided.innerRef} {...provided.draggableProps} className="flex items-center gap-2 p-2 border rounded-md bg-muted/50">
-                                              <div {...provided.dragHandleProps} className="p-1 cursor-grab">
-                                                  <GripVertical className="h-4 w-4 text-muted-foreground" />
-                                              </div>
-                                              <Input value={exercise.name} onChange={e => updateExercise(exercise.id, 'name', e.target.value)} placeholder="Nome do exercício" className="flex-1" />
-                                              <Input value={exercise.sets} onChange={e => updateExercise(exercise.id, 'sets', e.target.value)} placeholder="Séries" type="text" className="w-24" />
-                                              <Input value={exercise.reps} onChange={e => updateExercise(exercise.id, 'reps', e.target.value)} placeholder="Reps" className="w-24" />
-                                              <Button variant="ghost" size="icon" onClick={() => removeExercise(exercise.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                                            </div>
-                                          )}
-                                        </Draggable>
-                                      ))}
-                                      {provided.placeholder}
-                                    </div>
-                                  )}
-                                </Droppable>
-                              </CardContent>
-                              <CardFooter>
-                                <Button variant="outline" onClick={addExercise}><PlusCircle className="mr-2 h-4 w-4" />Adicionar Exercício</Button>
-                              </CardFooter>
-                            </Card>
+    return (
+      <>
+        <AddExerciseModal open={isAddExoModalOpen} onOpenChange={setAddExoModalOpen} onAddExercises={handleAddExercises} />
+        <DragDropContext onDragEnd={handleOnDragEnd}>
+            <div className="flex flex-col h-full">
+                <header className="flex items-center justify-between p-4 border-b">
+                    <Button variant="ghost" onClick={onBack}><ArrowLeft className="mr-2" /> Voltar para Planos</Button>
+                    <h1 className="text-xl font-bold">{plan.name || "Novo Plano"}</h1>
+                    <Button onClick={() => onSave(plan)}><Save className="mr-2"/> Salvar Plano</Button>
+                </header>
+                <div className="flex-1 grid grid-cols-1 md:grid-cols-[320px_1fr] overflow-hidden">
+                    {/* Left Sidebar */}
+                    <aside className="border-r flex flex-col overflow-y-auto">
+                        <div className="p-4 space-y-4">
+                            <div className="space-y-1">
+                                <Label htmlFor="plan-name">Nome do Plano</Label>
+                                <Input id="plan-name" value={plan.name} onChange={e => updatePlanDetails('name', e.target.value)} placeholder="Ex: Hipertrofia Intensa 5x" required />
+                            </div>
+                            <div className="space-y-1">
+                                <Label htmlFor="plan-difficulty">Dificuldade</Label>
+                                <Input id="plan-difficulty" value={plan.difficulty} onChange={e => updatePlanDetails('difficulty', e.target.value)} placeholder="Ex: Intermediário" required/>
+                            </div>
+                            <div className="space-y-1">
+                                <Label htmlFor="plan-description">Descrição</Label>
+                                <Textarea id="plan-description" value={plan.description} onChange={e => updatePlanDetails('description', e.target.value)} placeholder="Descreva o foco e objetivo deste plano..." />
+                            </div>
                         </div>
-                    ) : (
-                      <div className="flex items-center justify-center h-full text-center text-muted-foreground">
-                        <p>Selecione um dia à esquerda para ver os detalhes, <br />ou adicione um novo dia ao seu plano.</p>
-                      </div>
-                    )}
-                </main>
+                        <div className="p-4 border-t">
+                        <h3 className="font-semibold mb-2">Dias de Treino</h3>
+                        <Droppable droppableId="days-list" type="day">
+                            {(provided) => (
+                            <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-2">
+                                {plan.schedule?.map((day, index) => (
+                                <Draggable key={day.id} draggableId={day.id} index={index}>
+                                    {(provided, snapshot) => (
+                                    <div
+                                        ref={provided.innerRef}
+                                        {...provided.draggableProps}
+                                        {...provided.dragHandleProps}
+                                        onClick={() => setActiveDayId(day.id)}
+                                        className={cn(
+                                        "flex items-center justify-between p-2 rounded-md border cursor-pointer transition-colors",
+                                        activeDayId === day.id ? "bg-primary text-primary-foreground border-primary" : "hover:bg-muted",
+                                        snapshot.isDragging && "shadow-lg"
+                                        )}
+                                    >
+                                        <div className="flex items-center gap-2">
+                                        <GripVertical className="h-4 w-4 text-muted-foreground" />
+                                        <span>{day.day}</span>
+                                        </div>
+                                        <span className="text-xs opacity-70 truncate max-w-[100px]">{day.focus}</span>
+                                    </div>
+                                    )}
+                                </Draggable>
+                                ))}
+                                {provided.placeholder}
+                            </div>
+                            )}
+                        </Droppable>
+                        <Button variant="outline" size="sm" onClick={addDay} className="w-full mt-4"><PlusCircle className="mr-2 h-4 w-4" />Adicionar Dia</Button>
+                        </div>
+                    </aside>
+                    
+                    {/* Main Content */}
+                    <main className="overflow-y-auto p-6">
+                        {activeDay ? (
+                            <div className="space-y-6">
+                                <div className="flex justify-between items-center">
+                                    <div className="space-y-1 flex-1 mr-4">
+                                        <Label htmlFor="day-focus">Foco do Dia</Label>
+                                        <Input id="day-focus" value={activeDay.focus} onChange={(e) => updateDay(activeDayId!, 'focus', e.target.value)} placeholder="Ex: Peito e Tríceps, Descanso" />
+                                    </div>
+                                    <Button variant="outline" size="icon" onClick={() => removeDay(activeDay.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                                </div>
+
+                                <Card>
+                                <CardHeader>
+                                    <CardTitle>Exercícios</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <Droppable droppableId={activeDay.id} type="exercise">
+                                    {(provided) => (
+                                        <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-3">
+                                        {activeDay.exercises.map((exercise, index) => (
+                                            <Draggable key={exercise.id} draggableId={exercise.id} index={index}>
+                                            {(provided) => (
+                                                <div ref={provided.innerRef} {...provided.draggableProps} className="flex items-center gap-2 p-2 border rounded-md bg-muted/50">
+                                                    <div {...provided.dragHandleProps} className="p-1 cursor-grab">
+                                                        <GripVertical className="h-4 w-4 text-muted-foreground" />
+                                                    </div>
+                                                    {exercise.mediaUrl && (
+                                                        <Image src={exercise.mediaUrl} alt={exercise.name} width={50} height={50} className="rounded-md object-cover" data-ai-hint="exercise fitness"/>
+                                                    )}
+                                                    <Input value={exercise.name} onChange={e => updateExercise(exercise.id, 'name', e.target.value)} placeholder="Nome do exercício" className="flex-1" />
+                                                    <Input value={exercise.sets} onChange={e => updateExercise(exercise.id, 'sets', e.target.value)} placeholder="Séries" type="text" className="w-24" />
+                                                    <Input value={exercise.reps} onChange={e => updateExercise(exercise.id, 'reps', e.target.value)} placeholder="Reps" className="w-24" />
+                                                    <Button variant="ghost" size="icon" onClick={() => removeExercise(exercise.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                                                </div>
+                                            )}
+                                            </Draggable>
+                                        ))}
+                                        {provided.placeholder}
+                                        </div>
+                                    )}
+                                    </Droppable>
+                                </CardContent>
+                                <CardFooter>
+                                    <Button variant="outline" onClick={() => setAddExoModalOpen(true)}><PlusCircle className="mr-2 h-4 w-4" />Adicionar Exercício</Button>
+                                </CardFooter>
+                                </Card>
+                            </div>
+                        ) : (
+                        <div className="flex items-center justify-center h-full text-center text-muted-foreground">
+                            <p>Selecione um dia à esquerda para ver os detalhes, <br />ou adicione um novo dia ao seu plano.</p>
+                        </div>
+                        )}
+                    </main>
+                </div>
             </div>
-        </div>
-      </DragDropContext>
+        </DragDropContext>
+      </>
     );
 };
 
@@ -827,6 +921,11 @@ const StudentView = () => {
                                                                         <span className={cn("font-medium", exercise.isCompleted && "line-through text-muted-foreground")}>{exercise.name}</span>
                                                                         <span className="text-muted-foreground ml-2 text-sm">{exercise.sets} séries x {exercise.reps} reps</span>
                                                                     </div>
+                                                                    {exercise.mediaUrl && (
+                                                                        <div className="relative h-12 w-12 ml-2">
+                                                                            <Image src={exercise.mediaUrl} alt={exercise.name} layout="fill" className="rounded-md object-cover" data-ai-hint="exercise fitness" />
+                                                                        </div>
+                                                                    )}
                                                                     <NotebookText className="h-5 w-5 text-muted-foreground ml-2" />
                                                                 </button>
                                                             ))}

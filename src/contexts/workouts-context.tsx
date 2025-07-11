@@ -16,6 +16,7 @@ export type Exercise = {
     name: string; 
     sets: string; 
     reps: string; 
+    mediaUrl?: string; // Added mediaUrl
     isCompleted?: boolean;
     notes?: string;
     setLogs?: SetLog[];
@@ -35,20 +36,20 @@ export type WorkoutPlan = {
 
 const strengthTemplateSchedule: DailyWorkout[] = [
     { id: 'day1-str', day: 'Segunda-feira', focus: 'Peito, Ombros e Tríceps', exercises: [
-        { id: 'ex11-str', name: 'Supino Reto com Barra', sets: '4', reps: '6-8', isCompleted: false },
-        { id: 'ex12-str', name: 'Desenvolvimento Militar com Barra', sets: '3', reps: '8-10', isCompleted: false },
+        { id: 'ex11-str', name: 'Supino Reto com Barra', sets: '4', reps: '6-8', isCompleted: false, mediaUrl: 'https://placehold.co/100x100/EAB308/000000.gif?text=Ex' },
+        { id: 'ex12-str', name: 'Desenvolvimento Militar com Barra', sets: '3', reps: '8-10', isCompleted: false, mediaUrl: 'https://placehold.co/100x100/F472B6/000000.gif?text=Ex' },
         { id: 'ex13-str', name: 'Supino Fechado', sets: '3', reps: '8-10', isCompleted: false },
-        { id: 'ex14-str', name: 'Elevação Lateral com Halteres', sets: '3', reps: '12-15', isCompleted: false },
+        { id: 'ex14-str', name: 'Elevação Lateral com Halteres', sets: '3', reps: '12-15', isCompleted: false, mediaUrl: 'https://placehold.co/100x100/EF4444/000000.gif?text=Ex' },
     ]},
     { id: 'day2-str', day: 'Quarta-feira', focus: 'Costas e Bíceps', exercises: [
-        { id: 'ex21-str', name: 'Levantamento Terra', sets: '4', reps: '5-6', isCompleted: false },
-        { id: 'ex22-str', name: 'Remada Curvada com Barra', sets: '4', reps: '8-10', isCompleted: false },
-        { id: 'ex23-str', name: 'Rosca Direta com Barra', sets: '3', reps: '8-10', isCompleted: false },
+        { id: 'ex21-str', name: 'Levantamento Terra', sets: '4', reps: '5-6', isCompleted: false, mediaUrl: 'https://placehold.co/100x100/3B82F6/000000.gif?text=Ex' },
+        { id: 'ex22-str', name: 'Remada Curvada com Barra', sets: '4', reps: '8-10', isCompleted: false, mediaUrl: 'https://placehold.co/100x100/8B5CF6/000000.gif?text=Ex' },
+        { id: 'ex23-str', name: 'Rosca Direta com Barra', sets: '3', reps: '8-10', isCompleted: false, mediaUrl: 'https://placehold.co/100x100/10B981/000000.gif?text=Ex' },
     ]},
     { id: 'day3-str', day: 'Sexta-feira', focus: 'Pernas', exercises: [
-        { id: 'ex31-str', name: 'Agachamento Livre', sets: '5', reps: '5', isCompleted: false },
+        { id: 'ex31-str', name: 'Agachamento Livre', sets: '5', reps: '5', isCompleted: false, mediaUrl: 'https://placehold.co/100x100/F97316/000000.gif?text=Ex' },
         { id: 'ex32-str', name: 'Leg Press 45', sets: '4', reps: '10-12', isCompleted: false },
-        { id: 'ex33-str', name: 'Stiff', sets: '3', reps: '10-12', isCompleted: false },
+        { id: 'ex33-str', name: 'Stiff', sets: '3', reps: '10-12', isCompleted: false, mediaUrl: 'https://placehold.co/100x100/A855F7/000000.gif?text=Ex' },
         { id: 'ex34-str', name: 'Panturrilha em Pé', sets: '5', reps: '15-20', isCompleted: false },
     ]},
      { id: 'day4-str', day: 'Terça-feira', focus: 'Descanso', exercises: [] },
@@ -60,23 +61,23 @@ const strengthTemplateSchedule: DailyWorkout[] = [
 
 const hypertrophyTemplateSchedule: DailyWorkout[] = [
     { id: 'day1-hyp', day: 'Segunda', focus: 'Peito e Tríceps', exercises: [
-        { id: 'ex11-hyp', name: 'Supino Inclinado com Halteres', sets: '4', reps: '8-12' },
+        { id: 'ex11-hyp', name: 'Supino Inclinado com Halteres', sets: '4', reps: '8-12', mediaUrl: 'https://placehold.co/100x100/F472B6/000000.gif?text=Ex' },
         { id: 'ex12-hyp', name: 'Crucifixo na Máquina', sets: '3', reps: '12-15' },
-        { id: 'ex13-hyp', name: 'Tríceps Testa com Barra W', sets: '4', reps: '10-12' },
+        { id: 'ex13-hyp', name: 'Tríceps Testa com Barra W', sets: '4', reps: '10-12', mediaUrl: 'https://placehold.co/100x100/EAB308/000000.gif?text=Ex' },
     ]},
     { id: 'day2-hyp', day: 'Terça', focus: 'Costas e Bíceps', exercises: [
         { id: 'ex21-hyp', name: 'Puxada Frontal', sets: '4', reps: '8-12' },
-        { id: 'ex22-hyp', name: 'Remada Cavalinho', sets: '4', reps: '10-12' },
-        { id: 'ex23-hyp', name: 'Rosca Scott', sets: '3', reps: '12-15' },
+        { id: 'ex22-hyp', name: 'Remada Cavalinho', sets: '4', reps: '10-12', mediaUrl: 'https://placehold.co/100x100/8B5CF6/000000.gif?text=Ex' },
+        { id: 'ex23-hyp', name: 'Rosca Scott', sets: '3', reps: '12-15', mediaUrl: 'https://placehold.co/100x100/10B981/000000.gif?text=Ex' },
     ]},
     { id: 'day3-hyp', day: 'Quarta', focus: 'Descanso', exercises: []},
     { id: 'day4-hyp', day: 'Quinta', focus: 'Pernas (Quadríceps e Panturrilha)', exercises: [
-        { id: 'ex41-hyp', name: 'Agachamento Hack', sets: '4', reps: '10-12' },
+        { id: 'ex41-hyp', name: 'Agachamento Hack', sets: '4', reps: '10-12', mediaUrl: 'https://placehold.co/100x100/F97316/000000.gif?text=Ex' },
         { id: 'ex42-hyp', name: 'Cadeira Extensora', sets: '4', reps: '15-20' },
         { id: 'ex43-hyp', name: 'Panturrilha no Leg Press', sets: '5', reps: '15-20' },
     ]},
     { id: 'day5-hyp', day: 'Sexta', focus: 'Ombros e Posteriores', exercises: [
-        { id: 'ex51-hyp', name: 'Elevação Lateral', sets: '5', reps: '12-15' },
+        { id: 'ex51-hyp', name: 'Elevação Lateral', sets: '5', reps: '12-15', mediaUrl: 'https://placehold.co/100x100/EF4444/000000.gif?text=Ex' },
         { id: 'ex52-hyp', name: 'Mesa Flexora', sets: '4', reps: '12-15' },
         { id: 'ex53-hyp', name: 'Cadeira Abdutora', sets: '4', reps: '15-20' },
     ]},
@@ -85,7 +86,7 @@ const hypertrophyTemplateSchedule: DailyWorkout[] = [
 ];
 
 const initialWorkoutTemplates: WorkoutPlan[] = [
-    { id: "TPL-001", name: "Iniciante Força 3x", difficulty: "Iniciante", description: "Um plano de 3 dias para iniciantes focado em ganho de força com exercícios compostos.", schedule: strengthTemplateSchedule, assignedTo: ['alex-johnson'] },
+    { id: "TPL-001", name: "Iniciante Força 3x", difficulty: "Iniciante", description: "Um plano de 3 dias para iniciantes focado em ganho de força com exercícios compostos.", schedule: strengthTemplateSchedule, assignedTo: ['alex-johnson', 'stu-001'] },
     { id: "TPL-002", name: "Hipertrofia 5x Split", difficulty: "Intermediário", description: "Plano de 5 dias com divisão de grupamentos musculares para hipertrofia.", schedule: hypertrophyTemplateSchedule, assignedTo: ['maria-garcia'] },
     { id: "TPL-003", name: "Cardio Intenso 30min", difficulty: "Todos os Níveis", description: "Sessão de cardio de alta intensidade para ser usada em dias de descanso ativo ou como complemento.", schedule: [
         { id: 'day1-car', day: 'Sessão Única', focus: 'HIIT', exercises: [
@@ -98,21 +99,21 @@ const initialWorkoutTemplates: WorkoutPlan[] = [
 const mockStudentPlanSchedule: DailyWorkout[] = [
     {
         id: 'day1', day: 'Segunda-feira', focus: 'Peito, Ombros e Tríceps', exercises: [
-            { id: 'ex11', name: 'Supino Reto', sets: '4', reps: '8-12', isCompleted: true, setLogs: [{id: 'log1', weight: 80, reps: 10, isCompleted: true}, {id: 'log2', weight: 80, reps: 9, isCompleted: true}, {id: 'log3', weight: 75, reps: 11, isCompleted: true}], notes: 'Me senti forte hoje.' },
+            { id: 'ex11', name: 'Supino Reto', sets: '4', reps: '8-12', isCompleted: true, setLogs: [{id: 'log1', weight: 80, reps: 10, isCompleted: true}, {id: 'log2', weight: 80, reps: 9, isCompleted: true}, {id: 'log3', weight: 75, reps: 11, isCompleted: true}], notes: 'Me senti forte hoje.', mediaUrl: 'https://placehold.co/100x100/EAB308/000000.gif?text=Ex' },
             { id: 'ex12', name: 'Desenvolvimento com Halteres', sets: '3', reps: '10', isCompleted: true, setLogs: [{id: 'log4', weight: 20, reps: 10, isCompleted: true}, {id: 'log5', weight: 20, reps: 10, isCompleted: true}, {id: 'log6', weight: 20, reps: 9, isCompleted: true}], notes: '' },
             { id: 'ex13', name: 'Tríceps na Polia', sets: '3', reps: '12-15', isCompleted: false, setLogs: [], notes: '' },
         ]
     },
     {
         id: 'day2', day: 'Terça-feira', focus: 'Costas e Bíceps', exercises: [
-            { id: 'ex21', name: 'Barra Fixa', sets: '3', reps: 'Até a falha', isCompleted: false },
+            { id: 'ex21', name: 'Barra Fixa', sets: '3', reps: 'Até a falha', isCompleted: false, mediaUrl: 'https://placehold.co/100x100/8B5CF6/000000.gif?text=Ex' },
             { id: 'ex22', name: 'Remada Curvada', sets: '4', reps: '8-10', isCompleted: false },
-            { id: 'ex23', name: 'Rosca Direta', sets: '3', reps: '12', isCompleted: false },
+            { id: 'ex23', name: 'Rosca Direta', sets: '3', reps: '12', isCompleted: false, mediaUrl: 'https://placehold.co/100x100/10B981/000000.gif?text=Ex' },
         ]
     },
     { id: 'day3', day: 'Quarta-feira', focus: 'Descanso Ativo', exercises: [] },
     { id: 'day4', day: 'Quinta-feira', focus: 'Pernas', exercises: [
-         { id: 'ex41', name: 'Agachamento Livre', sets: '5', reps: '5', isCompleted: false },
+         { id: 'ex41', name: 'Agachamento Livre', sets: '5', reps: '5', isCompleted: false, mediaUrl: 'https://placehold.co/100x100/F97316/000000.gif?text=Ex' },
     ]},
     { id: 'day5', day: 'Sexta-feira', focus: 'Cardio', exercises: [
          { id: 'ex51', name: 'Corrida', sets: '1', reps: '30 min', isCompleted: false },
@@ -220,7 +221,7 @@ export const WorkoutsProvider = ({ children }: { children: ReactNode }) => {
 
     const getAssignments = () => {
         // This should return a list of students and their active plans
-        const allStudents = allUsers.filter(u => u.role === 'Student').slice(0, 6); // Mock: trainer sees first 6 students
+        const allStudents = allUsers.filter(u => u.role === 'Student').slice(0, 8); // Mock: trainer sees first 8 students
 
         return allStudents.map(student => {
             const activePlanId = activeStudentPlans[student.id];
@@ -302,5 +303,3 @@ export const WorkoutsProvider = ({ children }: { children: ReactNode }) => {
         </WorkoutsContext.Provider>
     )
 }
-
-    
