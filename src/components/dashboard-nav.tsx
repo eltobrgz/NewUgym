@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, LineChart, Calendar, Settings, Users, DollarSign, ClipboardList, Award, UserSquare, LogOut, Sun, Moon, Palette } from "lucide-react";
+import { LayoutDashboard, LineChart, Calendar, Settings, Users, DollarSign, ClipboardList, Award, UserSquare, LogOut, Sun, Moon, Palette, BookOpen } from "lucide-react";
 import { useUserRole } from "@/contexts/user-role-context";
 import { cn } from "@/lib/utils";
 import { useTheme } from "next-themes";
@@ -15,6 +15,7 @@ export const navConfig = {
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { name: "Meus Treinos", href: "/dashboard/workouts", icon: ClipboardList },
     { name: "Meu Progresso", href: "/dashboard/progress", icon: LineChart },
+    { name: "Biblioteca", href: "/dashboard/library", icon: BookOpen },
     { name: "Calendário", href: "/dashboard/calendar", icon: Calendar },
   ],
   trainer: [
@@ -41,7 +42,7 @@ const bottomNavItems = [
 export function DashboardNav({ isCollapsed, onLinkClick }: { isCollapsed: boolean, onLinkClick?: () => void }) {
   const pathname = usePathname();
   const { userRole } = useUserRole();
-  const { theme, setTheme, resolvedTheme } = useTheme();
+  const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -70,26 +71,9 @@ export function DashboardNav({ isCollapsed, onLinkClick }: { isCollapsed: boolea
     if (!mounted) {
         return <div className="h-[52px] w-full" />; // Placeholder
     }
-    return (
-        <div className="p-2">
-            <div className={cn("flex items-center rounded-lg p-2", isCollapsed ? 'justify-center' : 'justify-between')}>
-                <div className={cn("flex items-center gap-3", isCollapsed && "justify-center")}>
-                    <div className="flex items-center justify-center">
-                        {resolvedTheme === 'dark' ? <Moon className="h-5 w-5 text-muted-foreground" /> : <Sun className="h-5 w-5 text-muted-foreground" />}
-                    </div>
-                    <span className={cn("text-muted-foreground capitalize", isCollapsed ? "hidden" : "block")}>
-                        {resolvedTheme === 'dark' ? 'Escuro' : 'Claro'}
-                    </span>
-                </div>
-                <Switch
-                  checked={resolvedTheme === 'dark'}
-                  onCheckedChange={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
-                  className={cn(isCollapsed ? "hidden" : "block")}
-                  aria-label="Toggle theme"
-                />
-            </div>
-        </div>
-    );
+    // Theme switching is handled in the appearance page now, so this is no longer needed.
+    // Kept the function in case we want to add a quick toggle back later.
+    return null; 
   }
 
   return (
@@ -115,9 +99,12 @@ export function DashboardNav({ isCollapsed, onLinkClick }: { isCollapsed: boolea
                 </Link>
             ))}
         </div>
+        {/* Theme switcher removed from here as it's on the appearance page now */}
+        {/* 
         <div className="border-t">
             {renderThemeSwitcher()}
-        </div>
+        </div> 
+        */}
       </div>
     </div>
   );
