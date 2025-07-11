@@ -45,6 +45,15 @@ import { WorkoutsContext, WorkoutPlan, DailyWorkout, Exercise, SetLog } from '@/
 import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 import { exerciseLibrary, Exercise as LibraryExercise, exerciseCategories } from '@/lib/exercise-library';
 
+// Wrapper to solve React 18 strict mode issue with react-beautiful-dnd
+const ClientOnlyDroppable = ({ children, ...props }: DroppableProps) => {
+    const [isMounted, setIsMounted] = useState(false);
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
+    return isMounted ? <Droppable {...props}>{children}</Droppable> : null;
+};
+
 type GeneratedWorkoutPlan = { planName: string; weeklySchedule: { day: string; focus: string; exercises?: { name: string; sets?: number; reps?: string; duration?: string; rest?: string }[] }[] };
 
 const AddExerciseModal = ({ open, onOpenChange, onAddExercises }: { open: boolean, onOpenChange: (open: boolean) => void, onAddExercises: (exercises: Exercise[]) => void }) => {
@@ -283,12 +292,12 @@ const WorkoutBuilder = ({ onSave, onBack, plan: initialPlan }: { onSave: (plan: 
                         </div>
                         <div className="p-4 border-t">
                         <h3 className="font-semibold mb-2">Dias de Treino</h3>
-                        <Droppable droppableId="days-list" type="day">
-                            {(provided) => (
+                        <ClientOnlyDroppable droppableId="days-list" type="day">
+                            {(provided: any) => (
                             <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-2">
                                 {plan.schedule?.map((day, index) => (
                                 <Draggable key={day.id} draggableId={day.id} index={index}>
-                                    {(provided, snapshot) => (
+                                    {(provided: any, snapshot: any) => (
                                     <div
                                         ref={provided.innerRef}
                                         {...provided.draggableProps}
@@ -312,7 +321,7 @@ const WorkoutBuilder = ({ onSave, onBack, plan: initialPlan }: { onSave: (plan: 
                                 {provided.placeholder}
                             </div>
                             )}
-                        </Droppable>
+                        </ClientOnlyDroppable>
                         <Button variant="outline" size="sm" onClick={addDay} className="w-full mt-4"><PlusCircle className="mr-2 h-4 w-4" />Adicionar Dia</Button>
                         </div>
                     </aside>
@@ -334,12 +343,12 @@ const WorkoutBuilder = ({ onSave, onBack, plan: initialPlan }: { onSave: (plan: 
                                     <CardTitle>Exercícios</CardTitle>
                                 </CardHeader>
                                 <CardContent>
-                                    <Droppable droppableId={activeDay.id} type="exercise">
-                                    {(provided) => (
+                                    <ClientOnlyDroppable droppableId={activeDay.id} type="exercise">
+                                    {(provided: any) => (
                                         <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-3">
                                         {activeDay.exercises.map((exercise, index) => (
                                             <Draggable key={exercise.id} draggableId={exercise.id} index={index}>
-                                            {(provided) => (
+                                            {(provided: any) => (
                                                 <div ref={provided.innerRef} {...provided.draggableProps} className="flex items-center gap-2 p-2 border rounded-md bg-muted/50">
                                                     <div {...provided.dragHandleProps} className="p-1 cursor-grab">
                                                         <GripVertical className="h-4 w-4 text-muted-foreground" />
@@ -358,7 +367,7 @@ const WorkoutBuilder = ({ onSave, onBack, plan: initialPlan }: { onSave: (plan: 
                                         {provided.placeholder}
                                         </div>
                                     )}
-                                    </Droppable>
+                                    </ClientOnlyDroppable>
                                 </CardContent>
                                 <CardFooter>
                                     <Button variant="outline" onClick={() => setAddExoModalOpen(true)}><PlusCircle className="mr-2 h-4 w-4" />Adicionar Exercício</Button>
@@ -999,3 +1008,4 @@ export default function WorkoutsPage() {
     </div>
   );
 }
+
