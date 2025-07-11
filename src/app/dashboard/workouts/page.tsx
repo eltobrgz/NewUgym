@@ -40,7 +40,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { WorkoutsContext, WorkoutPlan, DailyWorkout, Exercise, SetLog } from '@/contexts/workouts-context';
 import { DragDropContext, Droppable, Draggable, DropResult, type DroppableProps } from 'react-beautiful-dnd';
 import { exerciseLibrary, Exercise as LibraryExercise, exerciseCategories } from '@/lib/exercise-library';
@@ -387,8 +387,16 @@ const WorkoutBuilder = ({ onSave, onBack, plan: initialPlan }: { onSave: (plan: 
     );
 };
 
+const studentsForAssignment = [
+  { id: "alex-johnson", name: "Alex Johnson" },
+  { id: "maria-garcia", name: "Maria Garcia" },
+  { id: "david-chen", name: "David Chen" },
+  { id: "sofia-davis", name: "Sofia Davis" },
+  { id: "emily-white", name: "Emily White" },
+  { id: "stu-001", name: "Alice Johnson" },
+];
 
-const AssignWorkoutModal = ({ open, onOpenChange, onAssign, planName }: { open: boolean, onOpenChange: (open: boolean) => void, onAssign: (studentIds: string[]) => void, planName: string }) => {
+const AssignWorkoutModal = ({ open, onOpenChange, onAssign, planName, students }: { open: boolean, onOpenChange: (open: boolean) => void, onAssign: (studentIds: string[]) => void, planName: string, students: {id: string, name: string}[] }) => {
     const { toast } = useToast();
     const [selectedStudents, setSelectedStudents] = useState<Set<string>>(new Set());
 
@@ -418,7 +426,7 @@ const AssignWorkoutModal = ({ open, onOpenChange, onAssign, planName }: { open: 
 
     const handleSelectAll = (isAllSelected: boolean) => {
         if (isAllSelected) {
-            setSelectedStudents(new Set(studentsForAssignment.map(s => s.id)));
+            setSelectedStudents(new Set(students.map(s => s.id)));
         } else {
             setSelectedStudents(new Set());
         }
@@ -433,12 +441,12 @@ const AssignWorkoutModal = ({ open, onOpenChange, onAssign, planName }: { open: 
                 </DialogHeader>
                 <div className="py-4">
                     <div className="flex items-center px-4 pb-2 border-b">
-                        <Checkbox id="select-all" onCheckedChange={(checked) => handleSelectAll(Boolean(checked))} checked={selectedStudents.size === studentsForAssignment.length && studentsForAssignment.length > 0} />
+                        <Checkbox id="select-all" onCheckedChange={(checked) => handleSelectAll(Boolean(checked))} checked={selectedStudents.size === students.length && students.length > 0} />
                         <Label htmlFor="select-all" className="ml-2 font-semibold">Selecionar Todos</Label>
                     </div>
                     <ScrollArea className="h-64">
                         <div className="p-4 space-y-2">
-                        {studentsForAssignment.map(student => (
+                        {students.map(student => (
                             <div key={student.id} className="flex items-center">
                                 <Checkbox id={student.id} onCheckedChange={(checked) => handleSelectStudent(student.id, Boolean(checked))} checked={selectedStudents.has(student.id)}/>
                                 <Label htmlFor={student.id} className="ml-2">{student.name}</Label>
@@ -554,6 +562,7 @@ const TrainerView = () => {
             onOpenChange={setAssignModalOpen}
             planName={selectedPlan.name}
             onAssign={handleAssignStudents}
+            students={studentsForAssignment}
           />
       )}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -1008,3 +1017,5 @@ export default function WorkoutsPage() {
     </div>
   );
 }
+
+    
