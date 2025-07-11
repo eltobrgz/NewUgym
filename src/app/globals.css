@@ -38,26 +38,26 @@
     --input: 220 15% 18%;
   }
 
-  /* Ugym Palette (Default - Teal) */
+  /* Ugym Palette (Default) */
   .ugym {
-    --background: 210 20% 96.1%; /* #F0F2F5 - Light Grayish Blue */
-    --primary: 180 100% 25%; /* #008080 - Teal */
-    --primary-foreground: 180 100% 98%;
-    --accent: 16 100% 55%; /* #FF8033 - Coral */
+    --background: 210 20% 96.1%;
+    --primary: 15 95% 53%; /* Red-Orange */
+    --primary-foreground: 20 0% 98%;
+    --accent: 0 84% 60%; /* Bright Red */
     --accent-foreground: 0 0% 100%;
-    --ring: 180 100% 25%;
-    --chart-1: 180 100% 25%;
-    --chart-2: 16 100% 55%;
+    --ring: 15 95% 53%;
+    --chart-1: 15 95% 53%;
+    --chart-2: 0 84% 60%;
   }
   .dark.ugym {
     --background: 222.2 47.4% 11.2%; /* Dark Blue */
-    --primary: 180 80% 45%;
-    --primary-foreground: 180 100% 98%;
-    --accent: 16 90% 60%;
+    --primary: 15 90% 60%;
+    --primary-foreground: 20 0% 98%;
+    --accent: 0 80% 65%;
     --accent-foreground: 0 0% 100%;
-    --ring: 180 80% 45%;
+    --ring: 15 90% 60%;
   }
-
+  
   /* Forest Palette */
   .forest {
     --primary: 142.1 76.2% 36.3%;

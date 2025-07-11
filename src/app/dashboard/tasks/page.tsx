@@ -5,7 +5,7 @@ import { useState, useContext, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable, DropResult, type DroppableProps } from 'react-beautiful-dnd';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { PlusCircle, GripVertical, Calendar as CalendarIcon, User } from 'lucide-react';
+import { PlusCircle, GripVertical, Calendar as CalendarIcon } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -21,6 +21,8 @@ import { useUserRole } from '@/contexts/user-role-context';
 import { allUsers } from '@/lib/user-directory';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+
 
 const ClientOnlyDroppable = ({ children, ...props }: DroppableProps) => {
     const [isMounted, setIsMounted] = useState(false);
@@ -58,7 +60,6 @@ const AddTaskDialog = () => {
         addTask({
             title,
             description: formData.get('description') as string,
-            status: 'todo',
             dueDate: dueDate ? format(dueDate, 'yyyy-MM-dd') : undefined,
             assignee: {
                 id: assignee.id,
@@ -193,7 +194,7 @@ export default function TasksPage() {
     const { tasks, moveTask } = useContext(TasksContext);
 
     const onDragEnd = (result: DropResult) => {
-        const { source, destination, draggableId } = result;
+        const { destination, draggableId } = result;
         if (!destination) return;
 
         moveTask(draggableId, destination.droppableId as TaskStatus);
@@ -236,12 +237,3 @@ export default function TasksPage() {
         </div>
     );
 }
-
-// Add Tooltip provider for avatar name hovers
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
-

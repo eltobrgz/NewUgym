@@ -3,12 +3,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, LineChart, Calendar, Settings, Users, DollarSign, ClipboardList, Award, UserSquare, LogOut, Sun, Moon, Palette, BookOpen, ListChecks as TasksIcon } from "lucide-react";
+import { LayoutDashboard, LineChart, Calendar, Settings, Users, DollarSign, ClipboardList, Award, UserSquare, LogOut, Palette, BookOpen, ListChecks as TasksIcon } from "lucide-react";
 import { useUserRole } from "@/contexts/user-role-context";
 import { cn } from "@/lib/utils";
-import { useTheme } from "next-themes";
-import { Switch } from "./ui/switch";
-import { useEffect, useState } from "react";
 
 export const navConfig = {
   student: [
@@ -46,11 +43,6 @@ const bottomNavItems = [
 export function DashboardNav({ isCollapsed, onLinkClick }: { isCollapsed: boolean, onLinkClick?: () => void }) {
   const pathname = usePathname();
   const { userRole } = useUserRole();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const lowerCaseRole = userRole.toLowerCase() as keyof typeof navConfig;
   const navItems = navConfig[lowerCaseRole] || navConfig.student;

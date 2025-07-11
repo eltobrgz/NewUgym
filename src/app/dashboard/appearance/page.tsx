@@ -45,7 +45,7 @@ export default function AppearancePage() {
         <CardContent>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             {themes.map((t) => (
-              <div key={t.name}>
+              <div key={t.name} className="relative">
                 <button
                   onClick={() => setTheme(t.className)}
                   className={cn(
