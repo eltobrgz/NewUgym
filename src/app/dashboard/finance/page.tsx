@@ -41,68 +41,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { allUsers } from "@/lib/user-directory";
 import { Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { ChartConfig, ChartContainer, ChartTooltipContent } from '@/components/ui/chart'
-import { subDays, startOfMonth, endOfMonth, format, subMonths } from 'date-fns';
+import { subDays, startOfMonth, endOfMonth, format, subMonths, parseISO } from 'date-fns';
+import { generateMockTransactions, getAllTransactions, addTransaction as addFinanceTransaction, Transaction, MembershipPlan, getAllPlans, addPlan as addFinancePlan, cancelSubscription } from "@/lib/finance-manager";
 
 
-type TransactionStatus = "Pago" | "Pendente" | "Atrasado";
-type TransactionType = "Primeiro Pagamento" | "Renovação";
-
-type Transaction = {
-  id: string;
-  member: string; // Member name for simplicity, in a real app this would be an ID
-  memberId: string;
-  amount: number;
-  status: TransactionStatus;
-  type: TransactionType;
-  date: string; // YYYY-MM-DD
-  plan: string; // Plan name
-};
-
-type MembershipPlan = {
-  id: string;
-  name: string;
-  price: number;
-  recurrence: "Mensal" | "Anual";
-};
-
-const initialMembers = allUsers.filter(u => u.role === 'Student');
-
-const initialPlans: MembershipPlan[] = [
-    { id: 'plan-1', name: 'Pro Anual', price: 999.90, recurrence: 'Anual' },
-    { id: 'plan-2', name: 'Pro Mensal', price: 99.90, recurrence: 'Mensal' },
-    { id: 'plan-3', name: 'Básico Mensal', price: 59.90, recurrence: 'Mensal' },
-];
-
-const generateMockTransactions = (): Transaction[] => {
-    const transactions: Transaction[] = [];
-    const today = new Date();
-    initialMembers.forEach((member, index) => {
-        for (let i = 0; i < 12; i++) {
-            const date = subDays(today, i * 30 + (index % 15));
-            const plan = initialPlans[index % initialPlans.length];
-            let status: TransactionStatus = "Pago";
-            if (i === 0 && index % 5 === 1) status = "Pendente";
-            if (i === 0 && index % 5 === 2) status = "Atrasado";
-
-            transactions.push({
-                id: `TRN-${member.id}-${i}`,
-                memberId: member.id,
-                member: member.name,
-                amount: plan.price,
-                status: status,
-                type: i > 2 ? "Renovação" : "Primeiro Pagamento",
-                date: format(date, 'yyyy-MM-dd'),
-                plan: plan.name,
-            });
-        }
-    });
-    return transactions;
-};
-
-const statusStyles: { [key in TransactionStatus]: { variant: "default" | "secondary" | "destructive" | "outline", className?: string, text: string }} = {
+const statusStyles: { [key in Transaction['status']]: { variant: "default" | "secondary" | "destructive" | "outline", className?: string, text: string }} = {
   "Pago": { variant: "secondary", className: "bg-green-500/10 text-green-400 border-green-500/20", text: "Pago" },
   "Pendente": { variant: "secondary", className: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20", text: "Pendente" },
   "Atrasado": { variant: "destructive", text: "Atrasado" },
+  "Cancelado": { variant: "outline", text: "Cancelado" },
 };
 
 const formatCurrency = (amount: number) => {
@@ -118,7 +65,7 @@ const churnChartConfig = {
     churn: { label: "Cancelamentos", color: "hsl(var(--destructive))" },
 } satisfies ChartConfig
 
-const AddTransactionDialog = ({ open, onOpenChange, prefilledMemberId, onAdd, plans, members }: { open: boolean, onOpenChange: (open: boolean) => void, prefilledMemberId: string, onAdd: (t: Transaction) => void, plans: MembershipPlan[], members: {id: string, name: string}[] }) => {
+const AddTransactionDialog = ({ open, onOpenChange, prefilledMemberId, onAdd, plans, members }: { open: boolean, onOpenChange: (open: boolean) => void, prefilledMemberId: string, onAdd: (t: Omit<Transaction, 'id'>) => void, plans: MembershipPlan[], members: {id: string, name: string}[] }) => {
     const [selectedPlanId, setSelectedPlanId] = useState<string>('');
     const [amount, setAmount] = useState<string>('');
 
@@ -146,13 +93,12 @@ const AddTransactionDialog = ({ open, onOpenChange, prefilledMemberId, onAdd, pl
 
         if(!selectedMember || !selectedPlan) return;
     
-        const newTransaction: Transaction = {
-            id: `TRN-${Date.now()}`,
+        const newTransaction: Omit<Transaction, 'id'> = {
             member: selectedMember.name,
             memberId: selectedMember.id,
             amount: parseFloat(amount),
-            status: formData.get("status") as TransactionStatus,
-            type: formData.get("type") as TransactionType,
+            status: formData.get("status") as Transaction['status'],
+            type: formData.get("type") as Transaction['type'],
             date: formData.get("date") as string,
             plan: selectedPlan.name,
         }
@@ -247,14 +193,13 @@ const AddTransactionDialog = ({ open, onOpenChange, prefilledMemberId, onAdd, pl
     )
 }
 
-const AddPlanDialog = ({ onAdd }: { onAdd: (plan: MembershipPlan) => void }) => {
+const AddPlanDialog = ({ onAdd }: { onAdd: (plan: Omit<MembershipPlan, 'id'>) => void }) => {
     const [open, setOpen] = useState(false);
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
-        const newPlan: MembershipPlan = {
-            id: `plan-${Date.now()}`,
+        const newPlan: Omit<MembershipPlan, 'id'> = {
             name: formData.get('name') as string,
             price: parseFloat(formData.get('price') as string),
             recurrence: formData.get('recurrence') as "Mensal" | "Anual",
@@ -303,8 +248,8 @@ const AddPlanDialog = ({ onAdd }: { onAdd: (plan: MembershipPlan) => void }) => 
 
 export default function FinancePage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [plans, setPlans] = useState<MembershipPlan[]>(initialPlans);
-  const [members] = useState(initialMembers);
+  const [plans, setPlans] = useState<MembershipPlan[]>([]);
+  const [members] = useState(allUsers.filter(u => u.role === 'Student'));
   const [tableFilter, setTableFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState("all-time");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -317,7 +262,9 @@ export default function FinancePage() {
 
   useEffect(() => {
     // Generate data on client-side to avoid hydration mismatch
-    setTransactions(generateMockTransactions());
+    generateMockTransactions(); // Initialize with mock data if needed
+    setTransactions(getAllTransactions());
+    setPlans(getAllPlans());
 
     const churnByMonth: { [key: string]: { new: number, churn: number } } = {};
     const months = Array.from({length: 6}, (_, i) => format(subMonths(new Date(), i), 'yyyy-MM')).reverse();
@@ -398,7 +345,7 @@ export default function FinancePage() {
 
     filteredTransactions.forEach(t => {
       if (t.status === 'Pago') {
-        const monthKey = format(new Date(t.date), 'yyyy-MM');
+        const monthKey = format(parseISO(t.date), 'yyyy-MM');
         if (revenueByMonth[monthKey] !== undefined) {
           revenueByMonth[monthKey] += t.amount;
         }
@@ -412,14 +359,15 @@ export default function FinancePage() {
     })).sort((a, b) => a.month.localeCompare(b.month));
   }, [filteredTransactions]);
 
-  const handleStatusChange = (id: string, newStatus: TransactionStatus) => {
+  const handleStatusChange = (id: string, newStatus: Transaction['status']) => {
     setTransactions(prev => prev.map(t => t.id === id ? { ...t, status: newStatus } : t));
     toast({ title: "Status Atualizado", description: `A transação ${id} foi marcada como ${newStatus}.` });
   };
 
-  const handleCancelTransaction = (id: string) => {
-    setTransactions(prev => prev.filter(t => t.id !== id));
-    toast({ title: "Transação Cancelada", description: `A transação ${id} foi removida.`, variant: "destructive" });
+  const handleCancelSubscription = (memberId: string) => {
+    cancelSubscription(memberId);
+    setTransactions(getAllTransactions()); // Refresh transactions to show cancellation
+    toast({ title: "Assinatura Cancelada", description: `A assinatura do membro foi cancelada.`, variant: "destructive" });
   };
   
   const handleExport = (type: 'CSV') => {
@@ -429,15 +377,17 @@ export default function FinancePage() {
       })
   }
 
-  const handleAddTransaction = (newTransaction: Transaction) => {
-    setTransactions(prev => [newTransaction, ...prev]);
+  const handleAddTransaction = (newTransaction: Omit<Transaction, 'id'>) => {
+    addFinanceTransaction(newTransaction);
+    setTransactions(getAllTransactions());
     toast({ title: "Transação Adicionada", description: `Nova transação para ${newTransaction.member} foi criada.` });
     setIsAddDialogOpen(false);
     setPrefilledMemberId('');
   };
   
-  const handleAddPlan = (newPlan: MembershipPlan) => {
-      setPlans(prev => [...prev, newPlan]);
+  const handleAddPlan = (newPlan: Omit<MembershipPlan, 'id'>) => {
+      addFinancePlan(newPlan);
+      setPlans(getAllPlans());
       toast({ title: "Plano Adicionado", description: `O plano ${newPlan.name} foi criado.` });
   }
 
@@ -446,7 +396,8 @@ export default function FinancePage() {
     const statusMap = {
         paid: "Pago",
         pending: "Pendente",
-        overdue: "Atrasado"
+        overdue: "Atrasado",
+        cancelled: "Cancelado",
     };
     return t.status === (statusMap[tableFilter as keyof typeof statusMap] || "");
   });
@@ -582,11 +533,12 @@ export default function FinancePage() {
                 </div>
                 <div className="w-full sm:w-auto">
                   <Tabs defaultValue="all" onValueChange={setTableFilter} className="w-full">
-                    <TabsList className="grid w-full grid-cols-4">
+                    <TabsList className="grid w-full grid-cols-5">
                       <TabsTrigger value="all">Todos</TabsTrigger>
                       <TabsTrigger value="paid">Pago</TabsTrigger>
                       <TabsTrigger value="pending">Pendente</TabsTrigger>
                       <TabsTrigger value="overdue">Atrasado</TabsTrigger>
+                      <TabsTrigger value="cancelled">Cancelado</TabsTrigger>
                     </TabsList>
                   </Tabs>
                 </div>
@@ -607,10 +559,10 @@ export default function FinancePage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {transactionsForTable.slice(0, 10).map((transaction) => (
+                  {transactionsForTable.slice(0, 15).map((transaction) => (
                     <TableRow key={transaction.id}>
                       <TableCell className="font-medium">{transaction.member}</TableCell>
-                      <TableCell className="hidden sm:table-cell">{format(new Date(transaction.date + 'T00:00:00'), 'dd/MM/yyyy')}</TableCell>
+                      <TableCell className="hidden sm:table-cell">{format(parseISO(transaction.date), 'dd/MM/yyyy')}</TableCell>
                        <TableCell>
                           <Badge variant={transaction.type === 'Primeiro Pagamento' ? 'default' : 'secondary'} className={cn(transaction.type === 'Primeiro Pagamento' && 'bg-blue-500/10 text-blue-400 border-blue-500/20')}>
                             {transaction.type}
@@ -634,27 +586,27 @@ export default function FinancePage() {
                             <DropdownMenuLabel>Ações</DropdownMenuLabel>
                             <DropdownMenuItem><Eye className="mr-2 h-4 w-4"/>Ver Detalhes</DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem onSelect={() => handleStatusChange(transaction.id, 'Pago')} disabled={transaction.status === 'Pago'}>
+                            <DropdownMenuItem onSelect={() => handleStatusChange(transaction.id, 'Pago')} disabled={transaction.status === 'Pago' || transaction.status === 'Cancelado'}>
                                 <CheckCircle className="mr-2 h-4 w-4 text-green-500" /> Marcar como Pago
                             </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => handleStatusChange(transaction.id, 'Pendente')} disabled={transaction.status === 'Pendente'}>
+                            <DropdownMenuItem onSelect={() => handleStatusChange(transaction.id, 'Pendente')} disabled={transaction.status === 'Pendente' || transaction.status === 'Cancelado'}>
                                 <AlertTriangle className="mr-2 h-4 w-4 text-yellow-500" />Marcar como Pendente
                             </DropdownMenuItem>
                              <DropdownMenuSeparator />
                             <AlertDialog>
                                 <AlertDialogTrigger asChild>
                                     <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">
-                                      <XCircle className="mr-2 h-4 w-4"/> Cancelar Transação
+                                      <XCircle className="mr-2 h-4 w-4"/> Cancelar Assinatura
                                     </DropdownMenuItem>
                                 </AlertDialogTrigger>
                                 <AlertDialogContent>
                                     <AlertDialogHeader>
                                         <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
-                                        <AlertDialogDescription>Isso cancelará permanentemente a transação para {transaction.member}.</AlertDialogDescription>
+                                        <AlertDialogDescription>Isso cancelará permanentemente a assinatura para {transaction.member}. O status do membro será definido como 'Inativo'.</AlertDialogDescription>
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
-                                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                        <AlertDialogAction onClick={() => handleCancelTransaction(transaction.id)}>Confirmar</AlertDialogAction>
+                                        <AlertDialogCancel>Voltar</AlertDialogCancel>
+                                        <AlertDialogAction onClick={() => handleCancelSubscription(transaction.memberId)}>Confirmar</AlertDialogAction>
                                     </AlertDialogFooter>
                                 </AlertDialogContent>
                             </AlertDialog>

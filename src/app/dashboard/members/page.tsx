@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from 'next/navigation';
 import {
   Table,
@@ -36,6 +36,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { allUsers, type DirectoryUser } from "@/lib/user-directory";
+import { getStudentSubscription, StudentSubscription } from "@/lib/finance-manager";
+import { format } from "date-fns";
 
 type Member = {
   id: string;
@@ -43,26 +45,10 @@ type Member = {
   email: string;
   avatar: string;
   initials: string;
-  status: "Ativo" | "Inativo";
+  status: "Ativo" | "Inativo" | "Pendente" | "Atrasado";
   plan: string;
   joinDate: string;
 };
-
-// Use the central user directory as the source of truth for members
-const getInitialMembers = (): Member[] => {
-    const studentUsers = allUsers.filter(u => u.role === 'Student');
-    return studentUsers.map((user, index) => ({
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        avatar: `https://placehold.co/100x100.png`,
-        initials: user.name.split(" ").map(n => n[0]).join("").toUpperCase(),
-        status: index % 5 === 0 ? "Inativo" : "Ativo", // Make some inactive
-        plan: index % 3 === 0 ? "Pro Anual" : index % 2 === 0 ? "Pro Mensal" : "Básico Mensal",
-        joinDate: new Date(new Date().setMonth(new Date().getMonth() - (index % 6))).toISOString().split('T')[0], // Vary join dates
-    }));
-};
-
 
 const AddMemberDialog = ({ open, onOpenChange, onAddMember }: { open: boolean, onOpenChange: (open: boolean) => void, onAddMember: (member: Member) => void}) => {
     const [searchTerm, setSearchTerm] = useState('');
@@ -88,7 +74,7 @@ const AddMemberDialog = ({ open, onOpenChange, onAddMember }: { open: boolean, o
             email: user.email,
             avatar: "https://placehold.co/100x100.png",
             initials: user.name.split(" ").map(n => n[0]).join("").toUpperCase(),
-            status: "Ativo",
+            status: "Inativo",
             plan: "Nenhum",
             joinDate: new Date().toISOString().split("T")[0],
         };
@@ -142,14 +128,52 @@ const AddMemberDialog = ({ open, onOpenChange, onAddMember }: { open: boolean, o
     )
 }
 
+const statusVariant: Record<Member['status'], "default" | "secondary" | "destructive"> = {
+    Ativo: "default",
+    Inativo: "secondary",
+    Pendente: "secondary",
+    Atrasado: "destructive",
+};
+
+const statusText: Record<Member['status'], string> = {
+    Ativo: "Ativo",
+    Inativo: "Inativo",
+    Pendente: "Pendente",
+    Atrasado: "Atrasado",
+}
+
 export default function MembersPage() {
-  const [members, setMembers] = useState<Member[]>(getInitialMembers());
+  const [members, setMembers] = useState<Member[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingMember, setEditingMember] = useState<Member | null>(null);
   const [newlyAddedMember, setNewlyAddedMember] = useState<Member | null>(null);
   const { toast } = useToast();
   const router = useRouter();
 
+  useEffect(() => {
+    // Logic to fetch members and their subscription status
+    const studentUsers = allUsers.filter(u => u.role === 'Student');
+    const memberData = studentUsers.map(user => {
+        const subscription = getStudentSubscription(user.id);
+        const statusMap: Record<StudentSubscription['status'], Member['status']> = {
+            Ativo: 'Ativo',
+            Pendente: 'Pendente',
+            Atrasado: 'Atrasado',
+            Cancelado: 'Inativo'
+        };
+        return {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            avatar: `https://placehold.co/100x100.png`,
+            initials: user.name.split(" ").map(n => n[0]).join("").toUpperCase(),
+            status: subscription ? statusMap[subscription.status] : 'Inativo',
+            plan: subscription ? subscription.planName : "Nenhum",
+            joinDate: subscription ? format(subscription.joinDate, 'dd/MM/yyyy') : 'N/A'
+        };
+    });
+    setMembers(memberData);
+  }, []);
 
   const handleAddMember = (newMember: Member) => {
       if (members.some(m => m.id === newMember.id)) {
@@ -163,8 +187,8 @@ export default function MembersPage() {
   }
 
   const handleDeactivate = (memberId: string) => {
-    setMembers(members.map(m => m.id === memberId ? { ...m, status: 'Inativo' } : m));
-    toast({ title: "Membro Desativado", variant: "destructive" });
+    // This action is now handled via subscription cancellation in finance page
+    toast({ title: "Ação não permitida", description: "Para desativar um membro, cancele sua assinatura na tela de Finanças."});
   };
   
   const handleConfirmPaymentRedirect = () => {
@@ -247,8 +271,8 @@ export default function MembersPage() {
                       </div>
                     </TableCell>
                     <TableCell className="hidden sm:table-cell">
-                      <Badge variant={member.status === "Ativo" ? "default" : "secondary"}>
-                        {member.status}
+                      <Badge variant={statusVariant[member.status]}>
+                        {statusText[member.status]}
                       </Badge>
                     </TableCell>
                     <TableCell className="hidden md:table-cell">{member.plan}</TableCell>
@@ -277,12 +301,12 @@ export default function MembersPage() {
                                 <AlertDialogHeader>
                                     <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
                                     <AlertDialogDescription>
-                                        Isso marcará {member.name} como inativo. Eles perderão o acesso às instalações da academia.
+                                        Para desativar um membro, você deve cancelar a assinatura dele na tela de Finanças. Esta ação apenas remove o membro da lista se ele não tiver uma assinatura.
                                     </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
                                     <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                    <AlertDialogAction onClick={() => handleDeactivate(member.id)}>Confirmar Desativação</AlertDialogAction>
+                                    <AlertDialogAction onClick={() => handleDeactivate(member.id)}>Confirmar</AlertDialogAction>
                                 </AlertDialogFooter>
                             </AlertDialogContent>
                           </AlertDialog>
@@ -299,5 +323,3 @@ export default function MembersPage() {
     </>
   );
 }
-
-    

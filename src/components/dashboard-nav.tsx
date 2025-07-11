@@ -17,6 +17,7 @@ export const navConfig = {
     { name: "Meu Progresso", href: "/dashboard/progress", icon: LineChart },
     { name: "Biblioteca", href: "/dashboard/library", icon: BookOpen },
     { name: "Calendário", href: "/dashboard/calendar", icon: Calendar },
+    { name: "Faturamento", href: "/dashboard/billing", icon: DollarSign },
   ],
   trainer: [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -42,7 +43,6 @@ const bottomNavItems = [
 export function DashboardNav({ isCollapsed, onLinkClick }: { isCollapsed: boolean, onLinkClick?: () => void }) {
   const pathname = usePathname();
   const { userRole } = useUserRole();
-  const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -67,15 +67,6 @@ export function DashboardNav({ isCollapsed, onLinkClick }: { isCollapsed: boolea
       isCollapsed ? "justify-center" : ""
     );
 
-  const renderThemeSwitcher = () => {
-    if (!mounted) {
-        return <div className="h-[52px] w-full" />; // Placeholder
-    }
-    // Theme switching is handled in the appearance page now, so this is no longer needed.
-    // Kept the function in case we want to add a quick toggle back later.
-    return null; 
-  }
-
   return (
     <div className="flex h-full flex-col">
       <nav className="flex-1 space-y-2 px-2 py-4">
@@ -99,12 +90,6 @@ export function DashboardNav({ isCollapsed, onLinkClick }: { isCollapsed: boolea
                 </Link>
             ))}
         </div>
-        {/* Theme switcher removed from here as it's on the appearance page now */}
-        {/* 
-        <div className="border-t">
-            {renderThemeSwitcher()}
-        </div> 
-        */}
       </div>
     </div>
   );
