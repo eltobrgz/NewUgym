@@ -17,7 +17,7 @@ export const navConfig = {
     { name: "Meu Progresso", href: "/dashboard/progress", icon: LineChart },
     { name: "Biblioteca", href: "/dashboard/library", icon: BookOpen },
     { name: "Calendário", href: "/dashboard/calendar", icon: Calendar },
-    { name: "Faturamento", href: "/dashboard/billing", icon: DollarSign },
+    { name: "Mensalidade", href: "/dashboard/billing", icon: DollarSign },
   ],
   trainer: [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },

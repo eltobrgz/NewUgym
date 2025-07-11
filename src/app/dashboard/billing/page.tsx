@@ -51,7 +51,7 @@ export default function BillingPage() {
     if (!subscription) {
         return (
             <div className="flex flex-col gap-6">
-                 <h1 className="text-3xl font-bold tracking-tight">Faturamento</h1>
+                 <h1 className="text-3xl font-bold tracking-tight">Minha Mensalidade</h1>
                  <Card>
                     <CardContent className="pt-6 text-center text-muted-foreground">
                         <p>Você não possui uma assinatura ativa no momento.</p>
@@ -65,7 +65,7 @@ export default function BillingPage() {
 
     return (
         <div className="flex flex-col gap-6">
-            <h1 className="text-3xl font-bold tracking-tight">Faturamento e Assinatura</h1>
+            <h1 className="text-3xl font-bold tracking-tight">Minha Mensalidade</h1>
             
             <Card>
                 <CardHeader>
