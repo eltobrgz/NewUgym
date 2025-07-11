@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
 import { useUserRole } from '@/contexts/user-role-context';
 import { useToast } from '@/hooks/use-toast';
 import { getStudentTransactions, getStudentSubscription, StudentSubscription, Transaction, cancelSubscription } from '@/lib/finance-manager';
