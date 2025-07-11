@@ -19,6 +19,7 @@ export const allUsers: DirectoryUser[] = [
     { id: "alex-johnson", name: "Alex Johnson", email: "alex.j@email.com", role: "Student" },
     { id: "maria-garcia", name: "Maria Garcia", email: "maria.g@email.com", role: "Student" },
     { id: "david-chen", name: "David Chen", email: "david.c@email.com", role: "Student" },
+    { id: "sofia-davis", name: "Sofia Davis", email: "sofia.d@email.com", role: "Student" },
     { id: "emily-white", name: "Emily White", email: "emily.w@email.com", role: "Student" },
     { id: "olivia.martin", name: "Olivia Martin", email: "olivia.martin@email.com", role: "Student" },
     { id: "jackson.lee", name: "Jackson Lee", email: "jackson.lee@email.com", role: "Student" },
@@ -34,5 +35,3 @@ export const allUsers: DirectoryUser[] = [
     { id: "gym-001", name: "Gym Admin One", email: "admin@pro-fit.com", role: "Gym" },
     { id: "gym-002", name: "Powerhouse Gym", email: "manager@powerhouse.com", role: "Gym" },
 ];
-
-    

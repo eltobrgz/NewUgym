@@ -17,6 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { WorkoutsContext } from '@/contexts/workouts-context';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { cn } from '@/lib/utils';
+import { allUsers } from '@/lib/user-directory';
 
 // Mock data for a specific student, you would fetch this based on params.studentId in a real app
 const studentData: { [key: string]: any } = {
@@ -38,6 +39,22 @@ const studentData: { [key: string]: any } = {
       { date: '2024-06-01', weight: 64, bodyFat: 27, arm: 32.5, leg: 55.5, waist: 73 },
       { date: '2024-07-01', weight: 62, bodyFat: 25, arm: 33, leg: 56, waist: 71 },
       { date: '2024-08-01', weight: 62, bodyFat: 24.5, arm: 33, leg: 56, waist: 70 },
+    ],
+  },
+  'david-chen': {
+    name: 'David Chen',
+     heightInCm: 175,
+     progressData: [
+      { date: '2024-07-01', weight: 78, bodyFat: 20, arm: 35, leg: 58, waist: 85 },
+      { date: '2024-08-01', weight: 77, bodyFat: 19, arm: 35.5, leg: 58, waist: 84 },
+    ],
+  },
+   'sofia-davis': {
+    name: 'Sofia Davis',
+     heightInCm: 168,
+     progressData: [
+      { date: '2024-07-01', weight: 60, bodyFat: 24, arm: 30, leg: 54, waist: 70 },
+      { date: '2024-08-01', weight: 59, bodyFat: 23, arm: 30, leg: 54, waist: 69 },
     ],
   }
 };
@@ -92,7 +109,8 @@ export default function StudentProgressPage({ params: paramsPromise }: { params:
   
   // Use a fallback if studentId is not in mock data
   const data = studentData[params.studentId] || studentData['alex-johnson'];
-  const { name, heightInCm, progressData } = data;
+  const name = allUsers.find(u => u.id === params.studentId)?.name || 'Aluno';
+  const { heightInCm, progressData } = data;
   
   const studentWorkoutPlan = getStudentPlan(params.studentId);
   const workoutProgress = getStudentWorkoutProgress(params.studentId);

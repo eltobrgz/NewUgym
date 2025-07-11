@@ -48,11 +48,20 @@ type Member = {
   joinDate: string;
 };
 
-const initialMembers: Member[] = [
-  { id: "mem-1", name: "Olivia Martin", email: "olivia.martin@email.com", avatar: "https://placehold.co/100x100.png", initials: "OM", status: "Ativo", plan: "Pro Anual", joinDate: "2023-07-15" },
-  { id: "mem-2", name: "Jackson Lee", email: "jackson.lee@email.com", avatar: "https://placehold.co/100x100.png", initials: "JL", status: "Ativo", plan: "Pro Mensal", joinDate: "2023-08-20" },
-  { id: "mem-3", name: "Isabella Nguyen", email: "isabella.nguyen@email.com", avatar: "https://placehold.co/100x100.png", initials: "IN", status: "Inativo", plan: "Básico Mensal", joinDate: "2023-03-10" },
-];
+// Use the central user directory as the source of truth for initial members
+const initialMembers: Member[] = allUsers
+  .filter(user => user.role === 'Student' && ['olivia.martin', 'jackson.lee', 'isabella.nguyen'].includes(user.id))
+  .map(user => ({
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    avatar: "https://placehold.co/100x100.png",
+    initials: user.name.split(" ").map(n => n[0]).join("").toUpperCase(),
+    status: user.id === 'isabella.nguyen' ? "Inativo" : "Ativo",
+    plan: user.id === 'olivia.martin' ? "Pro Anual" : user.id === 'jackson.lee' ? "Pro Mensal" : "Básico Mensal",
+    joinDate: new Date().toISOString().split("T")[0],
+  }));
+
 
 const AddMemberDialog = ({ open, onOpenChange, onAddMember }: { open: boolean, onOpenChange: (open: boolean) => void, onAddMember: (member: Member) => void}) => {
     const [searchTerm, setSearchTerm] = useState('');
