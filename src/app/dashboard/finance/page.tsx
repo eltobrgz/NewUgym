@@ -21,7 +21,7 @@ import {
   CardDescription,
   CardFooter,
 } from "@/components/ui/card";
-import { MoreHorizontal, Download, FileText, CheckCircle, AlertTriangle, XCircle, Eye, PlusCircle } from "lucide-react";
+import { MoreHorizontal, Download, FileText, CheckCircle, AlertTriangle, XCircle, Eye, PlusCircle, TrendingUp, TrendingDown, Users } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,6 +39,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { allUsers } from "@/lib/user-directory";
+import { Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart'
+import { subDays, startOfMonth, endOfMonth, format } from 'date-fns';
 
 
 type TransactionStatus = "Pago" | "Pendente" | "Atrasado";
@@ -51,7 +54,7 @@ type Transaction = {
   amount: number;
   status: TransactionStatus;
   type: TransactionType;
-  date: string;
+  date: string; // YYYY-MM-DD
   plan: string; // Plan name
 };
 
@@ -62,7 +65,7 @@ type MembershipPlan = {
   recurrence: "Mensal" | "Anual";
 };
 
-const initialMembers = allUsers.filter(u => u.role === 'Student').slice(0, 8).map(u => ({id: u.id, name: u.name}));
+const initialMembers = allUsers.filter(u => u.role === 'Student');
 
 const initialPlans: MembershipPlan[] = [
     { id: 'plan-1', name: 'Pro Anual', price: 999.90, recurrence: 'Anual' },
@@ -71,16 +74,32 @@ const initialPlans: MembershipPlan[] = [
 ];
 
 
-const initialTransactions: Transaction[] = [
-  { id: "TRN-001", memberId: "olivia.martin", member: "Olivia Martin", amount: 999.90, status: "Pago", type: "Renovação", date: "2024-07-28", plan: "Pro Anual" },
-  { id: "TRN-002", memberId: "jackson.lee", member: "Jackson Lee", amount: 99.90, status: "Pendente", type: "Renovação", date: "2024-08-01", plan: "Pro Mensal" },
-  { id: "TRN-003", memberId: "isabella.nguyen", member: "Isabella Nguyen", amount: 59.90, status: "Atrasado", type: "Primeiro Pagamento", date: "2024-07-10", plan: "Básico Mensal" },
-  { id: "TRN-004", memberId: "alex-johnson", member: "Alex Johnson", amount: 999.90, status: "Pago", type: "Primeiro Pagamento", date: "2024-07-25", plan: "Pro Anual" },
-  { id: "TRN-005", memberId: "sofia-davis", member: "Sofia Davis", amount: 99.90, status: "Pago", type: "Renovação", date: "2024-07-18", plan: "Pro Mensal" },
-  { id: "TRN-006", memberId: "david-chen", member: "David Chen", amount: 99.90, status: "Pendente", type: "Renovação", date: "2024-08-02", plan: "Pro Mensal" },
-  { id: "TRN-007", memberId: "maria-garcia", member: "Maria Garcia", amount: 59.90, status: "Pago", type: "Renovação", date: "2024-07-15", plan: "Básico Mensal" },
-  { id: "TRN-008", memberId: "emily-white", member: "Emily White", amount: 99.90, status: "Atrasado", type: "Renovação", date: "2024-07-05", plan: "Pro Mensal" },
-];
+const generateMockTransactions = (): Transaction[] => {
+    const transactions: Transaction[] = [];
+    const today = new Date();
+    initialMembers.forEach((member, index) => {
+        for (let i = 0; i < 6; i++) {
+            const date = subDays(today, i * 30 + (index % 10)); // Vary dates
+            const plan = initialPlans[index % initialPlans.length];
+            let status: TransactionStatus = "Pago";
+            if (i === 0 && index % 4 === 1) status = "Pendente";
+            if (i === 0 && index % 4 === 2) status = "Atrasado";
+
+            transactions.push({
+                id: `TRN-${index}-${i}`,
+                memberId: member.id,
+                member: member.name,
+                amount: plan.price,
+                status: status,
+                type: i > 2 ? "Renovação" : "Primeiro Pagamento",
+                date: format(date, 'yyyy-MM-dd'),
+                plan: plan.name,
+            });
+        }
+    });
+    return transactions;
+};
+const initialTransactions = generateMockTransactions();
 
 const statusStyles: { [key in TransactionStatus]: { variant: "default" | "secondary" | "destructive" | "outline", className?: string, text: string }} = {
   "Pago": { variant: "secondary", className: "bg-green-500/10 text-green-400 border-green-500/20", text: "Pago" },
@@ -94,7 +113,6 @@ const AddTransactionDialog = ({ open, onOpenChange, prefilledMemberId, onAdd, pl
 
     useEffect(() => {
         if (open && prefilledMemberId) {
-            // Reset state when dialog opens
             setSelectedPlanId('');
             setAmount('');
         }
@@ -281,7 +299,8 @@ export default function FinancePage() {
   const [transactions, setTransactions] = useState<Transaction[]>(initialTransactions);
   const [plans, setPlans] = useState<MembershipPlan[]>(initialPlans);
   const [members, setMembers] = useState(initialMembers);
-  const [filter, setFilter] = useState("all");
+  const [tableFilter, setTableFilter] = useState("all");
+  const [dateFilter, setDateFilter] = useState("all-time");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [prefilledMemberId, setPrefilledMemberId] = useState('');
   const { toast } = useToast();
@@ -298,15 +317,52 @@ export default function FinancePage() {
     }
   }, [searchParams, router]);
 
+  const { filteredTransactions, periodLabel } = useMemo(() => {
+    const now = new Date();
+    let startDate: Date;
+    let label = "Todo o Período";
+
+    switch (dateFilter) {
+      case 'last-30-days':
+        startDate = subDays(now, 30);
+        label = "Últimos 30 dias";
+        break;
+      case 'this-month':
+        startDate = startOfMonth(now);
+        label = "Este Mês";
+        break;
+      case 'all-time':
+      default:
+        startDate = new Date(0); // far in the past
+        break;
+    }
+    
+    return {
+        filteredTransactions: transactions.filter(t => new Date(t.date) >= startDate),
+        periodLabel: label,
+    };
+  }, [transactions, dateFilter]);
+  
   const summary = useMemo(() => {
-    return transactions.reduce((acc, t) => {
+    return filteredTransactions.reduce((acc, t) => {
         if (t.status === 'Pago') acc.paid += t.amount;
         if (t.status === 'Pendente') acc.pending += t.amount;
         if (t.status === 'Atrasado') acc.overdue += t.amount;
         return acc;
     }, { paid: 0, pending: 0, overdue: 0 });
-  }, [transactions]);
+  }, [filteredTransactions]);
   
+  const monthlyRevenueData = useMemo(() => {
+    const revenueByMonth: {[key: string]: number} = {};
+    filteredTransactions.forEach(t => {
+      if (t.status === 'Pago') {
+        const monthKey = format(new Date(t.date), 'yyyy-MM');
+        revenueByMonth[monthKey] = (revenueByMonth[monthKey] || 0) + t.amount;
+      }
+    });
+    return Object.entries(revenueByMonth).map(([month, revenue]) => ({ month, revenue })).sort((a, b) => a.month.localeCompare(b.month));
+  }, [filteredTransactions]);
+
 
   const handleStatusChange = (id: string, newStatus: TransactionStatus) => {
     setTransactions(prev => prev.map(t => t.id === id ? { ...t, status: newStatus } : t));
@@ -337,24 +393,27 @@ export default function FinancePage() {
       toast({ title: "Plano Adicionado", description: `O plano ${newPlan.name} foi criado.` });
   }
 
-  const filteredTransactions = transactions.filter(t => {
-    if (filter === "all") return true;
+  const transactionsForTable = filteredTransactions.filter(t => {
+    if (tableFilter === "all") return true;
     const statusMap = {
         paid: "Pago",
         pending: "Pendente",
         overdue: "Atrasado"
     };
-    return t.status === (statusMap[filter as keyof typeof statusMap] || "");
+    return t.status === (statusMap[tableFilter as keyof typeof statusMap] || "");
   });
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-        <h1 className="text-3xl font-bold tracking-tight">Financeiro</h1>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+            <h1 className="text-3xl font-bold tracking-tight">Financeiro</h1>
+            <p className="text-muted-foreground">Visão geral financeira da academia.</p>
+        </div>
         <div className="flex w-full sm:w-auto gap-2">
             <Button variant="outline" className="w-full" onClick={() => handleExport('CSV')}>
               <Download className="mr-2 h-4 w-4" />
-              Exportar CSV
+              Exportar
             </Button>
             <AddTransactionDialog 
                 open={isAddDialogOpen}
@@ -371,35 +430,63 @@ export default function FinancePage() {
       </div>
       
       <div className="flex flex-col gap-6">
+          <div className="flex items-center gap-2">
+                <Label>Período:</Label>
+                 <Tabs defaultValue="all-time" onValueChange={setDateFilter}>
+                    <TabsList>
+                      <TabsTrigger value="all-time">Todo o Período</TabsTrigger>
+                      <TabsTrigger value="this-month">Este Mês</TabsTrigger>
+                      <TabsTrigger value="last-30-days">Últimos 30 Dias</TabsTrigger>
+                    </TabsList>
+                  </Tabs>
+            </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Card>
-              <CardHeader>
-                <CardTitle>Faturamento Total</CardTitle>
-                <CardDescription>Soma de todas as transações pagas.</CardDescription>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">Faturamento ({periodLabel})</CardTitle>
+                 <TrendingUp className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <p className="text-3xl font-bold">{formatCurrency(summary.paid)}</p>
               </CardContent>
             </Card>
             <Card>
-              <CardHeader>
-                <CardTitle>Pagamentos Pendentes</CardTitle>
-                <CardDescription>Valor total aguardando pagamento.</CardDescription>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">Pagamentos Pendentes</CardTitle>
+                <AlertTriangle className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <p className="text-3xl font-bold">{formatCurrency(summary.pending)}</p>
               </CardContent>
             </Card>
             <Card>
-              <CardHeader>
-                <CardTitle>Inadimplência</CardTitle>
-                <CardDescription>Valor total de mensalidades atrasadas.</CardDescription>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">Inadimplência</CardTitle>
+                <TrendingDown className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <p className="text-3xl font-bold text-destructive">{formatCurrency(summary.overdue)}</p>
               </CardContent>
             </Card>
           </div>
+          
+           <Card>
+                <CardHeader>
+                    <CardTitle>Receita Mensal</CardTitle>
+                    <CardDescription>Visão geral do faturamento pago ao longo dos meses.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <ResponsiveContainer width="100%" height={300}>
+                        <BarChart data={monthlyRevenueData}>
+                            <CartesianGrid vertical={false} strokeDasharray="3 3" />
+                            <XAxis dataKey="month" tickFormatter={(tick) => format(new Date(tick), "MMM/yy")} />
+                            <YAxis tickFormatter={(tick) => formatCurrency(tick)} />
+                            <Tooltip content={<ChartTooltipContent formatter={(value) => formatCurrency(Number(value))} />} />
+                            <Bar dataKey="revenue" name="Receita" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                        </BarChart>
+                    </ResponsiveContainer>
+                </CardContent>
+            </Card>
 
           <Card>
             <CardHeader>
@@ -409,7 +496,7 @@ export default function FinancePage() {
                   <CardDescription>Visualize e gerencie todos os pagamentos.</CardDescription>
                 </div>
                 <div className="w-full sm:w-auto">
-                  <Tabs defaultValue="all" onValueChange={setFilter} className="w-full">
+                  <Tabs defaultValue="all" onValueChange={setTableFilter} className="w-full">
                     <TabsList className="grid w-full grid-cols-4">
                       <TabsTrigger value="all">Todos</TabsTrigger>
                       <TabsTrigger value="paid">Pago</TabsTrigger>
@@ -425,7 +512,7 @@ export default function FinancePage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Membro</TableHead>
-                    <TableHead className="hidden sm:table-cell">Plano</TableHead>
+                    <TableHead className="hidden sm:table-cell">Data</TableHead>
                     <TableHead>Tipo</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Valor</TableHead>
@@ -435,10 +522,10 @@ export default function FinancePage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredTransactions.map((transaction) => (
+                  {transactionsForTable.slice(0, 10).map((transaction) => (
                     <TableRow key={transaction.id}>
                       <TableCell className="font-medium">{transaction.member}</TableCell>
-                      <TableCell className="hidden sm:table-cell">{transaction.plan}</TableCell>
+                      <TableCell className="hidden sm:table-cell">{format(new Date(transaction.date), 'dd/MM/yyyy')}</TableCell>
                        <TableCell>
                           <Badge variant={transaction.type === 'Primeiro Pagamento' ? 'default' : 'secondary'} className={cn(transaction.type === 'Primeiro Pagamento' && 'bg-blue-500/10 text-blue-400 border-blue-500/20')}>
                             {transaction.type}
@@ -478,7 +565,7 @@ export default function FinancePage() {
                                 <AlertDialogContent>
                                     <AlertDialogHeader>
                                         <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
-                                        <AlertDialogDescription>Isso cancelará permanentemente a transação para {transaction.member}.</AlertDialogDescription>
+                                        <AlertDialogDescription>Isso cancelará permanentemente a transação para {transaction.member}.</JSONDescription>
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
                                         <AlertDialogCancel>Cancelar</AlertDialogCancel>
