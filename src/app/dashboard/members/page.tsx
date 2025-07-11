@@ -74,7 +74,7 @@ const AddMemberDialog = ({ open, onOpenChange, onAddMember }: { open: boolean, o
             email: user.email,
             avatar: "https://placehold.co/100x100.png",
             initials: user.name.split(" ").map(n => n[0]).join("").toUpperCase(),
-            status: "Inativo",
+            status: "Inativo", // Default status for a newly added member
             plan: "Nenhum",
             joinDate: new Date().toISOString().split("T")[0],
         };
@@ -214,7 +214,7 @@ export default function MembersPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Membro Adicionado com Sucesso!</AlertDialogTitle>
             <AlertDialogDescription>
-              Deseja registrar o primeiro pagamento para {newlyAddedMember?.name} agora?
+              Deseja registrar o primeiro pagamento para {newlyAddedMember?.name} agora? Isso ativará a assinatura dele.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
