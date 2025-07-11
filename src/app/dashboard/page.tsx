@@ -111,6 +111,11 @@ const studentEngagementData = [
   { student: 'Sofia D.', lastActive: 15, progress: 25 },
 ];
 
+const trainerChartConfig = {
+    progress: { label: "Progresso (%)", color: "hsl(var(--primary))" },
+    lastActive: { label: "Últ. Atividade (Dias)", color: "hsl(var(--secondary))" },
+}
+
 const studentsNeedingAttention = [
     { name: 'David Chen', reason: 'Baixo progresso de treino (40%)', avatar: 'https://placehold.co/100x100.png', initials: 'DC', id: 'david-chen' },
     { name: 'Sofia Davis', reason: 'Inativa há 15 dias', avatar: 'https://placehold.co/100x100.png', initials: 'SD', id: 'sofia-davis'},
@@ -139,16 +144,16 @@ const TrainerDashboard = () => (
                     <CardDescription>Progresso de treino vs. dias desde a última atividade.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <ResponsiveContainer width="100%" height={250}>
+                    <ChartContainer config={trainerChartConfig} className="h-[250px] w-full">
                         <BarChart data={studentEngagementData}>
                             <CartesianGrid vertical={false} />
                             <XAxis dataKey="student" />
                             <Tooltip content={<ChartTooltipContent indicator="dot" />} />
                             <Legend />
-                            <Bar dataKey="progress" name="Progresso (%)" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                            <Bar dataKey="lastActive" name="Últ. Atividade (Dias)" fill="hsl(var(--secondary))" radius={[4, 4, 0, 0]} />
+                            <Bar dataKey="progress" name="Progresso (%)" fill="var(--color-progress)" radius={[4, 4, 0, 0]} />
+                            <Bar dataKey="lastActive" name="Últ. Atividade (Dias)" fill="var(--color-lastActive)" radius={[4, 4, 0, 0]} />
                         </BarChart>
-                    </ResponsiveContainer>
+                    </ChartContainer>
                 </CardContent>
             </Card>
             <Card className="col-span-4 lg:col-span-3">

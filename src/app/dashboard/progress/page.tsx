@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
+import { ChartConfig, ChartContainer } from '@/components/ui/chart';
 
 const progressData = [
   { date: '2024-05-01', weight: 85, bodyFat: 22, arm: 38, leg: 58, waist: 90 },
@@ -48,23 +49,35 @@ const chartComponents = {
   area: AreaChart,
 };
 
+const chartConfig: ChartConfig = {
+    weight: { label: 'Peso (kg)', color: 'hsl(var(--primary))'},
+    bodyFat: { label: 'Gordura Corporal (%)', color: 'hsl(var(--primary))'},
+    arm: { label: 'Braço (cm)', color: 'hsl(var(--primary))'},
+    leg: { label: 'Perna (cm)', color: 'hsl(var(--primary))'},
+    waist: { label: 'Cintura (cm)', color: 'hsl(var(--primary))'},
+}
+
 const ChartComponent = ({ type, data, metric } : { type: keyof typeof chartComponents, data: any[], metric: string}) => {
   const Chart = chartComponents[type];
-  const color = "hsl(var(--primary))";
+  const ChartPrimitive = type === 'line' ? Line : type === 'bar' ? Bar : Area;
 
   return (
-    <ResponsiveContainer width="100%" height={300}>
+    <ChartContainer config={chartConfig} className="w-full h-[300px]">
       <Chart data={data}>
         <CartesianGrid strokeDasharray="3 3" vertical={false} />
         <XAxis dataKey="date" tick={{ fontSize: 12 }} />
         <YAxis tick={{ fontSize: 12 }} />
         <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))' }} />
         <Legend />
-        {type === 'line' && <Line type="monotone" dataKey={metric} stroke={color} strokeWidth={2} name={metric.charAt(0).toUpperCase() + metric.slice(1)} />}
-        {type === 'bar' && <Bar dataKey={metric} fill={color} name={metric.charAt(0).toUpperCase() + metric.slice(1)} />}
-        {type === 'area' && <Area type="monotone" dataKey={metric} stroke={color} fill={color} fillOpacity={0.3} name={metric.charAt(0).toUpperCase() + metric.slice(1)} />}
+        <ChartPrimitive 
+            dataKey={metric}
+            type="monotone"
+            fill={`var(--color-${metric})`}
+            stroke={`var(--color-${metric})`}
+            name={chartConfig[metric as keyof typeof chartConfig]?.label as string || metric}
+        />
       </Chart>
-    </ResponsiveContainer>
+    </ChartContainer>
   );
 };
 

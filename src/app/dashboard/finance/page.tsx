@@ -40,7 +40,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { allUsers } from "@/lib/user-directory";
 import { Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart'
+import { ChartConfig, ChartContainer, ChartTooltipContent } from '@/components/ui/chart'
 import { subDays, startOfMonth, endOfMonth, format, subMonths } from 'date-fns';
 
 
@@ -108,6 +108,15 @@ const statusStyles: { [key in TransactionStatus]: { variant: "default" | "second
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(amount);
 }
+
+const monthlyChartConfig = {
+    revenue: { label: "Receita", color: "hsl(var(--primary))" },
+} satisfies ChartConfig
+
+const churnChartConfig = {
+    new: { label: "Novos Membros", color: "hsl(var(--primary))" },
+    churn: { label: "Cancelamentos", color: "hsl(var(--destructive))" },
+} satisfies ChartConfig
 
 const AddTransactionDialog = ({ open, onOpenChange, prefilledMemberId, onAdd, plans, members }: { open: boolean, onOpenChange: (open: boolean) => void, prefilledMemberId: string, onAdd: (t: Transaction) => void, plans: MembershipPlan[], members: {id: string, name: string}[] }) => {
     const [selectedPlanId, setSelectedPlanId] = useState<string>('');
@@ -517,7 +526,7 @@ export default function FinancePage() {
                 <UserCheck className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <p className="text-3xl font-bold">+{memberChurnData.length > 0 ? memberChurnData[memberChurnData.length - 1].new : 0}</p>
+                <p className="text-3xl font-bold">+{memberChurnData.length > 0 ? memberChurnData[memberChurnData.length - 1]?.new || 0 : 0}</p>
                 <p className="text-xs text-muted-foreground">No último mês.</p>
               </CardContent>
             </Card>
@@ -530,16 +539,16 @@ export default function FinancePage() {
                       <CardDescription>Visão geral do faturamento pago nos últimos 6 meses.</CardDescription>
                   </CardHeader>
                   <CardContent>
-                      <ResponsiveContainer width="100%" height={300}>
+                      <ChartContainer config={monthlyChartConfig} className="w-full h-[300px]">
                           <BarChart data={monthlyRevenueData}>
                               <CartesianGrid vertical={false} strokeDasharray="3 3" />
                               <XAxis dataKey="monthLabel" />
                               <YAxis tickFormatter={(tick) => formatCurrency(tick).replace('R$', '')} />
                               <Tooltip content={<ChartTooltipContent formatter={(value) => formatCurrency(Number(value))} />} />
                               <Legend />
-                              <Bar dataKey="revenue" name="Receita" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                              <Bar dataKey="revenue" fill="var(--color-revenue)" radius={[4, 4, 0, 0]} />
                           </BarChart>
-                      </ResponsiveContainer>
+                      </ChartContainer>
                   </CardContent>
               </Card>
               <Card>
@@ -548,17 +557,17 @@ export default function FinancePage() {
                       <CardDescription>Balanço de crescimento de membros nos últimos 6 meses.</CardDescription>
                   </CardHeader>
                   <CardContent>
-                      <ResponsiveContainer width="100%" height={300}>
+                      <ChartContainer config={churnChartConfig} className="w-full h-[300px]">
                           <LineChart data={memberChurnData}>
                               <CartesianGrid vertical={false} strokeDasharray="3 3" />
                               <XAxis dataKey="monthLabel" />
                               <YAxis />
                               <Tooltip content={<ChartTooltipContent />} />
                               <Legend />
-                              <Line type="monotone" dataKey="new" name="Novos Membros" stroke="hsl(var(--primary))" strokeWidth={2} />
-                              <Line type="monotone" dataKey="churn" name="Cancelamentos" stroke="hsl(var(--destructive))" strokeWidth={2} />
+                              <Line type="monotone" dataKey="new" stroke="var(--color-new)" strokeWidth={2} />
+                              <Line type="monotone" dataKey="churn" stroke="var(--color-churn)" strokeWidth={2} />
                           </LineChart>
-                      </ResponsiveContainer>
+                      </ChartContainer>
                   </CardContent>
               </Card>
            </div>

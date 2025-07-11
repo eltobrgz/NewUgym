@@ -19,6 +19,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { cn } from '@/lib/utils';
 import { allUsers } from '@/lib/user-directory';
 import { analyzePerformance, AnalyzePerformanceInput } from '@/ai/flows/analyze-performance-flow';
+import { ChartConfig, ChartContainer } from '@/components/ui/chart';
 
 
 // Mock data for a specific student, you would fetch this based on params.studentId in a real app
@@ -88,23 +89,35 @@ const chartComponents = {
   area: AreaChart,
 };
 
+const chartConfig: ChartConfig = {
+    weight: { label: 'Peso (kg)', color: 'hsl(var(--primary))'},
+    bodyFat: { label: 'Gordura Corporal (%)', color: 'hsl(var(--primary))'},
+    arm: { label: 'Braço (cm)', color: 'hsl(var(--primary))'},
+    leg: { label: 'Perna (cm)', color: 'hsl(var(--primary))'},
+    waist: { label: 'Cintura (cm)', color: 'hsl(var(--primary))'},
+}
+
 const ChartComponent = ({ type, data, metric } : { type: keyof typeof chartComponents, data: any[], metric: string}) => {
   const Chart = chartComponents[type];
-  const color = "hsl(var(--primary))";
+  const ChartPrimitive = type === 'line' ? Line : type === 'bar' ? Bar : Area;
 
   return (
-    <ResponsiveContainer width="100%" height={300}>
+    <ChartContainer config={chartConfig} className="w-full h-[300px]">
       <Chart data={data}>
         <CartesianGrid strokeDasharray="3 3" vertical={false} />
         <XAxis dataKey="date" tick={{ fontSize: 12 }} />
         <YAxis tick={{ fontSize: 12 }} />
         <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))' }} />
         <Legend />
-        {type === 'line' && <Line type="monotone" dataKey={metric} stroke={color} strokeWidth={2} name={metric.charAt(0).toUpperCase() + metric.slice(1)} />}
-        {type === 'bar' && <Bar dataKey={metric} fill={color} name={metric.charAt(0).toUpperCase() + metric.slice(1)} />}
-        {type === 'area' && <Area type="monotone" dataKey={metric} stroke={color} fill={color} fillOpacity={0.3} name={metric.charAt(0).toUpperCase() + metric.slice(1)} />}
+        <ChartPrimitive 
+            dataKey={metric}
+            type="monotone"
+            fill={`var(--color-${metric})`}
+            stroke={`var(--color-${metric})`}
+            name={chartConfig[metric as keyof typeof chartConfig]?.label as string || metric}
+        />
       </Chart>
-    </ResponsiveContainer>
+    </ChartContainer>
   );
 };
 
@@ -432,4 +445,3 @@ export default function StudentProgressPage({ params: paramsPromise }: { params:
     </div>
   );
 }
-
