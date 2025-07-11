@@ -296,11 +296,12 @@ const AddPlanDialog = ({ onAdd }: { onAdd: (plan: MembershipPlan) => void }) => 
 export default function FinancePage() {
   const [transactions, setTransactions] = useState<Transaction[]>(initialTransactions);
   const [plans, setPlans] = useState<MembershipPlan[]>(initialPlans);
-  const [members, setMembers] = useState(initialMembers);
+  const [members] = useState(initialMembers);
   const [tableFilter, setTableFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState("all-time");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [prefilledMemberId, setPrefilledMemberId] = useState('');
+  const [memberChurnData, setMemberChurnData] = useState<any[]>([]);
   const { toast } = useToast();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -377,26 +378,28 @@ export default function FinancePage() {
     })).sort((a, b) => a.month.localeCompare(b.month));
   }, [filteredTransactions]);
 
-  const memberChurnData = useMemo(() => {
-      const churnByMonth: { [key: string]: { new: number, churn: number } } = {};
-      const months = Array.from({length: 6}, (_, i) => format(subMonths(new Date(), i), 'yyyy-MM')).reverse();
+  useEffect(() => {
+    const churnByMonth: { [key: string]: { new: number, churn: number } } = {};
+    const months = Array.from({length: 6}, (_, i) => format(subMonths(new Date(), i), 'yyyy-MM')).reverse();
 
-      months.forEach(month => {
-          churnByMonth[month] = { new: 0, churn: 0 };
-      });
-      
-      // Mock data for new and churned members
-      Object.keys(churnByMonth).forEach(month => {
-        churnByMonth[month].new = Math.floor(Math.random() * 10) + 5; // 5-14 new members
-        churnByMonth[month].churn = Math.floor(Math.random() * 4) + 1; // 1-4 churned members
-      });
-      
-      return Object.entries(churnByMonth).map(([month, data]) => ({
-          month,
-          monthLabel: format(new Date(month + '-02'), "MMM/yy"),
-          ...data
-      }));
-  }, [filteredTransactions]);
+    months.forEach(month => {
+        churnByMonth[month] = { new: 0, churn: 0 };
+    });
+    
+    // Mock data for new and churned members
+    Object.keys(churnByMonth).forEach(month => {
+      churnByMonth[month].new = Math.floor(Math.random() * 10) + 5; // 5-14 new members
+      churnByMonth[month].churn = Math.floor(Math.random() * 4) + 1; // 1-4 churned members
+    });
+    
+    const data = Object.entries(churnByMonth).map(([month, data]) => ({
+        month,
+        monthLabel: format(new Date(month + '-02'), "MMM/yy"),
+        ...data
+    }));
+
+    setMemberChurnData(data);
+  }, []);
 
   const handleStatusChange = (id: string, newStatus: TransactionStatus) => {
     setTransactions(prev => prev.map(t => t.id === id ? { ...t, status: newStatus } : t));
@@ -512,7 +515,7 @@ export default function FinancePage() {
                 <UserCheck className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <p className="text-3xl font-bold">+{memberChurnData[memberChurnData.length - 1]?.new || 0}</p>
+                <p className="text-3xl font-bold">+{memberChurnData.length > 0 ? memberChurnData[memberChurnData.length - 1].new : 0}</p>
                 <p className="text-xs text-muted-foreground">No último mês.</p>
               </CardContent>
             </Card>
@@ -685,5 +688,3 @@ export default function FinancePage() {
     </div>
   );
 }
-
-    
