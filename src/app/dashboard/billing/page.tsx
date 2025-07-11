@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useUserRole } from '@/contexts/user-role-context';
 import { useToast } from '@/hooks/use-toast';
-import { getStudentTransactions, getStudentSubscription, StudentSubscription, Transaction, cancelSubscription } from '@/lib/finance-manager';
+import { getStudentTransactions, getStudentSubscription, StudentSubscription, Transaction, cancelSubscription, generateMockTransactions } from '@/lib/finance-manager';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { AlertCircle, CheckCircle, Clock } from 'lucide-react';
@@ -34,6 +34,7 @@ export default function BillingPage() {
 
     useEffect(() => {
         // Fetch data on the client to avoid hydration issues with dates/random data
+        generateMockTransactions(); // Ensure mock data is available
         setTransactions(getStudentTransactions(user.id));
         setSubscription(getStudentSubscription(user.id));
     }, [user.id]);
