@@ -232,9 +232,7 @@ const WorkoutBuilder = ({ onSave, onBack, plan: initialPlan }: { onSave: (plan: 
     const removeDay = (dayId: string) => {
       const newSchedule = plan.schedule.filter(d => d.id !== dayId);
       setPlan({...plan, schedule: newSchedule});
-      if(activeDayId === dayId) {
-        setActiveDayId(newSchedule.length > 0 ? newSchedule[0].id : null);
-      }
+      // Do not change active day, user can select another or be left with no selection
     }
 
     const handleAddExercises = (newExercises: Exercise[]) => {
@@ -1017,5 +1015,3 @@ export default function WorkoutsPage() {
     </div>
   );
 }
-
-    

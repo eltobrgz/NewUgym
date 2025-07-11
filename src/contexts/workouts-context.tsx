@@ -152,7 +152,7 @@ interface WorkoutsContextType {
     plans: WorkoutPlan[];
     activeStudentPlans: ActiveStudentPlans;
     addPlan: (planData: Omit<WorkoutPlan, 'id'>) => void;
-    updatePlan: (planId: string, updates: WorkoutPlan) => void;
+    updatePlan: (planId: string, updates: Partial<WorkoutPlan>) => void;
     deletePlan: (planId: string) => void;
     assignPlanToStudents: (planId: string, studentIds: string[]) => void;
     getAssignments: () => { studentId: string; studentName: string; plan: WorkoutPlan | null; }[];
@@ -180,8 +180,8 @@ export const WorkoutsProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
-    const updatePlan = (planId: string, updates: WorkoutPlan) => {
-        setPlans(prev => prev.map(p => p.id === planId ? updates : p));
+    const updatePlan = (planId: string, updates: Partial<WorkoutPlan>) => {
+        setPlans(prev => prev.map(p => p.id === planId ? { ...p, ...updates } : p));
     };
 
     const deletePlan = (planId: string) => {
