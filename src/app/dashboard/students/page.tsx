@@ -70,6 +70,9 @@ const initialStudents: Student[] = [
   { id: "alex-johnson", name: "Alex Johnson", email: "alex.j@email.com", avatar: "https://placehold.co/100x100.png", initials: "AJ", lastActive: "2 dias atrás", progress: 75 },
   { id: "maria-garcia", name: "Maria Garcia", email: "maria.g@email.com", avatar: "https://placehold.co/100x100.png", initials: "MG", lastActive: "Hoje", progress: 90 },
   { id: "david-chen", name: "David Chen", email: "david.c@email.com", avatar: "https://placehold.co/100x100.png", initials: "DC", lastActive: "1 semana atrás", progress: 40 },
+  { id: "sofia-davis", name: "Sofia Davis", email: "sofia.d@email.com", avatar: "https://placehold.co/100x100.png", initials: "SD", lastActive: "15 dias atrás", progress: 25 },
+  { id: "emily-white", name: "Emily White", email: "emily.w@email.com", avatar: "https://placehold.co/100x100.png", initials: "EW", lastActive: "Ontem", progress: 60 },
+  { id: "stu-001", name: "Alice Johnson", email: "alice.j@email.com", avatar: "https://placehold.co/100x100.png", initials: "AJ", lastActive: "3 dias atrás", progress: 80 },
 ];
 
 
@@ -231,8 +234,8 @@ export default function StudentsPage() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                        <DropdownMenuItem asChild><Link href={`/dashboard/workouts`}>Atribuir Treino</Link></DropdownMenuItem>
                         <DropdownMenuItem asChild><Link href={`/dashboard/students/${student.id}/progress`}>Ver Progresso</Link></DropdownMenuItem>
-                        <DropdownMenuItem>Atribuir Treino</DropdownMenuItem>
                          <DropdownMenuSeparator />
                         <AlertDialog>
                             <AlertDialogTrigger asChild>
@@ -284,3 +287,5 @@ export default function StudentsPage() {
     </div>
   );
 }
+
+    

@@ -2,7 +2,7 @@
 "use client"
 
 import { createContext, useState, ReactNode } from 'react';
-import { format } from 'date-fns';
+import { format, addDays, startOfMonth } from 'date-fns';
 
 export type EventType = 'class' | 'event' | 'seminar';
 
@@ -21,11 +21,20 @@ type EventsState = Record<string, Event[]>;
 // Maps eventId to a Set of userIds (or names for mock)
 type RegistrationsState = Record<string, Set<string>>;
 
+// Helper to get dates for the current month for more dynamic mock data
+const today = new Date();
+const startOfCurrentMonth = startOfMonth(today);
+
 const initialEventsData: EventsState = {
-  "2024-08-01": [{ id: "evt1", date: "2024-08-01", title: "Aula de Yoga", time: "18:00", description: "Sessão de yoga relaxante para todos os níveis.", type: "class" }],
-  "2024-08-05": [{ id: "evt2", date: "2024-08-05", title: "Treino em Equipe", time: "10:00", description: "Treino em grupo de alta intensidade.", type: "event" }],
-  "2024-08-15": [{ id: "evt3", date: "2024-08-15", title: "Seminário de Nutrição", time: "14:00", description: "Aprenda sobre nutrição esportiva.", type: "seminar" }],
-  "2024-08-22": [{ id: "evt4", date: "2024-08-22", title: "Aula de Yoga", time: "18:00", description: "Fluxo Vinyasa avançado.", type: "class" }],
+  [format(addDays(startOfCurrentMonth, 1), 'yyyy-MM-dd')]: [{ id: "evt1", date: format(addDays(startOfCurrentMonth, 1), 'yyyy-MM-dd'), title: "Aula de Yoga", time: "18:00", description: "Sessão de yoga relaxante para todos os níveis.", type: "class" }],
+  [format(addDays(startOfCurrentMonth, 4), 'yyyy-MM-dd')]: [{ id: "evt2", date: format(addDays(startOfCurrentMonth, 4), 'yyyy-MM-dd'), title: "Treino em Equipe", time: "10:00", description: "Treino em grupo de alta intensidade.", type: "event" }],
+  [format(addDays(startOfCurrentMonth, 8), 'yyyy-MM-dd')]: [{ id: "evt5", date: format(addDays(startOfCurrentMonth, 8), 'yyyy-MM-dd'), title: "Aula de Spinning", time: "19:00", description: "Queime calorias ao som de músicas vibrantes.", type: "class" }],
+  [format(addDays(startOfCurrentMonth, 14), 'yyyy-MM-dd')]: [{ id: "evt3", date: format(addDays(startOfCurrentMonth, 14), 'yyyy-MM-dd'), title: "Seminário de Nutrição", time: "14:00", description: "Aprenda sobre nutrição esportiva com a Dra. Sofia.", type: "seminar" }],
+  [format(addDays(startOfCurrentMonth, 21), 'yyyy-MM-dd')]: [
+      { id: "evt4", date: format(addDays(startOfCurrentMonth, 21), 'yyyy-MM-dd'), title: "Aula de Yoga Avançada", time: "18:00", description: "Fluxo Vinyasa avançado.", type: "class" },
+      { id: "evt6", date: format(addDays(startOfCurrentMonth, 21), 'yyyy-MM-dd'), title: "Desafio de Força", time: "11:00", description: "Teste seus limites no supino e agachamento.", type: "event" }
+    ],
+  [format(addDays(startOfCurrentMonth, 28), 'yyyy-MM-dd')]: [{ id: "evt7", date: format(addDays(startOfCurrentMonth, 28), 'yyyy-MM-dd'), title: "Aula de Alongamento", time: "09:00", description: "Melhore sua flexibilidade e previna lesões.", type: "class" }],
 };
 
 interface EventsContextType {
@@ -46,7 +55,10 @@ export const EventsContext = createContext<EventsContextType>({
 
 export const EventsProvider = ({ children }: { children: ReactNode }) => {
   const [events, setEvents] = useState<EventsState>(initialEventsData);
-  const [registrations, setRegistrations] = useState<RegistrationsState>({});
+  const [registrations, setRegistrations] = useState<RegistrationsState>({
+    'evt1': new Set(['stu-001']),
+    'evt3': new Set(['stu-001', 'alex-johnson'])
+  });
 
   const addEvent = (newEventData: Omit<Event, 'id'>) => {
     setEvents(prev => {
@@ -83,3 +95,5 @@ export const EventsProvider = ({ children }: { children: ReactNode }) => {
     </EventsContext.Provider>
   );
 };
+
+    

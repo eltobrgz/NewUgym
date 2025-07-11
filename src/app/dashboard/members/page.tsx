@@ -49,18 +49,19 @@ type Member = {
 };
 
 // Use the central user directory as the source of truth for initial members
-const initialMembers: Member[] = allUsers
-  .filter(user => user.role === 'Student' && ['olivia.martin', 'jackson.lee', 'isabella.nguyen'].includes(user.id))
-  .map(user => ({
-    id: user.id,
-    name: user.name,
-    email: user.email,
-    avatar: "https://placehold.co/100x100.png",
-    initials: user.name.split(" ").map(n => n[0]).join("").toUpperCase(),
-    status: user.id === 'isabella.nguyen' ? "Inativo" : "Ativo",
-    plan: user.id === 'olivia.martin' ? "Pro Anual" : user.id === 'jackson.lee' ? "Pro Mensal" : "Básico Mensal",
-    joinDate: new Date().toISOString().split("T")[0],
-  }));
+const getInitialMembers = (): Member[] => {
+    const studentUsers = allUsers.filter(u => u.role === 'Student').slice(0, 8); // Get first 8 students
+    return studentUsers.map((user, index) => ({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        avatar: `https://placehold.co/100x100.png`,
+        initials: user.name.split(" ").map(n => n[0]).join("").toUpperCase(),
+        status: index % 5 === 0 ? "Inativo" : "Ativo", // Make some inactive
+        plan: index % 3 === 0 ? "Pro Anual" : index % 2 === 0 ? "Pro Mensal" : "Básico Mensal",
+        joinDate: new Date(new Date().setMonth(new Date().getMonth() - (index % 6))).toISOString().split('T')[0], // Vary join dates
+    }));
+};
 
 
 const AddMemberDialog = ({ open, onOpenChange, onAddMember }: { open: boolean, onOpenChange: (open: boolean) => void, onAddMember: (member: Member) => void}) => {
@@ -142,7 +143,7 @@ const AddMemberDialog = ({ open, onOpenChange, onAddMember }: { open: boolean, o
 }
 
 export default function MembersPage() {
-  const [members, setMembers] = useState<Member[]>(initialMembers);
+  const [members, setMembers] = useState<Member[]>(getInitialMembers());
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingMember, setEditingMember] = useState<Member | null>(null);
   const [newlyAddedMember, setNewlyAddedMember] = useState<Member | null>(null);
@@ -298,3 +299,5 @@ export default function MembersPage() {
     </>
   );
 }
+
+    

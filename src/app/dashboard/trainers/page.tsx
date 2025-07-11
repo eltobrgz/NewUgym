@@ -67,6 +67,8 @@ type Trainer = {
 const initialTrainers: Trainer[] = [
   { id: "trn-1", name: "John Carter", email: "john.carter@email.com", avatar: "https://placehold.co/100x100.png", initials: "JC", status: "Ativo", clients: 15 },
   { id: "trn-2", name: "Sophie Brown", email: "sophie.brown@email.com", avatar: "https://placehold.co/100x100.png", initials: "SB", status: "Ativo", clients: 12 },
+  { id: "trn-001", name: "Edward Carter", email: "edward.c@email.com", avatar: "https://placehold.co/100x100.png", initials: "EC", status: "De Licença", clients: 8 },
+  { id: "trn-002", name: "Fiona Davis", email: "fiona.d@email.com", avatar: "https://placehold.co/100x100.png", initials: "FD", status: "Ativo", clients: 22 },
 ];
 
 
@@ -290,3 +292,5 @@ export default function TrainersPage() {
         </div>
     );
 }
+
+    

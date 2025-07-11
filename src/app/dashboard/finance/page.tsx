@@ -38,6 +38,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { allUsers } from "@/lib/user-directory";
 
 
 type TransactionStatus = "Pago" | "Pendente" | "Atrasado";
@@ -61,29 +62,24 @@ type MembershipPlan = {
   recurrence: "Mensal" | "Anual";
 };
 
-const initialMembers = [
-  { id: "mem-1", name: "Olivia Martin" },
-  { id: "mem-2", name: "Jackson Lee" },
-  { id: "mem-3", name: "Isabella Nguyen" },
-  { id: "mem-4", name: "William Kim" },
-  { id: "mem-5", name: "Sofia Davis" },
-  { id: "mem-6", name: "David Chen" },
-];
+const initialMembers = allUsers.filter(u => u.role === 'Student').slice(0, 8).map(u => ({id: u.id, name: u.name}));
 
 const initialPlans: MembershipPlan[] = [
-    { id: 'plan-1', name: 'Pro Anual', price: 99.99, recurrence: 'Anual' },
-    { id: 'plan-2', name: 'Pro Mensal', price: 29.99, recurrence: 'Mensal' },
-    { id: 'plan-3', name: 'Básico Mensal', price: 15.00, recurrence: 'Mensal' },
+    { id: 'plan-1', name: 'Pro Anual', price: 999.90, recurrence: 'Anual' },
+    { id: 'plan-2', name: 'Pro Mensal', price: 99.90, recurrence: 'Mensal' },
+    { id: 'plan-3', name: 'Básico Mensal', price: 59.90, recurrence: 'Mensal' },
 ];
 
 
 const initialTransactions: Transaction[] = [
-  { id: "TRN-001", memberId: "mem-1", member: "Olivia Martin", amount: 99.99, status: "Pago", type: "Renovação", date: "2024-07-28", plan: "Pro Anual" },
-  { id: "TRN-002", memberId: "mem-2", member: "Jackson Lee", amount: 29.99, status: "Pendente", type: "Renovação", date: "2024-08-01", plan: "Pro Mensal" },
-  { id: "TRN-003", memberId: "mem-3", member: "Isabella Nguyen", amount: 15.00, status: "Atrasado", type: "Primeiro Pagamento", date: "2024-07-10", plan: "Básico Mensal" },
-  { id: "TRN-004", memberId: "mem-4", member: "William Kim", amount: 99.99, status: "Pago", type: "Primeiro Pagamento", date: "2024-07-25", plan: "Pro Anual" },
-  { id: "TRN-005", memberId: "mem-5", member: "Sofia Davis", amount: 29.99, status: "Pago", type: "Renovação", date: "2024-07-18", plan: "Pro Mensal" },
-  { id: "TRN-006", memberId: "mem-6", member: "David Chen", amount: 29.99, status: "Pendente", type: "Renovação", date: "2024-08-02", plan: "Pro Mensal" },
+  { id: "TRN-001", memberId: "olivia.martin", member: "Olivia Martin", amount: 999.90, status: "Pago", type: "Renovação", date: "2024-07-28", plan: "Pro Anual" },
+  { id: "TRN-002", memberId: "jackson.lee", member: "Jackson Lee", amount: 99.90, status: "Pendente", type: "Renovação", date: "2024-08-01", plan: "Pro Mensal" },
+  { id: "TRN-003", memberId: "isabella.nguyen", member: "Isabella Nguyen", amount: 59.90, status: "Atrasado", type: "Primeiro Pagamento", date: "2024-07-10", plan: "Básico Mensal" },
+  { id: "TRN-004", memberId: "alex-johnson", member: "Alex Johnson", amount: 999.90, status: "Pago", type: "Primeiro Pagamento", date: "2024-07-25", plan: "Pro Anual" },
+  { id: "TRN-005", memberId: "sofia-davis", member: "Sofia Davis", amount: 99.90, status: "Pago", type: "Renovação", date: "2024-07-18", plan: "Pro Mensal" },
+  { id: "TRN-006", memberId: "david-chen", member: "David Chen", amount: 99.90, status: "Pendente", type: "Renovação", date: "2024-08-02", plan: "Pro Mensal" },
+  { id: "TRN-007", memberId: "maria-garcia", member: "Maria Garcia", amount: 59.90, status: "Pago", type: "Renovação", date: "2024-07-15", plan: "Básico Mensal" },
+  { id: "TRN-008", memberId: "emily-white", member: "Emily White", amount: 99.90, status: "Atrasado", type: "Renovação", date: "2024-07-05", plan: "Pro Mensal" },
 ];
 
 const statusStyles: { [key in TransactionStatus]: { variant: "default" | "secondary" | "destructive" | "outline", className?: string, text: string }} = {
@@ -531,7 +527,5 @@ export default function FinancePage() {
     </div>
   );
 }
-
-    
 
     

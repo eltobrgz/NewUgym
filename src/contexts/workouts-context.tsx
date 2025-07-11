@@ -33,40 +33,113 @@ export type WorkoutPlan = {
     templateId?: string; // The ID of the template this plan was copied from
 };
 
+const strengthTemplateSchedule: DailyWorkout[] = [
+    { id: 'day1-str', day: 'Segunda-feira', focus: 'Peito, Ombros e Tríceps', exercises: [
+        { id: 'ex11-str', name: 'Supino Reto com Barra', sets: '4', reps: '6-8', isCompleted: false },
+        { id: 'ex12-str', name: 'Desenvolvimento Militar com Barra', sets: '3', reps: '8-10', isCompleted: false },
+        { id: 'ex13-str', name: 'Supino Fechado', sets: '3', reps: '8-10', isCompleted: false },
+        { id: 'ex14-str', name: 'Elevação Lateral com Halteres', sets: '3', reps: '12-15', isCompleted: false },
+    ]},
+    { id: 'day2-str', day: 'Quarta-feira', focus: 'Costas e Bíceps', exercises: [
+        { id: 'ex21-str', name: 'Levantamento Terra', sets: '4', reps: '5-6', isCompleted: false },
+        { id: 'ex22-str', name: 'Remada Curvada com Barra', sets: '4', reps: '8-10', isCompleted: false },
+        { id: 'ex23-str', name: 'Rosca Direta com Barra', sets: '3', reps: '8-10', isCompleted: false },
+    ]},
+    { id: 'day3-str', day: 'Sexta-feira', focus: 'Pernas', exercises: [
+        { id: 'ex31-str', name: 'Agachamento Livre', sets: '5', reps: '5', isCompleted: false },
+        { id: 'ex32-str', name: 'Leg Press 45', sets: '4', reps: '10-12', isCompleted: false },
+        { id: 'ex33-str', name: 'Stiff', sets: '3', reps: '10-12', isCompleted: false },
+        { id: 'ex34-str', name: 'Panturrilha em Pé', sets: '5', reps: '15-20', isCompleted: false },
+    ]},
+     { id: 'day4-str', day: 'Terça-feira', focus: 'Descanso', exercises: [] },
+     { id: 'day5-str', day: 'Quinta-feira', focus: 'Descanso', exercises: [] },
+     { id: 'day6-str', day: 'Sábado', focus: 'Descanso', exercises: [] },
+     { id: 'day7-str', day: 'Domingo', focus: 'Descanso', exercises: [] },
+].sort((a,b) => ['Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado', 'Domingo'].indexOf(a.day) - ['Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado', 'Domingo'].indexOf(b.day));
+
+
+const hypertrophyTemplateSchedule: DailyWorkout[] = [
+    { id: 'day1-hyp', day: 'Segunda', focus: 'Peito e Tríceps', exercises: [
+        { id: 'ex11-hyp', name: 'Supino Inclinado com Halteres', sets: '4', reps: '8-12' },
+        { id: 'ex12-hyp', name: 'Crucifixo na Máquina', sets: '3', reps: '12-15' },
+        { id: 'ex13-hyp', name: 'Tríceps Testa com Barra W', sets: '4', reps: '10-12' },
+    ]},
+    { id: 'day2-hyp', day: 'Terça', focus: 'Costas e Bíceps', exercises: [
+        { id: 'ex21-hyp', name: 'Puxada Frontal', sets: '4', reps: '8-12' },
+        { id: 'ex22-hyp', name: 'Remada Cavalinho', sets: '4', reps: '10-12' },
+        { id: 'ex23-hyp', name: 'Rosca Scott', sets: '3', reps: '12-15' },
+    ]},
+    { id: 'day3-hyp', day: 'Quarta', focus: 'Descanso', exercises: []},
+    { id: 'day4-hyp', day: 'Quinta', focus: 'Pernas (Quadríceps e Panturrilha)', exercises: [
+        { id: 'ex41-hyp', name: 'Agachamento Hack', sets: '4', reps: '10-12' },
+        { id: 'ex42-hyp', name: 'Cadeira Extensora', sets: '4', reps: '15-20' },
+        { id: 'ex43-hyp', name: 'Panturrilha no Leg Press', sets: '5', reps: '15-20' },
+    ]},
+    { id: 'day5-hyp', day: 'Sexta', focus: 'Ombros e Posteriores', exercises: [
+        { id: 'ex51-hyp', name: 'Elevação Lateral', sets: '5', reps: '12-15' },
+        { id: 'ex52-hyp', name: 'Mesa Flexora', sets: '4', reps: '12-15' },
+        { id: 'ex53-hyp', name: 'Cadeira Abdutora', sets: '4', reps: '15-20' },
+    ]},
+    { id: 'day6-hyp', day: 'Sábado', focus: 'Descanso', exercises: []},
+    { id: 'day7-hyp', day: 'Domingo', focus: 'Descanso', exercises: []},
+];
+
+const initialWorkoutTemplates: WorkoutPlan[] = [
+    { id: "TPL-001", name: "Iniciante Força 3x", difficulty: "Iniciante", description: "Um plano de 3 dias para iniciantes focado em ganho de força com exercícios compostos.", schedule: strengthTemplateSchedule, assignedTo: ['alex-johnson'] },
+    { id: "TPL-002", name: "Hipertrofia 5x Split", difficulty: "Intermediário", description: "Plano de 5 dias com divisão de grupamentos musculares para hipertrofia.", schedule: hypertrophyTemplateSchedule, assignedTo: ['maria-garcia'] },
+    { id: "TPL-003", name: "Cardio Intenso 30min", difficulty: "Todos os Níveis", description: "Sessão de cardio de alta intensidade para ser usada em dias de descanso ativo ou como complemento.", schedule: [
+        { id: 'day1-car', day: 'Sessão Única', focus: 'HIIT', exercises: [
+            { id: 'ex11-car', name: 'Corrida na Esteira (Tiros)', sets: '10', reps: '1 min forte / 1 min leve' },
+            { id: 'ex12-car', name: 'Bicicleta Ergométrica', sets: '1', reps: '15 minutos' },
+        ]}
+    ], assignedTo: [] },
+];
+
 const mockStudentPlanSchedule: DailyWorkout[] = [
     {
         id: 'day1', day: 'Segunda-feira', focus: 'Peito, Ombros e Tríceps', exercises: [
-            { id: 'ex11', name: 'Supino Reto', sets: '4', reps: '8-12', isCompleted: true, setLogs: [], notes: '' },
-            { id: 'ex12', name: 'Desenvolvimento com Halteres', sets: '3', reps: '10', isCompleted: false, setLogs: [], notes: '' },
+            { id: 'ex11', name: 'Supino Reto', sets: '4', reps: '8-12', isCompleted: true, setLogs: [{id: 'log1', weight: 80, reps: 10, isCompleted: true}, {id: 'log2', weight: 80, reps: 9, isCompleted: true}, {id: 'log3', weight: 75, reps: 11, isCompleted: true}], notes: 'Me senti forte hoje.' },
+            { id: 'ex12', name: 'Desenvolvimento com Halteres', sets: '3', reps: '10', isCompleted: true, setLogs: [{id: 'log4', weight: 20, reps: 10, isCompleted: true}, {id: 'log5', weight: 20, reps: 10, isCompleted: true}, {id: 'log6', weight: 20, reps: 9, isCompleted: true}], notes: '' },
             { id: 'ex13', name: 'Tríceps na Polia', sets: '3', reps: '12-15', isCompleted: false, setLogs: [], notes: '' },
         ]
     },
     {
         id: 'day2', day: 'Terça-feira', focus: 'Costas e Bíceps', exercises: [
-            { id: 'ex21', name: 'Barra Fixa', sets: '3', reps: 'Até a falha', isCompleted: false, setLogs: [], notes: '' },
-            { id: 'ex22', name: 'Remada Curvada', sets: '4', reps: '8-10', isCompleted: false, setLogs: [], notes: '' },
-            { id: 'ex23', name: 'Rosca Direta', sets: '3', reps: '12', isCompleted: false, setLogs: [], notes: '' },
+            { id: 'ex21', name: 'Barra Fixa', sets: '3', reps: 'Até a falha', isCompleted: false },
+            { id: 'ex22', name: 'Remada Curvada', sets: '4', reps: '8-10', isCompleted: false },
+            { id: 'ex23', name: 'Rosca Direta', sets: '3', reps: '12', isCompleted: false },
         ]
     },
     { id: 'day3', day: 'Quarta-feira', focus: 'Descanso Ativo', exercises: [] },
+    { id: 'day4', day: 'Quinta-feira', focus: 'Pernas', exercises: [
+         { id: 'ex41', name: 'Agachamento Livre', sets: '5', reps: '5', isCompleted: false },
+    ]},
+    { id: 'day5', day: 'Sexta-feira', focus: 'Cardio', exercises: [
+         { id: 'ex51', name: 'Corrida', sets: '1', reps: '30 min', isCompleted: false },
+    ]},
+    { id: 'day6', day: 'Sábado', focus: 'Descanso', exercises: [] },
+    { id: 'day7', day: 'Domingo', focus: 'Descanso', exercises: [] },
 ];
 
-
-const initialWorkoutTemplates: WorkoutPlan[] = [
-    { id: "TPL-001", name: "Iniciante Força 3x", difficulty: "Iniciante", description: "Um plano de 3 dias para iniciantes focado em ganho de força.", schedule: [], assignedTo: [] },
-    { id: "TPL-002", name: "Hipertrofia Full Body", difficulty: "Intermediário", description: "Treino de corpo inteiro para hipertrofia.", schedule: [], assignedTo: [] },
-    { id: "TPL-003", name: "Cardio Intenso 30min", difficulty: "Avançado", description: "Sessão de cardio de alta intensidade.", schedule: [] },
-];
 
 const initialStudentOwnedPlans: WorkoutPlan[] = [
     { 
-        id: "STU-PLN-001", 
-        name: "Meu Treino de Força", 
+        id: "STU-PLN-alex-johnson",
+        name: "Meu Treino de Força",
         difficulty: "Iniciante", 
         description: "Plano de 3 dias para iniciantes focado em ganho de força.", 
         schedule: mockStudentPlanSchedule, 
         owner: 'alex-johnson',
         templateId: 'TPL-001',
+    },
+     { 
+        id: "STU-PLN-maria-garcia",
+        name: "Hipertrofia 5x Split",
+        difficulty: "Intermediário", 
+        description: "Plano de 5 dias com divisão de grupamentos musculares para hipertrofia.",
+        schedule: hypertrophyTemplateSchedule.map(day => ({...day, exercises: day.exercises.map(ex => ({...ex, isCompleted: Math.random() > 0.5}))})), 
+        owner: 'maria-garcia',
+        templateId: 'TPL-002',
     }
 ]
 
@@ -93,7 +166,9 @@ export const WorkoutsContext = createContext<WorkoutsContextType>({} as Workouts
 export const WorkoutsProvider = ({ children }: { children: ReactNode }) => {
     const [plans, setPlans] = useState<WorkoutPlan[]>([...initialWorkoutTemplates, ...initialStudentOwnedPlans]);
     const [activeStudentPlans, setActiveStudentPlans] = useState<ActiveStudentPlans>({
-        'alex-johnson': 'STU-PLN-001' // Mock active plan for a student
+        'stu-001': 'STU-PLN-alex-johnson',
+        'alex-johnson': 'STU-PLN-alex-johnson',
+        'maria-garcia': 'STU-PLN-maria-garcia'
     });
 
     const addPlan = (planData: Omit<WorkoutPlan, 'id'>) => {
@@ -132,6 +207,7 @@ export const WorkoutsProvider = ({ children }: { children: ReactNode }) => {
                     owner: studentId,
                     templateId: template.id,
                     assignedTo: undefined, // Clear this for student copies
+                    schedule: template.schedule.map(day => ({...day, id: `${day.id}-copy-${Date.now()}`, exercises: day.exercises.map(ex => ({...ex, id: `${ex.id}-copy-${Date.now()}`, isCompleted: false, setLogs: []}))}))
                 };
                 newStudentPlans.push(newPlanForStudent);
                 newActivePlans[studentId] = newPlanForStudent.id;
@@ -144,11 +220,7 @@ export const WorkoutsProvider = ({ children }: { children: ReactNode }) => {
 
     const getAssignments = () => {
         // This should return a list of students and their active plans
-        const studentPlans = plans.filter(p => p.owner && allUsers.some(u => u.id === p.owner && u.role === 'Student'));
-
-        // This is a simplified logic. A real app would link trainers to students.
-        // For now, let's assume the trainer can see all students.
-        const allStudents = allUsers.filter(u => u.role === 'Student');
+        const allStudents = allUsers.filter(u => u.role === 'Student').slice(0, 6); // Mock: trainer sees first 6 students
 
         return allStudents.map(student => {
             const activePlanId = activeStudentPlans[student.id];
@@ -230,3 +302,5 @@ export const WorkoutsProvider = ({ children }: { children: ReactNode }) => {
         </WorkoutsContext.Provider>
     )
 }
+
+    

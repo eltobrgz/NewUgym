@@ -41,23 +41,24 @@ const MOCK_USERS: Record<UserRole, User> = {
     Student: { 
         id: mockStudent!.id,
         name: mockStudent!.name,
-        email: mockStudent!.email 
-    }, // Incomplete profile
+        email: mockStudent!.email,
+        height: 175, // Partially complete profile
+    },
     Trainer: { 
         id: mockTrainer!.id,
         name: mockTrainer!.name, 
         email: mockTrainer!.email, 
         cref: "123456-G/SP", 
-        specializations: "Treinamento Funcional, Nutrição Esportiva", 
-        bio: "Personal trainer com mais de 10 anos de experiência."
-    }, // Complete profile
+        specializations: "Treinamento Funcional, Nutrição Esportiva, Biomecânica", 
+        bio: "Personal trainer com mais de 10 anos de experiência, focado em ajudar clientes a atingir seu potencial máximo através de ciência e dedicação."
+    },
     Gym: { 
         id: mockGym!.id,
         name: mockGym!.name, 
         email: mockGym!.email, 
         phone: "(11) 98765-4321", 
-        address: "Rua dos Atletas, 123" 
-    }, // Complete profile
+        address: "Rua dos Atletas, 123, São Paulo - SP" 
+    },
 }
 
 // Function to check if the profile for a given role is complete
@@ -94,3 +95,5 @@ export const useUserRole = () => {
   }
   return context;
 };
+
+    
