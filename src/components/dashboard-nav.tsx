@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, LineChart, Calendar, Settings, Users, DollarSign, ClipboardList, Award, UserSquare, LogOut, Sun, Moon } from "lucide-react";
+import { LayoutDashboard, LineChart, Calendar, Settings, Users, DollarSign, ClipboardList, Award, UserSquare, LogOut, Sun, Moon, Palette } from "lucide-react";
 import { useUserRole } from "@/contexts/user-role-context";
 import { cn } from "@/lib/utils";
 import { useTheme } from "next-themes";
@@ -32,10 +32,16 @@ export const navConfig = {
   ],
 };
 
+const bottomNavItems = [
+    { name: "Aparência", href: "/dashboard/appearance", icon: Palette },
+    { name: "Perfil", href: "/dashboard/settings", icon: Settings },
+    { name: "Sair", href: "/", icon: LogOut },
+]
+
 export function DashboardNav({ isCollapsed, onLinkClick }: { isCollapsed: boolean, onLinkClick?: () => void }) {
   const pathname = usePathname();
   const { userRole } = useUserRole();
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -69,15 +75,15 @@ export function DashboardNav({ isCollapsed, onLinkClick }: { isCollapsed: boolea
             <div className={cn("flex items-center rounded-lg p-2", isCollapsed ? 'justify-center' : 'justify-between')}>
                 <div className={cn("flex items-center gap-3", isCollapsed && "justify-center")}>
                     <div className="flex items-center justify-center">
-                        {theme === 'dark' ? <Moon className="h-5 w-5 text-muted-foreground" /> : <Sun className="h-5 w-5 text-muted-foreground" />}
+                        {resolvedTheme === 'dark' ? <Moon className="h-5 w-5 text-muted-foreground" /> : <Sun className="h-5 w-5 text-muted-foreground" />}
                     </div>
-                    <span className={cn("text-muted-foreground", isCollapsed ? "hidden" : "block")}>
-                        {theme === 'dark' ? 'Escuro' : 'Claro'}
+                    <span className={cn("text-muted-foreground capitalize", isCollapsed ? "hidden" : "block")}>
+                        {resolvedTheme === 'dark' ? 'Escuro' : 'Claro'}
                     </span>
                 </div>
                 <Switch
-                  checked={theme === 'dark'}
-                  onCheckedChange={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                  checked={resolvedTheme === 'dark'}
+                  onCheckedChange={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
                   className={cn(isCollapsed ? "hidden" : "block")}
                   aria-label="Toggle theme"
                 />
@@ -100,18 +106,14 @@ export function DashboardNav({ isCollapsed, onLinkClick }: { isCollapsed: boolea
       </nav>
       <div className="mt-auto border-t">
         <div className="space-y-1 px-2 py-4">
-            <Link href="/dashboard/settings" onClick={handleLinkClick}>
-                <div className={linkClass("/dashboard/settings", isCollapsed)}>
-                    <Settings className="h-5 w-5 shrink-0" />
-                    <span className={cn("truncate", isCollapsed ? "hidden" : "block")}>Configurações</span>
-                </div>
-            </Link>
-             <Link href="/" onClick={handleLinkClick}>
-                <div className={linkClass("/", isCollapsed)}>
-                    <LogOut className="h-5 w-5 shrink-0" />
-                    <span className={cn("truncate", isCollapsed ? "hidden" : "block")}>Sair</span>
-                </div>
-            </Link>
+            {bottomNavItems.map((item) => (
+                 <Link key={item.name} href={item.href} onClick={handleLinkClick}>
+                    <div className={linkClass(item.href, isCollapsed)}>
+                        <item.icon className="h-5 w-5 shrink-0" />
+                        <span className={cn("truncate", isCollapsed ? "hidden" : "block")}>{item.name}</span>
+                    </div>
+                </Link>
+            ))}
         </div>
         <div className="border-t">
             {renderThemeSwitcher()}

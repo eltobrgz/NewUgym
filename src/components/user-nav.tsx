@@ -24,7 +24,7 @@ import {
   DropdownMenuSubTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useUserRole, UserRole } from "@/contexts/user-role-context";
-import { User, LogOut, SwatchBook, Moon, Sun } from "lucide-react";
+import { User, LogOut, SwatchBook, Palette } from "lucide-react";
 import { Button } from "./ui/button";
 
 export function UserNav() {
@@ -70,6 +70,12 @@ export function UserNav() {
                 <span>Perfil</span>
              </Link>
           </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+             <Link href="/dashboard/appearance">
+                <Palette className="mr-2 h-4 w-4" />
+                <span>Aparência</span>
+             </Link>
+          </DropdownMenuItem>
            <DropdownMenuSub>
             <DropdownMenuSubTrigger>
                 <SwatchBook className="mr-2 h-4 w-4" />
@@ -85,10 +91,6 @@ export function UserNav() {
               </DropdownMenuSubContent>
             </DropdownMenuPortal>
           </DropdownMenuSub>
-            <DropdownMenuItem onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
-                {theme === 'dark' ? <Sun className="mr-2 h-4 w-4" /> : <Moon className="mr-2 h-4 w-4" />}
-                <span>Alterar Tema</span>
-            </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>

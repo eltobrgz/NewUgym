@@ -10,24 +10,17 @@
     --card-foreground: 220 9% 10%;
     --popover: 220 20% 100%;
     --popover-foreground: 220 9% 10%;
-    --primary: 15 95% 53%; /* Reddish Orange */
-    --primary-foreground: 20 0% 100%;
     --secondary: 220 14% 90%;
     --secondary-foreground: 220 9% 10%;
     --muted: 220 14% 95%;
     --muted-foreground: 220 9% 45%;
-    --accent: 0 84% 60%; /* Vibrant Red */
-    --accent-foreground: 0 0% 100%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
     --border: 220 13% 89%;
     --input: 220 13% 91%;
-    --ring: 15 95% 53%;
     --radius: 0.5rem;
-    --chart-1: 15 95% 53%;
-    --chart-2: 0 84% 60%;
   }
-
+  
   .dark {
     --background: 220 10% 5%;
     --foreground: 220 20% 98%;
@@ -35,19 +28,86 @@
     --card-foreground: 220 20% 98%;
     --popover: 220 10% 5%;
     --popover-foreground: 220 20% 98%;
-    --primary: 15 85% 55%; /* Reddish Orange */
-    --primary-foreground: 20 0% 100%;
     --secondary: 220 15% 15%;
     --secondary-foreground: 220 20% 98%;
     --muted: 220 15% 15%;
     --muted-foreground: 220 10% 65%;
-    --accent: 0 74% 65%; /* Vibrant Red */
-    --accent-foreground: 0 0% 100%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
     --border: 220 15% 18%;
     --input: 220 15% 18%;
+  }
+
+  /* Ugym Palette (Default) */
+  .ugym {
+    --primary: 15 95% 53%; /* Reddish Orange */
+    --primary-foreground: 20 0% 100%;
+    --accent: 0 84% 60%; /* Vibrant Red */
+    --accent-foreground: 0 0% 100%;
+    --ring: 15 95% 53%;
+    --chart-1: 15 95% 53%;
+    --chart-2: 0 84% 60%;
+  }
+  .dark.ugym {
+    --primary: 15 85% 55%;
+    --primary-foreground: 20 0% 100%;
+    --accent: 0 74% 65%;
+    --accent-foreground: 0 0% 100%;
     --ring: 15 85% 55%;
+  }
+
+  /* Forest Palette */
+  .forest {
+    --primary: 142.1 76.2% 36.3%;
+    --primary-foreground: 142.1 76.2% 96.3%;
+    --accent: 164.3 87.5% 35.5%;
+    --accent-foreground: 164.3 87.5% 95.5%;
+    --ring: 142.1 76.2% 36.3%;
+    --chart-1: 142.1 76.2% 36.3%;
+    --chart-2: 164.3 87.5% 35.5%;
+  }
+  .dark.forest {
+    --primary: 142.1 70.2% 46.3%;
+    --primary-foreground: 142.1 70.2% 96.3%;
+    --accent: 164.3 80.5% 45.5%;
+    --accent-foreground: 164.3 80.5% 95.5%;
+    --ring: 142.1 70.2% 46.3%;
+  }
+
+   /* Ocean Palette */
+  .ocean {
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 221.2 83.2% 97.3%;
+    --accent: 210 90% 50%;
+    --accent-foreground: 210 90% 98%;
+    --ring: 221.2 83.2% 53.3%;
+    --chart-1: 221.2 83.2% 53.3%;
+    --chart-2: 210 90% 50%;
+  }
+  .dark.ocean {
+    --primary: 221.2 83.2% 63.3%;
+    --primary-foreground: 221.2 83.2% 97.3%;
+    --accent: 210 90% 60%;
+    --accent-foreground: 210 90% 98%;
+    --ring: 221.2 83.2% 63.3%;
+  }
+  
+  /* Vibe Palette */
+  .vibe {
+    --primary: 327.7 82.2% 55.7%;
+    --primary-foreground: 327.7 82.2% 95.7%;
+    --accent: 262.1 83.3% 57.8%;
+    --accent-foreground: 262.1 83.3% 97.8%;
+    --ring: 327.7 82.2% 55.7%;
+    --chart-1: 327.7 82.2% 55.7%;
+    --chart-2: 262.1 83.3% 57.8%;
+  }
+  .dark.vibe {
+    --primary: 327.7 82.2% 65.7%;
+    --primary-foreground: 327.7 82.2% 95.7%;
+    --accent: 262.1 83.3% 67.8%;
+    --accent-foreground: 262.1 83.3% 97.8%;
+    --ring: 327.7 82.2% 65.7%;
   }
 }
 
