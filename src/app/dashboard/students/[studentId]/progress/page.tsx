@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { TrendingDown, TrendingUp, ArrowRight, Weight, Ruler, HeartPulse, PlusCircle, CheckCircle, Circle } from 'lucide-react';
+import { TrendingDown, TrendingUp, ArrowRight, Weight, Ruler, HeartPulse, PlusCircle, CheckCircle, Circle, Wand2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
@@ -18,6 +18,8 @@ import { WorkoutsContext } from '@/contexts/workouts-context';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { cn } from '@/lib/utils';
 import { allUsers } from '@/lib/user-directory';
+import { analyzePerformance, AnalyzePerformanceInput } from '@/ai/flows/analyze-performance-flow';
+
 
 // Mock data for a specific student, you would fetch this based on params.studentId in a real app
 const studentData: { [key: string]: any } = {
@@ -105,6 +107,80 @@ const ChartComponent = ({ type, data, metric } : { type: keyof typeof chartCompo
     </ResponsiveContainer>
   );
 };
+
+const PerformanceAnalysis = ({ studentId, studentName }: {studentId: string, studentName: string}) => {
+    const { getStudentPlan, getStudentWorkoutProgress } = useContext(WorkoutsContext);
+    const [isLoading, setIsLoading] = useState(false);
+    const [analysis, setAnalysis] = useState<string | null>(null);
+    const { toast } = useToast();
+
+    const handleAnalyze = async () => {
+        setIsLoading(true);
+        setAnalysis(null);
+        try {
+            const studentPlan = getStudentPlan(studentId);
+            const data = studentData[studentId] || studentData['default'];
+            
+            const input: AnalyzePerformanceInput = {
+                studentName: studentName,
+                metricHistory: data.progressData,
+                workoutPlan: studentPlan ? {
+                    name: studentPlan.name,
+                    focus: studentPlan.description,
+                    schedule: studentPlan.schedule.map(day => ({
+                        day: day.day,
+                        focus: day.focus,
+                        exercises: day.exercises.map(ex => ({ name: ex.name, isCompleted: !!ex.isCompleted }))
+                    }))
+                } : undefined,
+            };
+
+            const result = await analyzePerformance(input);
+            setAnalysis(result.analysis);
+        } catch (error) {
+            console.error(error);
+            toast({
+                title: 'Erro na Análise',
+                description: 'Não foi possível gerar a análise de desempenho.',
+                variant: 'destructive',
+            });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>Análise de Desempenho com IA</CardTitle>
+                <CardDescription>Obtenha insights e sugestões automáticas sobre o progresso do aluno.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                {isLoading ? (
+                     <div className="flex flex-col items-center justify-center gap-4 p-8 text-center">
+                        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+                        <p className="text-muted-foreground">Analisando dados... Isso pode levar um momento.</p>
+                    </div>
+                ) : analysis ? (
+                    <div className="space-y-4">
+                        <div className="whitespace-pre-wrap p-4 bg-muted rounded-md text-sm">{analysis}</div>
+                        <Button variant="outline" onClick={() => setAnalysis(null)}>
+                            Fechar Análise
+                        </Button>
+                    </div>
+                ) : (
+                    <div className="text-center p-8 border-2 border-dashed rounded-lg">
+                         <p className="text-muted-foreground mb-4">Clique no botão para que a IA analise os dados de treino e métricas corporais, fornecendo um resumo acionável.</p>
+                        <Button onClick={handleAnalyze}>
+                            <Wand2 className="mr-2 h-4 w-4" />
+                            Analisar Desempenho
+                        </Button>
+                    </div>
+                )}
+            </CardContent>
+        </Card>
+    )
+}
 
 
 export default function StudentProgressPage({ params: paramsPromise }: { params: Promise<{ studentId: string }> }) {
@@ -239,6 +315,8 @@ export default function StudentProgressPage({ params: paramsPromise }: { params:
             </CardContent>
         </Card>
       </div>
+      
+      <PerformanceAnalysis studentId={params.studentId} studentName={name}/>
 
        <Card>
         <CardHeader>
@@ -354,3 +432,4 @@ export default function StudentProgressPage({ params: paramsPromise }: { params:
     </div>
   );
 }
+
