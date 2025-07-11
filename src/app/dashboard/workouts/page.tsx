@@ -42,7 +42,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { WorkoutsContext, WorkoutPlan, DailyWorkout, Exercise, SetLog } from '@/contexts/workouts-context';
-import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
+import { DragDropContext, Droppable, Draggable, DropResult, type DroppableProps } from 'react-beautiful-dnd';
 import { exerciseLibrary, Exercise as LibraryExercise, exerciseCategories } from '@/lib/exercise-library';
 
 // Wrapper to solve React 18 strict mode issue with react-beautiful-dnd
@@ -293,11 +293,11 @@ const WorkoutBuilder = ({ onSave, onBack, plan: initialPlan }: { onSave: (plan: 
                         <div className="p-4 border-t">
                         <h3 className="font-semibold mb-2">Dias de Treino</h3>
                         <ClientOnlyDroppable droppableId="days-list" type="day">
-                            {(provided: any) => (
+                            {(provided) => (
                             <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-2">
                                 {plan.schedule?.map((day, index) => (
                                 <Draggable key={day.id} draggableId={day.id} index={index}>
-                                    {(provided: any, snapshot: any) => (
+                                    {(provided, snapshot) => (
                                     <div
                                         ref={provided.innerRef}
                                         {...provided.draggableProps}
@@ -344,11 +344,11 @@ const WorkoutBuilder = ({ onSave, onBack, plan: initialPlan }: { onSave: (plan: 
                                 </CardHeader>
                                 <CardContent>
                                     <ClientOnlyDroppable droppableId={activeDay.id} type="exercise">
-                                    {(provided: any) => (
+                                    {(provided) => (
                                         <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-3">
                                         {activeDay.exercises.map((exercise, index) => (
                                             <Draggable key={exercise.id} draggableId={exercise.id} index={index}>
-                                            {(provided: any) => (
+                                            {(provided) => (
                                                 <div ref={provided.innerRef} {...provided.draggableProps} className="flex items-center gap-2 p-2 border rounded-md bg-muted/50">
                                                     <div {...provided.dragHandleProps} className="p-1 cursor-grab">
                                                         <GripVertical className="h-4 w-4 text-muted-foreground" />
@@ -1008,4 +1008,3 @@ export default function WorkoutsPage() {
     </div>
   );
 }
-
