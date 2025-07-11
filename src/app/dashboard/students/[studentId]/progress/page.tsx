@@ -19,7 +19,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { cn } from '@/lib/utils';
 import { allUsers } from '@/lib/user-directory';
 import { analyzePerformance, AnalyzePerformanceInput } from '@/ai/flows/analyze-performance-flow';
-import { ChartConfig, ChartContainer } from '@/components/ui/chart';
+import { ChartContainer, ChartConfig } from '@/components/ui/chart';
 
 
 // Mock data for a specific student, you would fetch this based on params.studentId in a real app

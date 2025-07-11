@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   Table,
@@ -52,9 +52,10 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { allUsers, type DirectoryUser } from "@/lib/user-directory";
+import { getStudentSubscription, StudentSubscription } from '@/lib/finance-manager';
+import { format, subDays } from 'date-fns';
 
 type Student = {
   id: string;
@@ -64,19 +65,10 @@ type Student = {
   initials: string;
   lastActive: string;
   progress: number;
+  status: "Ativo" | "Inativo" | "Pendente" | "Atrasado";
 };
 
-const initialStudents: Student[] = [
-  { id: "alex-johnson", name: "Alex Johnson", email: "alex.j@email.com", avatar: "https://placehold.co/100x100.png", initials: "AJ", lastActive: "2 dias atrás", progress: 75 },
-  { id: "maria-garcia", name: "Maria Garcia", email: "maria.g@email.com", avatar: "https://placehold.co/100x100.png", initials: "MG", lastActive: "Hoje", progress: 90 },
-  { id: "david-chen", name: "David Chen", email: "david.c@email.com", avatar: "https://placehold.co/100x100.png", initials: "DC", lastActive: "1 semana atrás", progress: 40 },
-  { id: "sofia-davis", name: "Sofia Davis", email: "sofia.d@email.com", avatar: "https://placehold.co/100x100.png", initials: "SD", lastActive: "15 dias atrás", progress: 25 },
-  { id: "emily-white", name: "Emily White", email: "emily.w@email.com", avatar: "https://placehold.co/100x100.png", initials: "EW", lastActive: "Ontem", progress: 60 },
-  { id: "stu-001", name: "Alice Johnson", email: "alice.j@email.com", avatar: "https://placehold.co/100x100.png", initials: "AJ", lastActive: "3 dias atrás", progress: 80 },
-];
-
-
-const AddStudentDialog = ({ open, onOpenChange, onAddStudent }: { open: boolean, onOpenChange: (open: boolean) => void, onAddStudent: (student: Student) => void}) => {
+const AddStudentDialog = ({ open, onOpenChange, onAddStudent }: { open: boolean, onOpenChange: (open: boolean) => void, onAddStudent: (student: Omit<Student, 'status'>) => void}) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [searchResults, setSearchResults] = useState<DirectoryUser[]>([]);
     
@@ -94,7 +86,7 @@ const AddStudentDialog = ({ open, onOpenChange, onAddStudent }: { open: boolean,
     }
 
     const handleAddClick = (user: DirectoryUser) => {
-        const newStudent: Student = {
+        const newStudent: Omit<Student, 'status'> = {
             id: user.id,
             name: user.name,
             email: user.email,
@@ -153,18 +145,54 @@ const AddStudentDialog = ({ open, onOpenChange, onAddStudent }: { open: boolean,
     )
 }
 
+const statusVariant: Record<Student['status'], "default" | "secondary" | "destructive"> = {
+    Ativo: "default",
+    Inativo: "secondary",
+    Pendente: "secondary",
+    Atrasado: "destructive",
+};
+
 export default function StudentsPage() {
-  const [students, setStudents] = useState<Student[]>(initialStudents);
+  const [students, setStudents] = useState<Student[]>([]);
   const [view, setView] = useState<'list' | 'grid'>('list');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const { toast } = useToast();
 
-  const handleAddStudent = (newStudent: Student) => {
+  useEffect(() => {
+    // Unify student list from the main user directory and enrich with status
+    const studentUsers = allUsers.filter(u => u.role === 'Student');
+    const studentData = studentUsers.map((user, index) => {
+        const subscription = getStudentSubscription(user.id);
+        const statusMap: Record<StudentSubscription['status'], Student['status']> = {
+            Ativo: 'Ativo',
+            Pendente: 'Pendente',
+            Atrasado: 'Atrasado',
+            Cancelado: 'Inativo'
+        };
+
+        const lastActiveDays = [2, 0, 7, 15, 1, 3];
+
+        return {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            avatar: `https://placehold.co/100x100.png`,
+            initials: user.name.split(" ").map(n => n[0]).join("").toUpperCase(),
+            lastActive: format(subDays(new Date(), lastActiveDays[index % lastActiveDays.length]), 'dd/MM/yyyy'),
+            progress: Math.floor(Math.random() * 80) + 20, // Random progress for visuals
+            status: subscription ? statusMap[subscription.status] : 'Inativo',
+        };
+    });
+    setStudents(studentData);
+  }, []);
+
+  const handleAddStudent = (newStudent: Omit<Student, 'status'>) => {
     if (students.some(s => s.id === newStudent.id)) {
         toast({ title: "Aluno já existe", description: `${newStudent.name} já está na sua lista de alunos.`, variant: "destructive" });
         return;
     }
-    setStudents(prev => [newStudent, ...prev]);
+    const studentWithStatus: Student = { ...newStudent, status: 'Inativo' };
+    setStudents(prev => [studentWithStatus, ...prev]);
     setIsAddDialogOpen(false);
     toast({ title: "Aluno Adicionado!", description: `${newStudent.name} foi adicionado à sua lista. Agora você pode atribuir um treino.` });
   };
@@ -200,7 +228,7 @@ export default function StudentsPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Aluno</TableHead>
-                <TableHead className="hidden sm:table-cell">Última Atividade</TableHead>
+                <TableHead className="hidden sm:table-cell">Status</TableHead>
                 <TableHead>Progresso do Treino</TableHead>
                 <TableHead><span className="sr-only">Ações</span></TableHead>
               </TableRow>
@@ -220,7 +248,11 @@ export default function StudentsPage() {
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell className="hidden sm:table-cell">{student.lastActive}</TableCell>
+                  <TableCell className="hidden sm:table-cell">
+                     <Badge variant={statusVariant[student.status]}>
+                        {student.status}
+                      </Badge>
+                  </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <Progress value={student.progress} className="h-2 w-16 sm:w-[100px]" />
@@ -271,12 +303,15 @@ export default function StudentsPage() {
                             <AvatarFallback>{student.initials}</AvatarFallback>
                         </Avatar>
                         <CardTitle>{student.name}</CardTitle>
-                        <CardDescription>Ativo: {student.lastActive}</CardDescription>
+                        <CardDescription>Ativo desde: {student.lastActive}</CardDescription>
                     </CardHeader>
                     <CardContent className="flex flex-col items-center">
-                        <div className="w-full px-4">
+                        <div className="w-full px-4 text-center space-y-2">
+                           <Badge variant={statusVariant[student.status]}>
+                             {student.status}
+                           </Badge>
                           <Progress value={student.progress} className="h-2" />
-                          <p className="text-sm text-muted-foreground mt-2">{student.progress}% de progresso</p>
+                          <p className="text-sm text-muted-foreground">{student.progress}% de progresso</p>
                         </div>
                         <Button variant="link" size="sm" asChild className="mt-2"><Link href={`/dashboard/students/${student.id}/progress`}>Ver Detalhes</Link></Button>
                     </CardContent>
@@ -287,5 +322,3 @@ export default function StudentsPage() {
     </div>
   );
 }
-
-    

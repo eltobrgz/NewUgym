@@ -40,7 +40,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { allUsers } from "@/lib/user-directory";
 import { Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { ChartConfig, ChartContainer, ChartTooltipContent } from '@/components/ui/chart'
+import { ChartContainer, ChartTooltipContent, ChartConfig } from '@/components/ui/chart';
 import { subDays, startOfMonth, endOfMonth, format, subMonths, parseISO } from 'date-fns';
 import { generateMockTransactions, getAllTransactions, addTransaction as addFinanceTransaction, Transaction, MembershipPlan, getAllPlans, addPlan as addFinancePlan, cancelSubscription } from "@/lib/finance-manager";
 
@@ -261,8 +261,7 @@ export default function FinancePage() {
 
 
   useEffect(() => {
-    // Generate data on client-side to avoid hydration mismatch
-    generateMockTransactions(); // Initialize with mock data if needed
+    generateMockTransactions();
     setTransactions(getAllTransactions());
     setPlans(getAllPlans());
 
@@ -273,10 +272,16 @@ export default function FinancePage() {
         churnByMonth[month] = { new: 0, churn: 0 };
     });
     
-    // Mock data for new and churned members
-    Object.keys(churnByMonth).forEach(month => {
-      churnByMonth[month].new = Math.floor(Math.random() * 10) + 5; // 5-14 new members
-      churnByMonth[month].churn = Math.floor(Math.random() * 4) + 1; // 1-4 churned members
+    getAllTransactions().forEach(t => {
+      const monthKey = format(parseISO(t.date), 'yyyy-MM');
+      if (churnByMonth[monthKey] !== undefined) {
+        if (t.type === 'Primeiro Pagamento' && t.status === 'Pago') {
+          churnByMonth[monthKey].new++;
+        }
+        if (t.status === 'Cancelado') {
+          churnByMonth[monthKey].churn++;
+        }
+      }
     });
     
     const data = Object.entries(churnByMonth).map(([month, data]) => ({
