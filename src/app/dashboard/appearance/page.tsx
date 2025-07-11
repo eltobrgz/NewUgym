@@ -1,6 +1,7 @@
 
 "use client"
 
+import { useState, useEffect } from "react"
 import { useTheme } from "next-themes"
 import { Check } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -15,6 +16,15 @@ const themes = [
 
 export default function AppearancePage() {
   const { theme, setTheme, resolvedTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!mounted) {
+    return null // or a skeleton loader
+  }
 
   return (
     <div className="flex flex-col gap-6">
