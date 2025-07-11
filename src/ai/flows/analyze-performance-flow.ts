@@ -52,7 +52,7 @@ export type AnalyzePerformanceOutput = z.infer<typeof AnalyzePerformanceOutputSc
 
 const prompt = ai.definePrompt({
   name: 'analyzePerformancePrompt',
-  input: { schema: AnalyzePerformanceInputSchema },
+  input: { schema: z.any() }, // Accept pre-processed data
   output: { schema: AnalyzePerformanceOutputSchema },
   prompt: `You are a highly experienced personal trainer and data analyst. Your task is to analyze the performance of a student, named {{studentName}}, based on their body metric history and workout plan adherence.
 
@@ -61,7 +61,7 @@ Provide a concise, insightful, and encouraging analysis. The analysis should be 
 **Analysis Sections:**
 1.  **Resumo Geral:** Start with a brief, encouraging summary of the student's journey.
 2.  **Pontos Fortes:** Identify areas where the student is excelling. This could be consistency in weight loss, adherence to the workout plan, or specific measurement improvements.
-3.  **Áreas para Melhoria:** Pinpoint areas that need attention. This could be stagnant progress in a specific measurement, inconsistency in workouts, or a metric that's not aligning with their goals.
+3.  **Áreas para Melhoria:** Pinpoint areas that need to be addressed. This could be stagnant progress in a specific measurement, inconsistency in workouts, or a metric that's not aligning with their goals.
 4.  **Sugestões Acionáveis:** Provide 2-3 clear, simple, and actionable suggestions. For example, "Considerar o aumento da carga no agachamento para desafiar mais as pernas" or "Focar em completar todos os exercícios do treino de Costas e Bíceps na próxima semana."
 
 **Dados do Aluno:**
@@ -76,7 +76,7 @@ Provide a concise, insightful, and encouraging analysis. The analysis should be 
 Foco: {{workoutPlan.focus}}
 Adesão ao plano:
 {{#each workoutPlan.schedule}}
-- {{day}} ({{focus}}): {{#if exercises.length}}{{#if (every exercises 'isCompleted')}}Completo{{else}}Incompleto{{/if}}{{else}}Descanso{{/if}}
+- {{day}} ({{focus}}): {{completionStatus}}
 {{/each}}
 {{/if}}
 
@@ -91,7 +91,24 @@ const analyzePerformanceFlow = ai.defineFlow(
     outputSchema: AnalyzePerformanceOutputSchema,
   },
   async (input) => {
-    const { output } = await prompt(input);
+    // Pre-process workout data to determine completion status before sending to the prompt
+    const processedInput = { ...input };
+    if (processedInput.workoutPlan) {
+        const processedSchedule = processedInput.workoutPlan.schedule.map(day => {
+            let completionStatus = 'Descanso'; // Default to Rest
+            if (day.exercises && day.exercises.length > 0) {
+                const allCompleted = day.exercises.every(ex => ex.isCompleted);
+                completionStatus = allCompleted ? 'Completo' : 'Incompleto';
+            }
+            return {
+                ...day,
+                completionStatus: completionStatus,
+            };
+        });
+        processedInput.workoutPlan = { ...processedInput.workoutPlan, schedule: processedSchedule };
+    }
+
+    const { output } = await prompt(processedInput);
     if (!output) {
       throw new Error('AI failed to generate performance analysis.');
     }
