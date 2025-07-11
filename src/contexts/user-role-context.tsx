@@ -37,12 +37,24 @@ const mockStudent = userDirectory.find(u => u.id === 'stu-001');
 const mockTrainer = userDirectory.find(u => u.id === 'trn-001');
 const mockGym = userDirectory.find(u => u.id === 'gym-001');
 
+// Mock progress data to get the latest weight, ensuring consistency with progress page
+const studentProgressData = [
+  { date: '2024-05-01', weight: 85 },
+  { date: '2024-06-01', weight: 83 },
+  { date: '2024-07-01', weight: 82 },
+  { date: '2024-08-01', weight: 80 },
+];
+const latestWeight = studentProgressData[studentProgressData.length - 1].weight;
+const studentHeight = 175;
+
+
 const MOCK_USERS: Record<UserRole, User> = {
     Student: { 
         id: mockStudent!.id,
         name: mockStudent!.name,
         email: mockStudent!.email,
-        height: 175, // Partially complete profile
+        height: studentHeight,
+        weight: latestWeight,
     },
     Trainer: { 
         id: mockTrainer!.id,
