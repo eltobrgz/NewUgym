@@ -56,6 +56,15 @@ const studentData: { [key: string]: any } = {
       { date: '2024-07-01', weight: 60, bodyFat: 24, arm: 30, leg: 54, waist: 70 },
       { date: '2024-08-01', weight: 59, bodyFat: 23, arm: 30, leg: 54, waist: 69 },
     ],
+  },
+  // Fallback for any other student ID
+  'default': {
+    name: 'Aluno',
+    heightInCm: 170,
+    progressData: [
+        { date: '2024-07-15', weight: 70, bodyFat: 20, arm: 35, leg: 55, waist: 80 },
+        { date: '2024-08-01', weight: 69, bodyFat: 19.5, arm: 35.5, leg: 55.5, waist: 79 },
+    ]
   }
 };
 
@@ -67,7 +76,7 @@ const calculateBmi = (weight: number, height: number) => {
 const getBmiCategory = (bmi: number) => {
     if (bmi < 18.5) return { category: "Abaixo do peso", variant: "default", className: "bg-blue-500 hover:bg-blue-500/80"};
     if (bmi < 24.9) return { category: "Peso normal", variant: "default", className: "bg-green-500 hover:bg-green-500/80"};
-    if (bmi < 29.9) return { category: "Sobrepeso", variant: "secondary", className: "bg-yellow-500/80 hover:bg-yellow-500 text-yellow-foreground"};
+    if (bmi < 29.9) return { category: "Sobrepeso", variant: "secondary", className: "bg-yellow-500/80 hover:bg-yellow-500 text-yellow-foreground" };
     return { category: "Obesidade", variant: "destructive"};
 }
 
@@ -108,7 +117,7 @@ export default function StudentProgressPage({ params: paramsPromise }: { params:
   const { toast } = useToast();
   
   // Use a fallback if studentId is not in mock data
-  const data = studentData[params.studentId] || studentData['alex-johnson'];
+  const data = studentData[params.studentId] || studentData['default'];
   const name = allUsers.find(u => u.id === params.studentId)?.name || 'Aluno';
   const { heightInCm, progressData } = data;
   
@@ -116,7 +125,7 @@ export default function StudentProgressPage({ params: paramsPromise }: { params:
   const workoutProgress = getStudentWorkoutProgress(params.studentId);
 
   const currentWeight = progressData[progressData.length - 1].weight;
-  const previousWeight = progressData[progressData.length - 2].weight;
+  const previousWeight = progressData.length > 1 ? progressData[progressData.length - 2].weight : currentWeight;
   const weightTrend = currentWeight > previousWeight ? 'increase' : currentWeight < previousWeight ? 'decrease' : 'stable';
   const currentBmi = parseFloat(calculateBmi(currentWeight, heightInCm));
   const bmiInfo = getBmiCategory(currentBmi);

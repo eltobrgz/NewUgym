@@ -48,9 +48,9 @@ type Member = {
   joinDate: string;
 };
 
-// Use the central user directory as the source of truth for initial members
+// Use the central user directory as the source of truth for members
 const getInitialMembers = (): Member[] => {
-    const studentUsers = allUsers.filter(u => u.role === 'Student').slice(0, 8); // Get first 8 students
+    const studentUsers = allUsers.filter(u => u.role === 'Student');
     return studentUsers.map((user, index) => ({
         id: user.id,
         name: user.name,
